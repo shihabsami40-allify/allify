@@ -71,11 +71,21 @@ function MarketplacePage() {
     let alive = true;
     (async () => {
       try {
+        // Fetch only what this page needs. Avoid four database round-trips on every route.
+        const needsProducts = ["market", "search", "category", "product"].includes(page);
+        const needsCategories = ["market", "search", "category", "seller", "seller-dashboard"].includes(page);
+        const needsAreas = page === "checkout";
         const [session, cats, productRows, areaRows] = await Promise.all([
           supabase.auth.getSession(),
-          supabase.from("categories").select("*").order("sort_order"),
-          supabase.from("products").select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area)").eq("status","active").order("sold_count",{ascending:false}).limit(100),
-          supabase.from("delivery_areas").select("name_bn,name_en,fee,zone").eq("active",true).order("sort_order")
+          needsCategories
+            ? supabase.from("categories").select("id,slug,name_bn,name_en,sort_order").order("sort_order")
+            : Promise.resolve({ data: [] as any[] }),
+          needsProducts
+            ? supabase.from("products").select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area)").eq("status","active").order("sold_count",{ascending:false}).limit(48)
+            : Promise.resolve({ data: [] as any[] }),
+          needsAreas
+            ? supabase.from("delivery_areas").select("name_bn,name_en,fee,zone").eq("active",true).order("sort_order")
+            : Promise.resolve({ data: [] as any[] })
         ]);
         if (!alive) return;
         setUser(session.data.session?.user ?? null);
