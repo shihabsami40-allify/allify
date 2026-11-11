@@ -2,34 +2,47 @@
 
 Bengali-first multi-vendor marketplace for Chattogram, Bangladesh.
 
-## Current status
+## Current implementation
 
-This repository contains the exported Lovable starter and database foundation. It is **not yet a complete or production-ready marketplace**. The currently implemented public UI is primarily the home page. Customer product browsing/details, search, cart, checkout, account/order history, seller application/dashboard/store pages, and admin management UI still need implementation and end-to-end testing.
+- Bengali-first responsive storefront and home page
+- Category browsing, product search and product detail views
+- Local browser cart and authenticated COD checkout using the server-side `place_order` RPC
+- Email/password sign-up, sign-in, customer account and order history
+- Seller application workflow and seller product publishing
+- Admin seller-application review through the protected `review_seller_application` RPC
+- Chattogram delivery areas and BDT pricing
+- Seed/demo catalog and demo labels
+
+## Important launch limitations
+
+This is a functional MVP codebase, not yet a fully launch-ready commercial marketplace. Before taking real orders, complete the deployment and live browser tests, set production environment variables, create the first admin through a trusted Supabase dashboard/service-role process, and verify RLS using customer, seller and admin accounts. The initial admin must never be self-claimed through public signup.
+
+The GitHub Actions build currently runs with Bun. A successful build confirms compilation, not complete end-to-end behavior.
+
+## Integrations
+
+- Cash on delivery only; no online payment gateway is configured.
+- No courier API, production email/SMS, or public image-storage upload is configured.
+- Seller product image URLs can be supplied manually; validate image ownership and safety before launch.
+- Missing local product images fall back gracefully in the UI.
 
 ## Stack
 
 - TanStack Start, React, TypeScript, Tailwind CSS
 - Supabase Auth and PostgreSQL
-- BDT (৳), Bangla-first, Chattogram delivery areas
-- Cash on delivery/manual order confirmation only
+- Bun package manager and lockfile
 
 ## Security
 
-- Do not commit `.env`, credentials, access tokens, or Supabase service-role keys.
-- The unsafe first-user admin-claim function is removed by migration `0001_remove_first_admin_claim.sql`.
-- Create the initial admin only through a trusted Supabase dashboard/service-role process; never through a public signup flow.
-- Review all row-level security policies and test them with anon, customer, seller, and admin roles before launch.
+- Never commit `.env`, credentials, access tokens, or Supabase service-role keys.
+- The unsafe first-user admin-claim function was removed from the live database and by migration `0001_remove_first_admin_claim.sql`.
+- Bootstrap the initial admin only through a trusted dashboard/service-role process.
+- Review row-level security policies before launch.
 
-## Integrations not configured
-
-Online payment gateways, courier APIs, production email/SMS, and public product-image storage are not configured. Do not imply these are active.
-
-## Build
+## Build and test
 
 ```sh
-npm install
-npm run build
-npm test
+bun install --frozen-lockfile
+bun run build
+bun run test
 ```
-
-A GitHub Actions build workflow is included at `.github/workflows/ci.yml`.
