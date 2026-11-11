@@ -19,14 +19,20 @@ export const Route = createFileRoute("/")({
 const bdt = (n: number) => "৳" + Number(n).toLocaleString("bn-BD");
 
 function Index() {
-  const cats = useQuery({ queryKey: ["cats"], queryFn: async () => (await supabase.from("categories").select("*").order("sort_order")).data ?? [] });
+  const cats = useQuery({ queryKey: ["cats"], queryFn: async () => (await supabase.from("categories").select("id,slug,name_bn,name_en,sort_order").order("sort_order")).data ?? [],
+    staleTime: 60_000,
+    gcTime: 300_000,
+    retry: 1 });
   const prods = useQuery({
     queryKey: ["popular"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("id,slug,title_bn,price,compare_price,product_images(url),seller_stores(name)").order("sold_count", { ascending: false }).limit(12);
+      const { data, error } = await supabase.from("products").select("id,slug,title_bn,price,compare_price,product_images(url),seller_stores(name)").eq("status", "active").order("sold_count", { ascending: false }).limit(12);
       if (error) throw error;
       return data ?? [];
     },
+    staleTime: 60_000,
+    gcTime: 300_000,
+    retry: 1,
   });
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -59,7 +65,7 @@ function Index() {
         <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
           {prods.data?.map((p: any) => (
             <article key={p.id} className="overflow-hidden rounded-xl border bg-card"><a href={"/product?slug="+p.slug} className="block">
-              <div className="aspect-square w-full bg-muted"><img src={p.product_images?.[0]?.url} alt={p.title_bn} loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }} className="aspect-square w-full object-cover" /></div>
+              <div className="aspect-square w-full bg-muted"><img src={p.product_images?.[0]?.url} alt={p.title_bn} loading="lazy" decoding="async" width={640} height={640} onError={(e) => { e.currentTarget.style.display = "none"; }} className="aspect-square w-full object-cover" /></div>
               <div className="p-3">
                 <h3 className="line-clamp-2 text-sm font-medium">{p.title_bn}</h3>
                 <p className="text-xs text-muted-foreground">{p.seller_stores?.name}</p>
