@@ -35,7 +35,7 @@ function Index() {
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <span className="font-display text-2xl font-bold tracking-tight text-primary">ALLIFY</span>
           <span className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">ডেমো মোড</span>
-          <span className="ml-auto text-sm text-muted-foreground">📍 চট্টগ্রাম জেলা</span>
+          <nav className="ml-auto flex items-center gap-3 text-sm"><a href="/market">সব পণ্য</a><a href="/seller">বিক্রেতা হোন</a><a href="/account">অ্যাকাউন্ট</a><a href="/cart">কার্ট</a><span className="hidden text-muted-foreground sm:inline">📍 চট্টগ্রাম জেলা</span></nav>
         </div>
       </header>
       <section className="relative">
@@ -47,11 +47,11 @@ function Index() {
           </div>
         </div>
       </section>
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="mx-auto max-w-6xl px-4 py-8"><form action="/search" className="mb-6 flex gap-2"><input name="q" placeholder="পণ্য খুঁজুন…" className="min-w-0 flex-1 rounded-lg border bg-card px-4 py-3 text-sm"/><button className="rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">খুঁজুন</button></form>
         <h2 className="font-display text-xl font-semibold">ক্যাটাগরি</h2>
         <div className="mt-3 grid grid-cols-4 gap-2 md:grid-cols-8">
           {cats.data?.map((c) => (
-            <div key={c.id} className="rounded-lg border bg-card p-3 text-center text-sm">{c.name_bn}</div>
+            <a key={c.id} href={"/category?category="+c.slug} className="rounded-lg border bg-card p-3 text-center text-sm hover:border-primary">{c.name_bn}</a>
           ))}
         </div>
         <h2 className="mt-8 font-display text-xl font-semibold">জনপ্রিয় পণ্য</h2>
@@ -59,7 +59,7 @@ function Index() {
         {prods.error && <p className="mt-3 text-destructive">পণ্য লোড করা যায়নি।</p>}
         <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
           {prods.data?.map((p: any) => (
-            <article key={p.id} className="overflow-hidden rounded-xl border bg-card">
+            <article key={p.id} className="overflow-hidden rounded-xl border bg-card"><a href={"/product?slug="+p.slug} className="block">
               <img src={p.product_images?.[0]?.url} alt={p.title_bn} loading="lazy" className="aspect-square w-full object-cover" />
               <div className="p-3">
                 <h3 className="line-clamp-2 text-sm font-medium">{p.title_bn}</h3>
