@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import hero from "@/assets/hero-bazaar.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -39,7 +38,7 @@ function Index() {
         </div>
       </header>
       <section className="relative">
-        <img src={hero} alt="চট্টগ্রামের বাজার" width={1600} height={912} className="h-64 w-full object-cover md:h-96" />
+        <div role="img" aria-label="চট্টগ্রামের ডিজিটাল বাজার" className="h-64 w-full bg-gradient-to-br from-teal-900 via-teal-700 to-amber-500 md:h-96"><div className="mx-auto flex h-full max-w-6xl items-center justify-end px-8 text-7xl opacity-30 md:text-9xl">🛍️ 🏬</div></div>
         <div className="absolute inset-0 flex items-end bg-gradient-to-t from-foreground/70 to-transparent">
           <div className="mx-auto w-full max-w-6xl px-4 pb-6 text-background">
             <h1 className="font-display text-3xl font-bold md:text-5xl">চট্টগ্রামের ডিজিটাল বাজার</h1>
@@ -60,7 +59,7 @@ function Index() {
         <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
           {prods.data?.map((p: any) => (
             <article key={p.id} className="overflow-hidden rounded-xl border bg-card"><a href={"/product?slug="+p.slug} className="block">
-              <img src={p.product_images?.[0]?.url} alt={p.title_bn} loading="lazy" className="aspect-square w-full object-cover" />
+              <div className="aspect-square w-full bg-muted"><img src={p.product_images?.[0]?.url} alt={p.title_bn} loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }} className="aspect-square w-full object-cover" /></div>
               <div className="p-3">
                 <h3 className="line-clamp-2 text-sm font-medium">{p.title_bn}</h3>
                 <p className="text-xs text-muted-foreground">{p.seller_stores?.name}</p>
