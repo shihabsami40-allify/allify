@@ -65,7 +65,7 @@ function Index() {
                 <h3 className="line-clamp-2 text-sm font-medium">{p.title_bn}</h3>
                 <p className="text-xs text-muted-foreground">{p.seller_stores?.name}</p>
                 <p className="mt-1 font-semibold text-primary">{bdt(p.price)} {p.compare_price && <s className="text-xs text-muted-foreground">{bdt(p.compare_price)}</s>}</p>
-              </div>
+              </div></a>
             </article>
           ))}
         </div>
