@@ -180,7 +180,19 @@ function MarketplacePage() {
   const submitProduct = async (e: FormEvent) => {
     e.preventDefault(); if (!myStore) return;
     setBusy(true); setError(""); setMessage("");
+    let createdProductId: string | null = null;
+    let uploadedImagePath: string | null = null;
     try {
+      if (productImage && !["image/jpeg","image/png","image/webp"].includes(productImage.type)) {
+        throw new Error("শুধু JPG, PNG বা WebP ছবি আপলোড করা যাবে।");
+      }
+      if (productImage && productImage.size > 5 * 1024 * 1024) {
+        throw new Error("ছবির আকার সর্বোচ্চ ৫ MB হতে পারবে।");
+      }
+      if (form.image_url) {
+        const imageUrl = new URL(form.image_url);
+        if (imageUrl.protocol !== "https:") throw new Error("ছবির URL অবশ্যই HTTPS হতে হবে।");
+      }
       const slug = (form.product_slug || "product-"+Date.now()).toLowerCase().replace(/[^a-z0-9-]/g,"-").replace(/-+/g,"-").replace(/^-|-$/g,"").slice(0,90);
       if (slug.length < 3) throw new Error("পণ্যের URL slug কমপক্ষে ৩ অক্ষরের হতে হবে।");
       const {data,error} = await supabase.from("products").insert({
@@ -190,11 +202,11 @@ function MarketplacePage() {
         stock:Number(form.stock||0), status:"active"
       }).select("id").single();
       if (error) throw error;
+      createdProductId = data.id;
       if (productImage) {
-        if (!["image/jpeg","image/png","image/webp"].includes(productImage.type)) throw new Error("শুধু JPG, PNG বা WebP ছবি আপলোড করা যাবে।");
-        if (productImage.size > 5 * 1024 * 1024) throw new Error("ছবির আকার সর্বোচ্চ ৫ MB হতে পারবে।");
         const extension = productImage.type === "image/png" ? "png" : productImage.type === "image/webp" ? "webp" : "jpg";
         const path = user.id + "/" + myStore.id + "/" + data.id + "-" + Date.now() + "." + extension;
+        uploadedImagePath = path;
         const uploaded = await supabase.storage.from("product-images").upload(path,productImage,{contentType:productImage.type,upsert:false});
         if (uploaded.error) throw uploaded.error;
         const imageUrl = supabase.storage.from("product-images").getPublicUrl(uploaded.data.path).data.publicUrl;
@@ -205,7 +217,11 @@ function MarketplacePage() {
         if (image.error) throw image.error;
       }
       setMessage("পণ্য যোগ হয়েছে।"); setForm({}); setProductImage(null);
-    } catch(e:any) { setError(e.message || "পণ্য যোগ করা যায়নি।"); }
+    } catch(e:any) {
+      if (createdProductId) await supabase.from("products").delete().eq("id", createdProductId);
+      if (uploadedImagePath) await supabase.storage.from("product-images").remove([uploadedImagePath]);
+      setError(e.message || "পণ্য যোগ করা যায়নি।");
+    }
     finally { setBusy(false); }
   };
 
