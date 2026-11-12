@@ -59,18 +59,23 @@ function MarketplacePage() {
   const addToCart = (p: Product) => {
     const next = [...cart];
     const found = next.find(x => x.product.id === p.id);
-    if (found) found.quantity = Math.min(99, found.quantity + 1);
+    if (found) found.quantity = Math.min(99, p.stock, found.quantity + 1);
     else next.push({product:p, quantity:1});
     saveCart(next);
     setMessage("পণ্যটি কার্টে যোগ হয়েছে।");
   };
   const changeQty = (id: string, quantity: number) => {
-    saveCart(cart.map(x => x.product.id === id ? {...x, quantity:Math.max(1,Math.min(99,quantity))} : x));
+    const line = cart.find(x => x.product.id === id);
+    if (!line) return;
+    const stock = Math.max(0, Number(line.product.stock) || 0);
+    if (stock < 1) { removeLine(id); return; }
+    saveCart(cart.map(x => x.product.id === id ? {...x, quantity:Math.max(1,Math.min(99,stock,quantity))} : x));
   };
   const removeLine = (id: string) => saveCart(cart.filter(x => x.product.id !== id));
   const subtotal = cart.reduce((n,x) => n + Number(x.product.price)*x.quantity, 0);
 
   useEffect(() => {
+    setLoading(true);
     refreshCart();
     let alive = true;
     (async () => {
@@ -127,7 +132,7 @@ function MarketplacePage() {
     })();
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
     return () => { alive = false; listener.subscription.unsubscribe(); };
-  }, [page]);
+  }, [page, searchStr]);
 
   const selected = useMemo(() => {
     const slug = queryValue("slug", searchStr);
