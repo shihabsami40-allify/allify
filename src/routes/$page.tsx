@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,7 +14,7 @@ type Area = { name_bn: string; name_en: string; fee: number; zone: string };
 type CartLine = { product: Product; quantity: number };
 
 const money = (n: number) => "৳" + Number(n || 0).toLocaleString("bn-BD");
-const queryValue = (key: string) => typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get(key) || "";
+const queryValue = (key: string, searchStr: string) => new URLSearchParams(searchStr).get(key) || "";
 const panel = "rounded-2xl border bg-card p-4 shadow-sm";
 const field = "w-full rounded-lg border bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary";
 const primary = "rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50";
@@ -24,6 +24,8 @@ const linkClass = "text-primary underline-offset-4 hover:underline";
 function MarketplacePage() {
   const { page } = Route.useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchStr = location.searchStr;
   const [user, setUser] = useState<any>(null);
   const [role, setRole] = useState("customer");
   const [products, setProducts] = useState<Product[]>([]);
@@ -76,7 +78,7 @@ function MarketplacePage() {
         // Fetch only what this page needs. Avoid four database round-trips on every route.
         const needsProducts = ["market", "search", "category", "product"].includes(page);
         const needsCategories = ["market", "search", "category", "seller", "seller-dashboard"].includes(page);
-        const needsAreas = page === "checkout";
+        const needsAreas = ["checkout", "seller"].includes(page);
         const [session, cats, productRows, areaRows] = await Promise.all([
           supabase.auth.getSession(),
           needsCategories
@@ -114,7 +116,7 @@ function MarketplacePage() {
           }
           setApplications(appRows.data ?? []);
         }
-        const slug = queryValue("slug");
+        const slug = queryValue("slug", searchStr);
         if (page === "store" && slug) {
           const found = await supabase.from("seller_stores").select("*,products(id,slug,title_bn,price,stock,product_images(url))").eq("slug",slug).maybeSingle();
           setStore(found.data);
@@ -131,14 +133,14 @@ function MarketplacePage() {
     const slug = queryValue("slug");
     if (page === "product") return products.find(p => p.slug === slug);
     return undefined;
-  }, [page, products]);
+  }, [page, products, searchStr]);
 
   const filtered = useMemo(() => {
-    const q = queryValue("q").toLowerCase();
-    const cat = queryValue("category");
+    const q = queryValue("q", searchStr).toLowerCase();
+    const cat = queryValue("category", searchStr);
     return products.filter(p => (!q || (p.title_bn + " " + (p.title_en || "")).toLowerCase().includes(q)) &&
       (!cat || p.category_id === cat || categories.find(c => c.id === p.category_id)?.slug === cat));
-  }, [products,categories,page]);
+  }, [products,categories,page,searchStr]);
 
   const submitAuth = async (e: FormEvent, mode: "login"|"register") => {
     e.preventDefault(); setBusy(true); setError(""); setMessage("");
@@ -158,6 +160,10 @@ function MarketplacePage() {
 
   const submitSeller = async (e: FormEvent) => {
     e.preventDefault(); if (!user) { navigate({to: "/login" as any}); return; }
+    if (applications.some((application) => application.status === "pending")) {
+      setError("তোমার একটি আবেদন ইতিমধ্যে পর্যালোচনার অপেক্ষায় আছে।");
+      return;
+    }
     setBusy(true); setError(""); setMessage("");
     try {
       const {error} = await supabase.from("seller_applications").insert({
@@ -175,7 +181,8 @@ function MarketplacePage() {
     e.preventDefault(); if (!myStore) return;
     setBusy(true); setError(""); setMessage("");
     try {
-      const slug = (form.product_slug || "product-"+Date.now()).toLowerCase().replace(/[^a-z0-9-]/g,"-").replace(/-+/g,"-");
+      const slug = (form.product_slug || "product-"+Date.now()).toLowerCase().replace(/[^a-z0-9-]/g,"-").replace(/-+/g,"-").replace(/^-|-$/g,"").slice(0,90);
+      if (slug.length < 3) throw new Error("পণ্যের URL slug কমপক্ষে ৩ অক্ষরের হতে হবে।");
       const {data,error} = await supabase.from("products").insert({
         store_id:myStore.id, category_id:form.category_id||null, slug,
         title_bn:form.title_bn, title_en:form.title_en||null, description:form.description||null,
@@ -276,9 +283,9 @@ function MarketplacePage() {
   } else if (page === "seller") {
     body = shell("বিক্রেতা হোন",myStore?<div className={panel}>তোমার দোকান চালু আছে: <b>{myStore.name}</b> <Link to={"/seller-dashboard" as any} className={linkClass}>ড্যাশবোর্ড খুলুন</Link></div>:<form onSubmit={submitSeller} className={panel+" max-w-2xl space-y-3"}><p className="text-sm text-muted-foreground">চট্টগ্রামের দোকানদাররা বিনামূল্যে আবেদন করতে পারবেন। অনুমোদনের পর দোকান ও পণ্য যোগ করা যাবে।</p><input required className={field} placeholder="দোকানের নাম" value={form.store_name||""} onChange={e=>set("store_name",e.target.value)}/><input required className={field} placeholder="মালিকের নাম" value={form.owner_name||""} onChange={e=>set("owner_name",e.target.value)}/><input required pattern="01[3-9][0-9]{8}" className={field} placeholder="মোবাইল নম্বর" value={form.phone||""} onChange={e=>set("phone",e.target.value)}/><select required className={field} value={form.area||""} onChange={e=>set("area",e.target.value)}><option value="">দোকানের এলাকা</option>{areas.map(a=><option key={a.name_en} value={a.name_en}>{a.name_bn}</option>)}</select><input required minLength={5} className={field} placeholder="দোকানের ঠিকানা" value={form.address||""} onChange={e=>set("address",e.target.value)}/><input className={field} placeholder="পণ্যের ধরন" value={form.category_hint||""} onChange={e=>set("category_hint",e.target.value)}/><textarea className={field} placeholder="দোকান সম্পর্কে" value={form.description||""} onChange={e=>set("description",e.target.value)}/><button disabled={busy} className={primary}>{busy?"জমা হচ্ছে…":"বিনামূল্যে আবেদন জমা দিন"}</button>{!user&&<p className="text-xs text-muted-foreground">আবেদন করতে আগে <Link to={"/login" as any} className={linkClass}>লগইন</Link> করতে হবে।</p>}</form>);
   } else if (page === "seller-dashboard") {
-    body = shell("বিক্রেতা ড্যাশবোর্ড",myStore?<><div className={panel}><h2 className="font-bold">{myStore.name}</h2><p className="text-sm text-muted-foreground">{myStore.area} · {myStore.status}</p></div><div className={panel+" mt-4"}><h3 className="font-bold">দোকানের অর্ডার</h3>{sellerOrders.length?sellerOrders.map(item=>{const o=item.orders||{};return <div key={item.id} className="mt-3 rounded-xl border p-3"><div className="flex flex-wrap justify-between gap-2"><b>{o.order_no||"অর্ডার"}</b><b>{money(Number(item.unit_price)*Number(item.quantity))}</b></div><p className="mt-1 text-sm">{item.title} × {Number(item.quantity).toLocaleString("bn-BD")}</p><p className="mt-1 text-xs text-muted-foreground">{o.recipient} · {o.phone} · {o.area}</p><p className="mt-1 text-xs text-muted-foreground">{o.address_line}</p><div className="mt-3 flex gap-2"><select aria-label="অর্ডারের অবস্থা" className={field+" max-w-48"} value={item.status} disabled={busy||["delivered","cancelled"].includes(item.status)} onChange={e=>updateSellerOrderStatus(item.id,e.target.value)}><option value="pending">নতুন অর্ডার</option><option value="confirmed">নিশ্চিত</option><option value="shipped">পাঠানো হয়েছে</option><option value="delivered">ডেলিভারি সম্পন্ন</option><option value="cancelled">বাতিল</option></select></div></div>}) : <p className="mt-3 text-sm text-muted-foreground">এখনো কোনো অর্ডার আসেনি।</p>}</div><form onSubmit={submitProduct} className={panel+" mt-4 max-w-2xl space-y-3"}><h3 className="font-bold">নতুন পণ্য যোগ করুন</h3><input required className={field} placeholder="পণ্যের বাংলা নাম" value={form.title_bn||""} onChange={e=>set("title_bn",e.target.value)}/><input className={field} placeholder="English title (optional)" value={form.title_en||""} onChange={e=>set("title_en",e.target.value)}/><input required className={field} placeholder="পণ্যের URL slug (যেমন cotton-panjabi)" value={form.product_slug||""} onChange={e=>set("product_slug",e.target.value)}/><select className={field} value={form.category_id||""} onChange={e=>set("category_id",e.target.value)}><option value="">ক্যাটাগরি</option>{categories.map(c=><option key={c.id} value={c.id}>{c.name_bn}</option>)}</select><textarea className={field} placeholder="পণ্যের বিবরণ" value={form.description||""} onChange={e=>set("description",e.target.value)}/><input required type="number" min="1" className={field} placeholder="বিক্রয় মূল্য" value={form.price||""} onChange={e=>set("price",e.target.value)}/><input type="number" min="0" className={field} placeholder="আগের মূল্য (ঐচ্ছিক)" value={form.compare_price||""} onChange={e=>set("compare_price",e.target.value)}/><input required type="number" min="0" className={field} placeholder="স্টক" value={form.stock||""} onChange={e=>set("stock",e.target.value)}/><label className="block text-sm font-medium">পণ্যের ছবি (JPG, PNG বা WebP; সর্বোচ্চ ৫ MB)<input type="file" accept="image/jpeg,image/png,image/webp" className={field+" mt-1"} onChange={e=>setProductImage(e.target.files?.[0]||null)}/></label><input type="url" className={field} placeholder="অথবা ছবির URL (ঐচ্ছিক)" value={form.image_url||""} onChange={e=>set("image_url",e.target.value)}/><button disabled={busy} className={primary}>পণ্য প্রকাশ করুন</button></form></>:<div className={panel}>বিক্রেতা ড্যাশবোর্ড ব্যবহারের জন্য অনুমোদিত বিক্রেতা অ্যাকাউন্ট প্রয়োজন। <Link to={"/seller" as any} className={linkClass}>বিক্রেতা আবেদন করুন</Link></div>);
+    body = shell("বিক্রেতা ড্যাশবোর্ড",myStore?<><div className={panel}><h2 className="font-bold">{myStore.name}</h2><p className="text-sm text-muted-foreground">{myStore.area} · {myStore.status}</p></div><div className={panel+" mt-4"}><h3 className="font-bold">দোকানের অর্ডার</h3>{sellerOrders.length?sellerOrders.map(item=>{const o=item.orders||{};return <div key={item.id} className="mt-3 rounded-xl border p-3"><div className="flex flex-wrap justify-between gap-2"><b>{o.order_no||"অর্ডার"}</b><b>{money(Number(item.unit_price)*Number(item.quantity))}</b></div><p className="mt-1 text-sm">{item.title} × {Number(item.quantity).toLocaleString("bn-BD")}</p><p className="mt-1 text-xs text-muted-foreground">{o.recipient} · {o.phone} · {o.area}</p><p className="mt-1 text-xs text-muted-foreground">{o.address_line}</p><div className="mt-3 flex gap-2"><select aria-label="অর্ডারের অবস্থা" className={field+" max-w-48"} value={item.status} disabled={busy||["delivered","cancelled"].includes(item.status)} onChange={e=>updateSellerOrderStatus(item.id,e.target.value)}><option value="pending">নতুন অর্ডার</option><option value="confirmed">নিশ্চিত</option><option value="shipped">পাঠানো হয়েছে</option><option value="delivered">ডেলিভারি সম্পন্ন</option><option value="cancelled">বাতিল</option></select></div></div>}) : <p className="mt-3 text-sm text-muted-foreground">এখনো কোনো অর্ডার আসেনি।</p>}</div><form onSubmit={submitProduct} className={panel+" mt-4 max-w-2xl space-y-3"}><h3 className="font-bold">নতুন পণ্য যোগ করুন</h3><input required className={field} placeholder="পণ্যের বাংলা নাম" value={form.title_bn||""} onChange={e=>set("title_bn",e.target.value)}/><input className={field} placeholder="English title (optional)" value={form.title_en||""} onChange={e=>set("title_en",e.target.value)}/><input className={field} placeholder="পণ্যের URL slug (ঐচ্ছিক; না দিলে স্বয়ংক্রিয় হবে)" value={form.product_slug||""} onChange={e=>set("product_slug",e.target.value)}/><select className={field} value={form.category_id||""} onChange={e=>set("category_id",e.target.value)}><option value="">ক্যাটাগরি</option>{categories.map(c=><option key={c.id} value={c.id}>{c.name_bn}</option>)}</select><textarea className={field} placeholder="পণ্যের বিবরণ" value={form.description||""} onChange={e=>set("description",e.target.value)}/><input required type="number" min="1" className={field} placeholder="বিক্রয় মূল্য" value={form.price||""} onChange={e=>set("price",e.target.value)}/><input type="number" min="0" className={field} placeholder="আগের মূল্য (ঐচ্ছিক)" value={form.compare_price||""} onChange={e=>set("compare_price",e.target.value)}/><input required type="number" min="0" className={field} placeholder="স্টক" value={form.stock||""} onChange={e=>set("stock",e.target.value)}/><label className="block text-sm font-medium">পণ্যের ছবি (JPG, PNG বা WebP; সর্বোচ্চ ৫ MB)<input type="file" accept="image/jpeg,image/png,image/webp" className={field+" mt-1"} onChange={e=>setProductImage(e.target.files?.[0]||null)}/></label><input type="url" className={field} placeholder="অথবা ছবির URL (ঐচ্ছিক)" value={form.image_url||""} onChange={e=>set("image_url",e.target.value)}/><button disabled={busy} className={primary}>পণ্য প্রকাশ করুন</button></form></>:<div className={panel}>বিক্রেতা ড্যাশবোর্ড ব্যবহারের জন্য অনুমোদিত বিক্রেতা অ্যাকাউন্ট প্রয়োজন। <Link to={"/seller" as any} className={linkClass}>বিক্রেতা আবেদন করুন</Link></div>);
   } else if (page === "account") {
-    body = shell("আমার অ্যাকাউন্ট",user?<><div className={panel}><p>{user.email}</p><p className="mt-1 text-sm text-muted-foreground">অ্যাকাউন্টের ধরন: {role==="admin"?"অ্যাডমিন":role==="seller"?"বিক্রেতা":"ক্রেতা"}</p><div className="mt-3 flex flex-wrap gap-2"><button className={secondary} onClick={signOut}>লগআউট</button>{role==="seller"&&<Link to={"/seller-dashboard" as any} className={primary}>বিক্রেতা ড্যাশবোর্ড</Link>}{role==="admin"&&<Link to={"/admin" as any} className={primary}>অ্যাডমিন প্যানেল</Link>}</div></div><h2 className="mb-3 mt-6 font-bold">আমার অর্ডার</h2>{orders.length?orders.map(o=><div key={o.id} className={panel+" mb-3"}><div className="flex justify-between gap-2"><b>{o.order_no}</b><span className="text-sm">{o.status}</span></div><p className="mt-1 text-sm">মোট: {money(o.total)} · {o.area}</p><p className="mt-1 text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("bn-BD")}</p></div>):<p className={panel}>এখনো কোনো অর্ডার নেই।</p>}</>:<div className={panel}>অ্যাকাউন্ট দেখতে <Link to={"/login" as any} className={linkClass}>লগইন</Link> করুন।</div>);
+    body = shell("আমার অ্যাকাউন্ট",user?<><div className={panel}><p>{user.email}</p><p className="mt-1 text-sm text-muted-foreground">অ্যাকাউন্টের ধরন: {role==="admin"?"অ্যাডমিন":role==="seller"?"বিক্রেতা":"ক্রেতা"}</p><div className="mt-3 flex flex-wrap gap-2"><button className={secondary} onClick={signOut}>লগআউট</button>{role==="seller"&&<Link to={"/seller-dashboard" as any} className={primary}>বিক্রেতা ড্যাশবোর্ড</Link>}{role==="admin"&&<Link to={"/admin" as any} className={primary}>অ্যাডমিন প্যানেল</Link>}</div></div><h2 className="mb-3 mt-6 font-bold">আমার অর্ডার</h2>{orders.length?orders.map(o=><div key={o.id} className={panel+" mb-3"}><div className="flex justify-between gap-2"><b>{o.order_no}</b><span className="text-sm">{o.status}</span></div><p className="mt-1 text-sm">মোট: {money(o.total)} · {o.area}</p><p className="mt-1 text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("bn-BD")}</p>{(o.order_items||[]).map((item:any)=><div key={item.id} className="mt-2 flex justify-between gap-3 border-t pt-2 text-xs"><span>{item.title} × {Number(item.quantity).toLocaleString("bn-BD")}</span><span>{item.status}</span></div>)}</div>):<p className={panel}>এখনো কোনো অর্ডার নেই।</p>}</>:<div className={panel}>অ্যাকাউন্ট দেখতে <Link to={"/login" as any} className={linkClass}>লগইন</Link> করুন।</div>);
   } else if (page === "admin") {
     body = shell("অ্যাডমিন প্যানেল",role==="admin"?<><div className={panel}><p>বিক্রেতা আবেদন: {applications.length.toLocaleString("bn-BD")}</p><p className="text-xs text-muted-foreground">এই অ্যাকাউন্টে অ্যাডমিন ভূমিকা থাকলে ডাটাবেস নীতিমালা অনুযায়ী তথ্য দেখা যাবে।</p></div><div className="mt-4 space-y-3">{applications.map(a=><div className={panel} key={a.id}><b>{a.store_name}</b><p className="text-sm">{a.owner_name} · {a.phone} · {a.area}</p><p className="text-xs text-muted-foreground">স্ট্যাটাস: {a.status}</p>{a.status==="pending"&&<div className="mt-3 flex gap-2"><button disabled={busy} className={primary} onClick={()=>reviewApplication(a.id,true)}>অনুমোদন</button><button disabled={busy} className={secondary} onClick={()=>reviewApplication(a.id,false)}>বাতিল</button></div>}</div>)}</div></>:<div className={panel}>এই পৃষ্ঠাটি শুধু অনুমোদিত অ্যাডমিনদের জন্য।</div>);
   } else {
