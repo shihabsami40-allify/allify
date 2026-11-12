@@ -130,7 +130,7 @@ function MarketplacePage() {
   }, [page]);
 
   const selected = useMemo(() => {
-    const slug = queryValue("slug");
+    const slug = queryValue("slug", searchStr);
     if (page === "product") return products.find(p => p.slug === slug);
     return undefined;
   }, [page, products, searchStr]);
@@ -267,7 +267,7 @@ function MarketplacePage() {
   let body:any;
   if (page === "search" || page === "category" || page === "market") {
     const title = page==="search" ? "পণ্য খুঁজুন" : page==="category" ? "ক্যাটাগরি অনুযায়ী পণ্য" : "সব পণ্য";
-    body = shell(title,<><form className="mb-5 flex gap-2" onSubmit={e=>{e.preventDefault();navigate({to: "/search" as any,search:{q:form.q||""} as any});}}><input className={field} placeholder="পণ্যের নাম লিখুন…" value={form.q??queryValue("q")} onChange={e=>set("q",e.target.value)}/><button className={primary}>খুঁজুন</button></form><div className="mb-5 flex flex-wrap gap-2">{categories.map(c=><Link key={c.id} to={"/category" as any} search={{category:c.slug} as any} className={secondary}>{c.name_bn}</Link>)}</div><div className="grid grid-cols-2 gap-3 md:grid-cols-4">{filtered.map(productCard)}</div>{!filtered.length&&<p className={panel}>এই অনুসন্ধানে কোনো পণ্য পাওয়া যায়নি।</p>}</>);
+    body = shell(title,<><form className="mb-5 flex gap-2" onSubmit={e=>{e.preventDefault();navigate({to: "/search" as any,search:{q:form.q||""} as any});}}><input className={field} placeholder="পণ্যের নাম লিখুন…" value={form.q??queryValue("q", searchStr)} onChange={e=>set("q",e.target.value)}/><button className={primary}>খুঁজুন</button></form><div className="mb-5 flex flex-wrap gap-2">{categories.map(c=><Link key={c.id} to={"/category" as any} search={{category:c.slug} as any} className={secondary}>{c.name_bn}</Link>)}</div><div className="grid grid-cols-2 gap-3 md:grid-cols-4">{filtered.map(productCard)}</div>{!filtered.length&&<p className={panel}>এই অনুসন্ধানে কোনো পণ্য পাওয়া যায়নি।</p>}</>);
   } else if (page === "product") {
     const p = selected;
     body = shell("পণ্যের বিবরণ",p ? <div className="grid gap-6 md:grid-cols-2"><img src={p.product_images?.[0]?.url||"/images/products/panjabi.jpg"} onError={(e) => { e.currentTarget.style.display = "none"; }} className="w-full rounded-2xl border bg-muted object-cover" alt={p.title_bn}/><div><h1 className="text-2xl font-bold">{p.title_bn}</h1><p className="mt-2 text-sm text-muted-foreground">{p.seller_stores?.name}</p><p className="mt-4 text-2xl font-bold text-primary">{money(p.price)}</p>{p.compare_price&&<s className="text-muted-foreground">{money(p.compare_price)}</s>}<p className="mt-4 whitespace-pre-wrap text-sm leading-7">{p.description||"বিস্তারিত তথ্য শিগগিরই যোগ করা হবে।"}</p><p className="mt-3 text-sm">স্টক: {p.stock.toLocaleString("bn-BD")}</p><button className={primary+" mt-5"} disabled={!p.stock} onClick={()=>addToCart(p)}>কার্টে যোগ করুন</button><p className="mt-4 text-xs text-muted-foreground">পেমেন্ট: ক্যাশ অন ডেলিভারি</p></div></div>:<p className={panel}>পণ্যটি পাওয়া যায়নি। <Link to={"/market" as any} className={linkClass}>সব পণ্য দেখুন</Link></p>);
