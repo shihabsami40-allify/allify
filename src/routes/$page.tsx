@@ -38,6 +38,7 @@ function MarketplacePage() {
   const [error, setError] = useState("");
   const [form, setForm] = useState<Record<string,string>>({});
   const [store, setStore] = useState<any>(null);
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [sellerOrders, setSellerOrders] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
@@ -122,8 +123,16 @@ function MarketplacePage() {
           setApplications(appRows.data ?? []);
         }
         const slug = queryValue("slug", searchStr);
-        if (page === "store" && slug) {
-          const found = await supabase.from("seller_stores").select("*,products(id,slug,title_bn,price,stock,product_images(url))").eq("slug",slug).maybeSingle();
+        if (page === "product" && slug) {
+          setDetailProduct(null);
+          const found = await supabase.from("products")
+            .select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area)")
+            .eq("slug", slug).eq("status", "active").maybeSingle();
+          if (found.error) throw found.error;
+          setDetailProduct(found.data as Product | null);
+        } else if (page === "store" && slug) {
+          const found = await supabase.from("seller_stores").select("*,products(id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area))").eq("slug",slug).maybeSingle();
+          if (found.error) throw found.error;
           setStore(found.data);
         }
       } catch (e:any) {
@@ -134,11 +143,7 @@ function MarketplacePage() {
     return () => { alive = false; listener.subscription.unsubscribe(); };
   }, [page, searchStr]);
 
-  const selected = useMemo(() => {
-    const slug = queryValue("slug", searchStr);
-    if (page === "product") return products.find(p => p.slug === slug);
-    return undefined;
-  }, [page, products, searchStr]);
+  const selected = useMemo(() => page === "product" ? detailProduct : undefined, [page, detailProduct]);
 
   const filtered = useMemo(() => {
     const q = queryValue("q", searchStr).toLowerCase();
