@@ -19,6 +19,10 @@ This is a functional MVP codebase, not yet a fully launch-ready commercial marke
 
 The GitHub Actions build currently runs with Bun. A successful build confirms compilation, not complete end-to-end behavior.
 
+## Database migration required for order tracking
+
+The migration `drizzle/migrations/0003_order_status_lifecycle.sql` adds server-side order-status transition rules and keeps the customer-visible order status synchronized with seller-managed order items. Apply this SQL to the connected Supabase project before testing seller order updates. A GitHub commit or Cloudflare deployment does not apply SQL migrations to Supabase automatically. Do not re-run the initial schema/seed migration against an existing production database.
+
 ## Integrations
 
 - Cash on delivery only; no online payment gateway is configured.
