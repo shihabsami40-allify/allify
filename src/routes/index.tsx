@@ -26,7 +26,7 @@ type StoreProduct = {
   stock: number;
   category_id?: string | null;
   product_images?: { url: string }[];
-  seller_stores?: { name: string } | null;
+  seller_stores?: { name: string; is_demo?: boolean } | null;
 };
 
 const bdt = (n: number) => "৳ " + Number(n || 0).toLocaleString("bn-BD");
@@ -60,7 +60,7 @@ function Index() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id,slug,title_bn,price,compare_price,stock,category_id,product_images(url),seller_stores(name)")
+        .select("id,slug,title_bn,price,compare_price,stock,category_id,product_images(url),seller_stores(name,is_demo)")
         .eq("status", "active")
         .order("sold_count", { ascending: false })
         .limit(12);
@@ -206,7 +206,7 @@ function Index() {
                 </div>
                 <div className="p-3">
                   <h3 className="line-clamp-2 text-sm font-bold">{product.title_bn}</h3>
-                  <p className="mt-1 text-[10px]" style={{ color: "#687571" }}>{product.seller_stores?.name || "স্থানীয় দোকান"}</p>
+                  <p className="mt-1 text-[10px]" style={{ color: "#687571" }}>{product.seller_stores?.name || "স্থানীয় দোকান"}{product.seller_stores?.is_demo ? " · নমুনা দোকান" : ""}</p>
                   <p className="mt-2 font-black" style={{ color: "#123b32" }}>{bdt(product.price)} {product.compare_price ? <s className="ml-1 text-[10px] font-normal text-gray-400">{bdt(product.compare_price)}</s> : null}</p>
                 </div>
               </a>
