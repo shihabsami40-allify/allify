@@ -30,7 +30,14 @@ begin
 
   return new;
 end;
-$$;
+$;
+
+-- Enforce the transition guard for every direct order-item update.
+drop trigger if exists order_items_guard_update on public.order_items;
+create trigger order_items_guard_update
+before update on public.order_items
+for each row
+execute function public.guard_order_item_update();
 
 create or replace function public.sync_order_status_from_items()
 returns trigger
