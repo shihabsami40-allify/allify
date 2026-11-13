@@ -8,7 +8,7 @@ type Product = {
   id: string; slug: string; title_bn: string; title_en?: string | null;
   description?: string | null; price: number; compare_price?: number | null;
   stock: number; category_id?: string | null;
-  product_images?: { url: string }[]; seller_stores?: { id?: string; name: string; slug?: string; area?: string };
+  product_images?: { url: string }[]; seller_stores?: { id?: string; name: string; slug?: string; area?: string; is_demo?: boolean };
 };
 type Area = { name_bn: string; name_en: string; fee: number; zone: string };
 type CartLine = { product: Product; quantity: number };
@@ -105,7 +105,7 @@ function MarketplacePage() {
             ? supabase.from("categories").select("id,slug,name_bn,name_en,sort_order").order("sort_order")
             : Promise.resolve({ data: [] as any[] }),
           needsProducts
-            ? supabase.from("products").select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area)").eq("status","active").order("sold_count",{ascending:false}).limit(48)
+            ? supabase.from("products").select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),undefined").eq("status","active").order("sold_count",{ascending:false}).limit(48)
             : Promise.resolve({ data: [] as any[] }),
           needsAreas
             ? supabase.from("delivery_areas").select("name_bn,name_en,fee,zone").eq("active",true).order("sort_order")
@@ -152,12 +152,12 @@ function MarketplacePage() {
         if (page === "product" && slug) {
           setDetailProduct(null);
           const found = await supabase.from("products")
-            .select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area)")
+            .select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),undefined")
             .eq("slug", slug).eq("status", "active").maybeSingle();
           if (found.error) throw found.error;
           setDetailProduct(found.data as Product | null);
         } else if (page === "store" && slug) {
-          const found = await supabase.from("seller_stores").select("*,products(id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area))").eq("slug",slug).maybeSingle();
+          const found = await supabase.from("seller_stores").select("*,products(id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),undefined)").eq("slug",slug).maybeSingle();
           if (found.error) throw found.error;
           setStore(found.data);
         }
@@ -339,7 +339,7 @@ function MarketplacePage() {
       <img src={p.product_images?.[0]?.url || "/images/products/panjabi.jpg"} alt={p.title_bn} loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }} className="aspect-square w-full bg-muted object-cover"/>
     </Link>
     <div className="p-3"><Link to={"/product" as any} search={{slug:p.slug} as any} className="line-clamp-2 text-sm font-semibold hover:text-primary">{p.title_bn}</Link>
-      <p className="mt-1 text-xs text-muted-foreground">{p.seller_stores?.name || "স্থানীয় দোকান"}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{p.seller_stores?.name || "স্থানীয় দোকান"}{p.seller_stores?.is_demo ? " · নমুনা দোকান" : ""}</p>
       <p className="mt-1 font-bold text-primary">{money(p.price)} {p.compare_price ? <s className="text-xs font-normal text-muted-foreground">{money(p.compare_price)}</s> : null}</p>
       <p className="text-xs text-muted-foreground">স্টক: {p.stock.toLocaleString("bn-BD")}</p>
       <button className={primary+" mt-3 w-full"} onClick={()=>addToCart(p)} disabled={p.stock<1}>কার্টে যোগ করুন</button>
