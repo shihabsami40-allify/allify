@@ -21,13 +21,13 @@ The GitHub Actions build currently runs with Bun. A successful build confirms co
 
 ## Database migration required for order tracking
 
-The migration `drizzle/migrations/0003_order_status_lifecycle.sql` adds server-side order-status transition rules and keeps the customer-visible order status synchronized with seller-managed order items. Apply this SQL to the connected Supabase project before testing seller order updates. A GitHub commit or Cloudflare deployment does not apply SQL migrations to Supabase automatically. Do not re-run the initial schema/seed migration against an existing production database.
+The migrations `drizzle/migrations/0002_product_image_bucket.sql` and `drizzle/migrations/0003_order_status_lifecycle.sql` configure the seller image bucket and add server-side order-status transition rules, keeping the customer-visible order status synchronized with seller-managed order items. Apply both SQL files in order to the connected Supabase project before testing seller image uploads or seller order updates. A GitHub commit or Cloudflare deployment does not apply SQL migrations to Supabase automatically. Do not re-run the initial schema/seed migration against an existing production database.
 
 ## Integrations
 
 - Cash on delivery only; no online payment gateway is configured.
-- No courier API, production email/SMS, or public image-storage upload is configured.
-- Seller product image URLs can be supplied manually; validate image ownership and safety before launch.
+- No courier API or production email/SMS integration is configured.
+- Seller image uploads use the `product-images` public Supabase Storage bucket. Apply migration `0002_product_image_bucket.sql` before enabling uploads; the bucket accepts JPG, PNG and WebP up to 5 MB. Public image URLs are readable by design; upload/delete paths are restricted to the signed-in seller's user folder.
 - Missing local product images fall back gracefully in the UI.
 
 ## Stack
