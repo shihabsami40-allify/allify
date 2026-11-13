@@ -42,6 +42,8 @@ function MarketplacePage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [sellerOrders, setSellerOrders] = useState<any[]>([]);
   const [sellerProducts, setSellerProducts] = useState<any[]>([]);
+  const [adminProducts, setAdminProducts] = useState<any[]>([]);
+  const [adminOrders, setAdminOrders] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
   const [myStore, setMyStore] = useState<any>(null);
   const [productImage, setProductImage] = useState<File | null>(null);
@@ -112,6 +114,14 @@ function MarketplacePage() {
             supabase.from("seller_stores").select("*").eq("owner_id",uid).maybeSingle(),
             supabase.from("orders").select("*,order_items(*)").eq("customer_id",uid).order("created_at",{ascending:false}).limit(30)
           ]);
+          if (roles.includes("admin")) {
+            const [productRows, allOrderRows] = await Promise.all([
+              supabase.from("products").select("id,title_bn,price,stock,status,seller_stores(name)").order("created_at",{ascending:false}).limit(100),
+              supabase.from("orders").select("id,order_no,status,total,recipient,phone,area,created_at").order("created_at",{ascending:false}).limit(100)
+            ]);
+            setAdminProducts(productRows.data ?? []);
+            setAdminOrders(allOrderRows.data ?? []);
+          }
           const appRows = roles.includes("admin")
             ? await supabase.from("seller_applications").select("*").order("created_at",{ascending:false}).limit(100)
             : await supabase.from("seller_applications").select("*").eq("user_id",uid).order("created_at",{ascending:false}).limit(10);
@@ -251,6 +261,17 @@ function MarketplacePage() {
     finally { setBusy(false); }
   };
 
+  const updateAdminProduct = async (id:string, status:string) => {
+    setBusy(true); setError(""); setMessage("");
+    try {
+      const {error} = await supabase.from("products").update({status}).eq("id",id);
+      if (error) throw error;
+      setAdminProducts(rows=>rows.map(p=>p.id===id?{...p,status}:p));
+      setMessage("পণ্যের প্রকাশ-অবস্থা আপডেট হয়েছে।");
+    } catch(e:any) { setError(e.message || "পণ্য আপডেট করা যায়নি।"); }
+    finally { setBusy(false); }
+  };
+
   const reviewApplication = async (id:string, approve:boolean) => {
     setBusy(true); setError(""); setMessage("");
     try {
@@ -329,7 +350,7 @@ function MarketplacePage() {
   } else if (page === "account") {
     body = shell("আমার অ্যাকাউন্ট",user?<><div className={panel}><p>{user.email}</p><p className="mt-1 text-sm text-muted-foreground">অ্যাকাউন্টের ধরন: {role==="admin"?"অ্যাডমিন":role==="seller"?"বিক্রেতা":"ক্রেতা"}</p><div className="mt-3 flex flex-wrap gap-2"><button className={secondary} onClick={signOut}>লগআউট</button>{role==="seller"&&<Link to={"/seller-dashboard" as any} className={primary}>বিক্রেতা ড্যাশবোর্ড</Link>}{role==="admin"&&<Link to={"/admin" as any} className={primary}>অ্যাডমিন প্যানেল</Link>}</div></div><h2 className="mb-3 mt-6 font-bold">আমার অর্ডার</h2>{orders.length?orders.map(o=><div key={o.id} className={panel+" mb-3"}><div className="flex justify-between gap-2"><b>{o.order_no}</b><span className="text-sm">{o.status}</span></div><p className="mt-1 text-sm">মোট: {money(o.total)} · {o.area}</p><p className="mt-1 text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("bn-BD")}</p>{(o.order_items||[]).map((item:any)=><div key={item.id} className="mt-2 flex justify-between gap-3 border-t pt-2 text-xs"><span>{item.title} × {Number(item.quantity).toLocaleString("bn-BD")}</span><span>{item.status}</span></div>)}</div>):<p className={panel}>এখনো কোনো অর্ডার নেই।</p>}</>:<div className={panel}>অ্যাকাউন্ট দেখতে <Link to={"/login" as any} className={linkClass}>লগইন</Link> করুন।</div>);
   } else if (page === "admin") {
-    body = shell("অ্যাডমিন প্যানেল",role==="admin"?<><div className={panel}><p>বিক্রেতা আবেদন: {applications.length.toLocaleString("bn-BD")}</p><p className="text-xs text-muted-foreground">এই অ্যাকাউন্টে অ্যাডমিন ভূমিকা থাকলে ডাটাবেস নীতিমালা অনুযায়ী তথ্য দেখা যাবে।</p></div><div className="mt-4 space-y-3">{applications.map(a=><div className={panel} key={a.id}><b>{a.store_name}</b><p className="text-sm">{a.owner_name} · {a.phone} · {a.area}</p><p className="text-xs text-muted-foreground">স্ট্যাটাস: {a.status}</p>{a.status==="pending"&&<div className="mt-3 flex gap-2"><button disabled={busy} className={primary} onClick={()=>reviewApplication(a.id,true)}>অনুমোদন</button><button disabled={busy} className={secondary} onClick={()=>reviewApplication(a.id,false)}>বাতিল</button></div>}</div>)}</div></>:<div className={panel}>এই পৃষ্ঠাটি শুধু অনুমোদিত অ্যাডমিনদের জন্য।</div>);
+    body = shell("অ্যাডমিন প্যানেল",role==="admin"?<><div className={panel}><p>বিক্রেতা আবেদন: {applications.length.toLocaleString("bn-BD")}</p><p className="text-xs text-muted-foreground">এই অ্যাকাউন্টে অ্যাডমিন ভূমিকা থাকলে ডাটাবেস নীতিমালা অনুযায়ী তথ্য দেখা যাবে।</p></div><div className="mt-4 space-y-3">{applications.map(a=><div className={panel} key={a.id}><b>{a.store_name}</b><p className="text-sm">{a.owner_name} · {a.phone} · {a.area}</p><p className="text-xs text-muted-foreground">স্ট্যাটাস: {a.status}</p>{a.status==="pending"&&<div className="mt-3 flex gap-2"><button disabled={busy} className={primary} onClick={()=>reviewApplication(a.id,true)}>অনুমোদন</button><button disabled={busy} className={secondary} onClick={()=>reviewApplication(a.id,false)}>বাতিল</button></div>}</div>)}</div><div className={panel+" mt-5"}><h2 className="font-bold">পণ্য নিয়ন্ত্রণ</h2>{adminProducts.length?adminProducts.map(p=><div key={p.id} className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3"><div className="min-w-0 flex-1"><b className="text-sm">{p.title_bn}</b><p className="text-xs text-muted-foreground">{p.seller_stores?.name||"দোকান"} · {money(Number(p.price))} · স্টক {Number(p.stock).toLocaleString("bn-BD")}</p></div><span className="text-xs">{p.status}</span><button disabled={busy} className={secondary+" text-xs"} onClick={()=>updateAdminProduct(p.id,p.status==="active"?"hidden":"active")}>{p.status==="active"?"লুকান":"প্রকাশ করুন"}</button></div>):<p className="mt-2 text-sm text-muted-foreground">কোনো পণ্য পাওয়া যায়নি।</p>}</div><div className={panel+" mt-5"}><h2 className="font-bold">সাম্প্রতিক অর্ডার</h2>{adminOrders.length?adminOrders.map(o=><div key={o.id} className="mt-3 flex flex-wrap justify-between gap-2 border-t pt-3 text-sm"><div><b>{o.order_no}</b><p className="text-xs text-muted-foreground">{o.recipient} · {o.phone} · {o.area}</p></div><div className="text-right"><b>{money(Number(o.total))}</b><p className="text-xs text-muted-foreground">{o.status}</p></div></div>):<p className="mt-2 text-sm text-muted-foreground">কোনো অর্ডার পাওয়া যায়নি।</p>}</div></>:<div className={panel}>এই পৃষ্ঠাটি শুধু অনুমোদিত অ্যাডমিনদের জন্য।</div>);
   } else {
     body = shell("পৃষ্ঠাটি পাওয়া যায়নি",<div className={panel}>এই পৃষ্ঠাটি এখনো তৈরি হয়নি। <Link to={"/market" as any} className={linkClass}>বাজারে ফিরে যান</Link></div>);
   }
