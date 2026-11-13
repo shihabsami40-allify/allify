@@ -83,12 +83,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "ALLIFY" },
       { name: "description", content: "ALLIFY — Chattogram digital bazaar" },
-      { name: "author", content: "Lovable" },
+      { name: "author", content: "ALLIFY" },
       { property: "og:title", content: "ALLIFY" },
       { property: "og:description", content: "ALLIFY — Chattogram digital bazaar" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "ALLIFY" },
+      { name: "twitter:description", content: "চট্টগ্রামের স্থানীয় ব্যবসার ডিজিটাল ঠিকানা।" },
     ],
     links: [
       {
