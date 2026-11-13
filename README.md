@@ -10,12 +10,13 @@ Bengali-first multi-vendor marketplace for Chattogram, Bangladesh.
 - Email/password sign-up, sign-in, customer account and order history
 - Seller application workflow and seller product publishing
 - Admin seller-application review through the protected `review_seller_application` RPC
+- Seller stock and product visibility controls; admin product moderation and order-item status controls
 - Chattogram delivery areas and BDT pricing
 - Seed/demo catalog and demo labels
 
 ## Important launch limitations
 
-This is a functional MVP codebase, not yet a fully launch-ready commercial marketplace. Before taking real orders, complete the deployment and live browser tests, set production environment variables, create the first admin through a trusted Supabase dashboard/service-role process, and verify RLS using customer, seller and admin accounts. The initial admin must never be self-claimed through public signup.
+This is a functional MVP codebase, not yet a fully launch-ready commercial marketplace. Before taking real orders, complete the deployment and live browser tests, set production environment variables, apply the pending migrations, create the first admin through a trusted Supabase dashboard/service-role process, and verify RLS and order workflows using customer, seller and admin accounts. The admin order screen updates individual order items; confirm the parent order status synchronization against the live database before launch. The initial admin must never be self-claimed through public signup.
 
 The GitHub Actions build currently runs with Bun. A successful build confirms compilation, not complete end-to-end behavior.
 
