@@ -152,12 +152,12 @@ function MarketplacePage() {
         if (page === "product" && slug) {
           setDetailProduct(null);
           const found = await supabase.from("products")
-            .select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),undefined")
+            .select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area,is_demo)")
             .eq("slug", slug).eq("status", "active").maybeSingle();
           if (found.error) throw found.error;
           setDetailProduct(found.data as Product | null);
         } else if (page === "store" && slug) {
-          const found = await supabase.from("seller_stores").select("*,products(id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),undefined)").eq("slug",slug).maybeSingle();
+          const found = await supabase.from("seller_stores").select("*,products(id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area,is_demo))").eq("slug",slug).maybeSingle();
           if (found.error) throw found.error;
           setStore(found.data);
         }
