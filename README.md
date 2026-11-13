@@ -22,7 +22,7 @@ The GitHub Actions build currently runs with Bun. A successful build confirms co
 
 ## Database migration required for order tracking
 
-The migrations `drizzle/migrations/0002_product_image_bucket.sql` and `drizzle/migrations/0003_order_status_lifecycle.sql` configure the seller image bucket and add server-side order-status transition rules, keeping the customer-visible order status synchronized with seller-managed order items. Apply both SQL files in order to the connected Supabase project before testing seller image uploads or seller order updates. A GitHub commit or Cloudflare deployment does not apply SQL migrations to Supabase automatically. Do not re-run the initial schema/seed migration against an existing production database.
+The migrations `drizzle/migrations/0002_product_image_bucket.sql` and `drizzle/migrations/0003_order_status_lifecycle.sql` configure the seller image bucket and its owner-folder storage policies, and add server-side order-status transition rules that synchronize the customer-visible order status with seller-managed order items. Apply both SQL files in order to the **original Lovable-provisioned database** (`htsvvotamlxlkncksssq`) before testing seller image uploads or seller order updates. The newly connected Supabase project is separate and is not the app's configured backend. A GitHub commit or Cloudflare deployment does not apply SQL migrations to the database automatically. These two migrations are designed to be re-runnable; do not re-run the initial schema/seed migration against an existing production database.
 
 ## Integrations
 
@@ -41,7 +41,7 @@ The migrations `drizzle/migrations/0002_product_image_bucket.sql` and `drizzle/m
 
 - Never commit `.env`, credentials, access tokens, or Supabase service-role keys.
 - The unsafe first-user admin-claim function was removed from the live database and by migration `0001_remove_first_admin_claim.sql`.
-- Bootstrap the initial admin only through a trusted dashboard/service-role process.
+- Bootstrap the initial admin only through a trusted dashboard/service-role process after confirming the exact Auth user's UUID. Never add a public signup/admin-claim RPC and never guess the account UUID. The app currently cannot verify an admin account until that role is assigned.
 - Review row-level security policies before launch.
 
 ## Build and test
@@ -72,4 +72,4 @@ Also set these Worker runtime variables for server-side Supabase requests:
 
 Only use the Supabase publishable/anon key in the browser. Never put a service-role key in build variables or client code. The Supabase URL and publishable key must come from the connected project; do not guess them.
 
-Cloudflare account authorization and connecting the GitHub repository are account-owner actions. After the first setup, pushes to `main` can trigger deployment automatically. Free-plan limits apply; check current Cloudflare limits before a public launch.
+Cloudflare account authorization and connecting the GitHub repository are account-owner actions. After the first setup, pushes to `main` can trigger deployment automatically. Account authorization, GitHub-to-Cloudflare connection, production variables and first deployment require the account owner. Free-plan limits apply; check current Cloudflare limits before a public launch.
