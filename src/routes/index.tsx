@@ -91,8 +91,20 @@ function Index() {
       const saved = JSON.parse(localStorage.getItem("allify-cart") || "[]");
       const next = Array.isArray(saved) ? [...saved] : [];
       const found = next.find((row: any) => row.product?.id === product.id);
-      if (found) found.quantity = Math.min(99, Number(found.quantity || 0) + 1);
-      else next.push({ product, quantity: 1 });
+      const stockLimit = Math.max(0, Math.min(99, Number(product.stock) || 0));
+      if (stockLimit < 1) {
+        setToast("এই পণ্যটি বর্তমানে স্টকে নেই");
+        window.setTimeout(() => setToast(""), 2200);
+        return;
+      }
+      if (found) {
+        if (Number(found.quantity || 0) >= stockLimit) {
+          setToast("স্টকে থাকা সর্বোচ্চ পরিমাণ কার্টে যোগ করা হয়েছে");
+          window.setTimeout(() => setToast(""), 2200);
+          return;
+        }
+        found.quantity = Number(found.quantity || 0) + 1;
+      } else next.push({ product, quantity: 1 });
       localStorage.setItem("allify-cart", JSON.stringify(next));
       setCartCount(next.reduce((n: number, row: any) => n + Number(row.quantity || 0), 0));
       setToast("পণ্যটি কার্টে যোগ হয়েছে");
