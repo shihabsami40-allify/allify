@@ -75,3 +75,8 @@ after update of status on public.order_items
 for each row
 when (old.status is distinct from new.status)
 execute function public.sync_order_status_from_items();
+
+
+-- Trigger functions are invoked by their triggers, not directly by clients.
+revoke all on function public.guard_order_item_update() from public, anon, authenticated;
+revoke all on function public.sync_order_status_from_items() from public, anon, authenticated;
