@@ -30,7 +30,7 @@ begin
 
   return new;
 end;
-$;
+$$;
 
 -- Enforce the transition guard for every direct order-item update.
 drop trigger if exists order_items_guard_update on public.order_items;
