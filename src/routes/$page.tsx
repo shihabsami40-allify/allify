@@ -61,11 +61,22 @@ function MarketplacePage() {
     localStorage.setItem("allify-cart", JSON.stringify(next));
   };
   const addToCart = (p: Product) => {
+    const stock = Math.max(0, Math.min(99, Number(p.stock) || 0));
+    if (stock < 1) {
+      setError("এই পণ্যটি বর্তমানে স্টকে নেই।");
+      return;
+    }
     const next = [...cart];
     const found = next.find(x => x.product.id === p.id);
-    if (found) found.quantity = Math.min(99, p.stock, found.quantity + 1);
-    else next.push({product:p, quantity:1});
+    if (found) {
+      if (found.quantity >= stock) {
+        setError("স্টকে থাকা সর্বোচ্চ পরিমাণ কার্টে যোগ করা হয়েছে।");
+        return;
+      }
+      found.quantity += 1;
+    } else next.push({product:p, quantity:1});
     saveCart(next);
+    setError("");
     setMessage("পণ্যটি কার্টে যোগ হয়েছে।");
   };
   const changeQty = (id: string, quantity: number) => {
