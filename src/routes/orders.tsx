@@ -1,7 +1,38 @@
 import {createFileRoute,Link} from '@tanstack/react-router';
-import {metadata,money,statusName} from '@/lib/marketplace';
+import {useQuery} from '@tanstack/react-query';
+import {metadata,money,statusName,type Status} from '@/lib/marketplace';
 import {useMarket} from '@/components/market-provider';
+import {supabase} from '@/integrations/supabase/client';
 import {PageTitle,Empty} from '@/components/market-shell';
 import {Button} from '@/components/ui/button';
-export const Route=createFileRoute('/orders')({head:()=>metadata('আমার ডেমো অর্ডার','ALLIFY ব্রাউজারে সংরক্ষিত ডেমো অর্ডারের তালিকা।'),component:Orders});
-function Orders(){const {demoOrders}=useMarket();return <main className="page-wrap py-9"><PageTitle eyebrow="YOUR ORDERS" title="আমার ডেমো অর্ডার"/><p className="notice mb-7">সব অর্ডার পরীক্ষামূলক; কোনো টাকা দিতে হবে না, বাস্তব ডেলিভারি হবে না।</p>{demoOrders.length?<div className="space-y-5">{demoOrders.map(o=><article key={o.id} className="rounded-lg border bg-card p-5"><div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-semibold">{o.id}</h2><p className="text-sm text-muted-foreground">{o.area} • ডেমো COD</p></div><span className="text-sm text-primary">{statusName[o.status]}</span></div><div className="my-4 border-y py-3">{o.items.map((l,i)=><p key={i} className="flex justify-between gap-4 py-1 text-sm"><span>{l.title} × {l.quantity}</span><span>{money(l.price*l.quantity)}</span></p>)}</div><p className="text-right font-semibold">নমুনা মোট {money(o.total)}</p></article>)}</div>:<Empty title="এখনো ডেমো অর্ডার নেই"><Button asChild><Link to="/browse" search={{q:'',category:'',sort:'popular'}}>পণ্য দেখুন</Link></Button></Empty>}</main>;}
+
+export const Route=createFileRoute('/orders')({head:()=>metadata('আমার অর্ডার','ALLIFY-তে আপনার বাস্তব অর্ডারের অবস্থা ও বিবরণ।'),component:Orders});
+function Orders(){
+ const {user,authReady}=useMarket();
+ const q=useQuery({
+  queryKey:['customer-orders',user?.id],
+  enabled:!!user,
+  queryFn:async()=>{
+   if(!user) return [];
+   const {data:orders,error}=await supabase.from('orders').select('*').eq('customer_id',user.id).order('created_at',{ascending:false});
+   if(error)throw error;
+   if(!orders.length)return [];
+   const {data:items,error:itemError}=await supabase.from('order_items').select('*').in('order_id',orders.map(o=>o.id));
+   if(itemError)throw itemError;
+   return orders.map(order=>({...order,items:(items??[]).filter(item=>item.order_id===order.id)}));
+  }
+ });
+ if(!authReady)return <main className="page-wrap py-9">অ্যাকাউন্ট যাচাই হচ্ছে…</main>;
+ if(!user)return <main className="page-wrap py-9"><Empty title="আপনার অর্ডার দেখতে লগইন করুন"><Button asChild><Link to="/auth">লগইন করুন</Link></Button></Empty></main>;
+ if(q.isPending)return <main className="page-wrap py-9">আপনার অর্ডার লোড হচ্ছে…</main>;
+ if(q.isError)return <main className="page-wrap py-9"><Empty title="অর্ডার লোড করা যায়নি"><Button variant="outline" onClick={()=>q.refetch()}>আবার চেষ্টা করুন</Button></Empty></main>;
+ return <main className="page-wrap py-9">
+  <PageTitle eyebrow="ORDER HISTORY" title="আমার অর্ডার"/>
+  {q.data.length?<div className="space-y-5">{q.data.map(order=><article key={order.id} className="rounded-lg border bg-card p-5">
+   <div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-semibold">{order.order_no}</h2><p className="text-sm text-muted-foreground">{order.area} • {new Date(order.created_at).toLocaleString('bn-BD')}</p></div><span className="text-sm text-primary">{statusName[order.status as Status]}</span></div>
+   <div className="my-4 border-y py-3">{order.items.map(item=><p key={item.id} className="flex justify-between gap-4 py-1 text-sm"><span>{item.title} × {item.quantity}</span><span>{money(item.unit_price*item.quantity)}</span></p>)}</div>
+   <p className="text-sm text-muted-foreground">প্রাপক: {order.recipient} • {order.phone}</p><p className="mt-1 text-sm text-muted-foreground">{order.address_line}</p>
+   <div className="mt-4 flex justify-between border-t pt-3 text-sm"><span>ডেলিভারি চার্জ: {money(order.delivery_fee)}</span><strong>সর্বমোট: {money(order.total)}</strong></div>
+  </article>)}</div>:<Empty title="এখনো কোনো অর্ডার করেননি"><Button asChild><Link to="/browse" search={{q:'',category:'',sort:'popular'}}>পণ্য দেখুন</Link></Button></Empty>}
+ </main>;
+}
