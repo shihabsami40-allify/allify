@@ -1,0 +1,54 @@
+import { createServerFn } from '@tanstack/react-start';
+import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
+import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
+import type { Database } from '@/integrations/supabase/types';
+import { applicationSchema, categorySchema, canTransition, productSchema, type Catalog } from './marketplace';
+
+export const getCatalog = createServerFn({method:'GET'}).handler(async ():Promise<Catalog>=>{
+ const url=process.env['SUPABASE_URL']; const key=process.env['SUPABASE_PUBLISHABLE_KEY'];
+ if(!url||!key) return {products:[],stores:[],categories:[],areas:[],unavailable:true};
+ const db=createClient<Database>(url,key,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:(input,init)=>{const headers=new Headers(init?.headers); if(key.startsWith('sb_')&&headers.get('Authorization')===`Bearer ${key}`) headers.delete('Authorization'); headers.set('apikey',key); return fetch(input,{...init,headers});}}});
+ const [products,categories,stores,areas]=await Promise.all([db.from('products').select('*,product_images(url),seller_stores(name,slug,is_demo,area)').eq('status','active').order('sold_count',{ascending:false}),db.from('categories').select('*').order('sort_order'),db.from('seller_stores').select('*').eq('status','active'),db.from('delivery_areas').select('*').eq('active',true).order('sort_order')]);
+ if(products.error||categories.error||stores.error||areas.error) return {products:[],categories:[],stores:[],areas:[],unavailable:true};
+ return {products:products.data??[],categories:categories.data??[],stores:stores.data??[],areas:areas.data??[]};
+});
+export const getAccount = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).handler(async({context})=>{
+ const db=context.supabase;
+ const [roles,profile,stores,orders,applications]=await Promise.all([db.from('user_roles').select('role').eq('user_id',context.userId),db.from('profiles').select('*').eq('id',context.userId).single(),db.from('seller_stores').select('*').eq('owner_id',context.userId),db.from('orders').select('*,order_items(*)').eq('customer_id',context.userId).order('created_at',{ascending:false}),db.from('seller_applications').select('*').eq('user_id',context.userId)]);
+ if(roles.error||stores.error||orders.error||applications.error||(profile.error&&profile.error.code!=='PGRST116')) throw Error('অ্যাকাউন্ট লোড করা যায়নি');
+ return {roles:roles.data??[],profile:profile.data,stores:stores.data??[],orders:orders.data??[],applications:applications.data??[]};
+});
+export const getManagement = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator((input:{admin:boolean})=>z.object({admin:z.boolean()}).parse(input)).handler(async({data,context})=>{
+ const db=context.supabase;
+ if(data.admin){const {data:allowed}=await db.rpc('has_role',{_user_id:context.userId,_role:'admin'}); if(!allowed) throw Error('এই পৃষ্ঠায় প্রবেশের অনুমতি নেই');}
+ let storesQuery=db.from('seller_stores').select('*'); if(!data.admin) storesQuery=storesQuery.eq('owner_id',context.userId);
+ const stores=await storesQuery; const ids=(stores.data??[]).map(s=>s.id);
+ let productsQuery=db.from('products').select('*,product_images(url),seller_stores(name,slug,is_demo,area)'); if(!data.admin) productsQuery=productsQuery.in('store_id',ids);
+ let itemsQuery=db.from('order_items').select('*,orders(order_no,recipient,phone,area,address_line,is_demo)'); if(!data.admin) itemsQuery=itemsQuery.in('store_id',ids);
+ const [products,items,applications,categories,orders]=await Promise.all([productsQuery.order('created_at',{ascending:false}),itemsQuery,data.admin?db.from('seller_applications').select('*').order('created_at',{ascending:false}):Promise.resolve({data:[],error:null}),db.from('categories').select('*').order('sort_order'),data.admin?db.from('orders').select('*').order('created_at',{ascending:false}):Promise.resolve({data:[],error:null})]);
+ if(stores.error||products.error||items.error||applications.error||categories.error||orders.error) throw Error('তথ্য লোড করা যায়নি');
+ return {stores:stores.data??[],products:products.data??[],items:items.data??[],applications:applications.data??[],categories:categories.data??[],orders:orders.data??[]};
+});
+export const saveProduct = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(input=>productSchema.parse(input)).handler(async({data,context})=>{
+ const {image,id,...values}=data; const db=context.supabase;
+ const {data:store}=await db.from('seller_stores').select('id').eq('id',data.store_id).eq('owner_id',context.userId).eq('status','active').single(); if(!store) throw Error('সক্রিয় দোকানের মালিকের অনুমতি প্রয়োজন');
+ const result=id?await db.from('products').update(values).eq('id',id).eq('store_id',data.store_id).select('id').single():await db.from('products').insert({...values,slug:'product-'+crypto.randomUUID()}).select('id').single();
+ if(result.error||!result.data) throw Error('পণ্য সংরক্ষণ করা যায়নি');
+ if(image){ const old=await db.from('product_images').select('id').eq('product_id',result.data.id).order('sort_order').limit(1); const saved=old.data?.[0]?await db.from('product_images').update({url:image}).eq('id',old.data[0].id):await db.from('product_images').insert({product_id:result.data.id,url:image}); if(saved.error) throw Error('পণ্য সংরক্ষিত, ছবি সংরক্ষণ করা যায়নি'); }
+ return result.data;
+});
+export const applySeller = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(input=>applicationSchema.parse(input)).handler(async({data,context})=>{const area=await context.supabase.from('delivery_areas').select('id').eq('name_bn',data.area).eq('active',true).maybeSingle();if(area.error||!area.data)throw Error('চট্টগ্রামের তালিকাভুক্ত এলাকা নির্বাচন করুন');const {error}=await context.supabase.from('seller_applications').insert({...data,user_id:context.userId}); if(error) throw Error('আবেদন পাঠানো যায়নি; আগের আবেদন বা দোকান আছে কি না দেখুন'); return true;});
+export const updateItemStatus = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(input=>z.object({id:z.string().uuid(),status:z.enum(['pending','confirmed','shipped','delivered','cancelled'])}).parse(input)).handler(async({data,context})=>{const db=context.supabase;const current=await db.from('order_items').select('status,store_id').eq('id',data.id).single();if(current.error||!current.data||!canTransition(current.data.status,data.status))throw Error('অর্ডারের অবস্থা পরিবর্তন অনুমোদিত নয়');const role=await db.rpc('has_role',{_user_id:context.userId,_role:'admin'});if(!role.data){const own=await db.from('seller_stores').select('id').eq('id',current.data.store_id??'').eq('owner_id',context.userId).single();if(!own.data)throw Error('নিজের দোকানের অর্ডার পরিচালনা করুন');}const {error,data:rows}=await db.from('order_items').update({status:data.status}).eq('id',data.id).eq('status',current.data.status).select('id'); if(error||!rows?.length) throw Error('অর্ডারের অবস্থা পরিবর্তন করা যায়নি'); return true; });
+export const adminAction = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(input=>z.object({id:z.string().uuid(),action:z.enum(['approve','reject','suspend','activate','hide']),note:z.string().max(500).default('')}).parse(input)).handler(async({data,context})=>{
+ const db=context.supabase; const {data:allowed}=await db.rpc('has_role',{_user_id:context.userId,_role:'admin'}); if(!allowed) throw Error('প্রশাসকের অনুমতি প্রয়োজন');
+ let error;
+ if(data.action==='approve'||data.action==='reject') {({error}=await db.rpc('review_seller_application',{p_app_id:data.id,p_approve:data.action==='approve',p_note:data.note}));}
+ else if(data.action==='hide') {const result=await db.from('products').update({status:'hidden'}).eq('id',data.id).select('id').single();error=result.error;}
+ else {const result=await db.from('seller_stores').update({status:data.action==='suspend'?'suspended':'active'}).eq('id',data.id).select('id').single();error=result.error;}
+ if(error) throw Error('পরিবর্তন করা যায়নি। ডেমো আবেদন বাস্তব অ্যাকাউন্ট নয়।'); return true;
+});
+export const saveStore = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(input=>z.object({id:z.string().uuid(),name:z.string().trim().min(2).max(80),description:z.string().max(1000)}).parse(input)).handler(async({data,context})=>{const {error,data:rows}=await context.supabase.from('seller_stores').update({name:data.name,description:data.description}).eq('id',data.id).eq('owner_id',context.userId).select('id');if(error||!rows?.length) throw Error('দোকান সংরক্ষণ করা যায়নি');return true;});
+export const saveProfile=createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(input=>z.object({full_name:z.string().trim().min(2).max(100),phone:z.string().regex(/^01[3-9][0-9]{8}$/)}).parse(input)).handler(async({data,context})=>{const {error}=await context.supabase.from('profiles').upsert({...data,id:context.userId});if(error)throw Error('প্রোফাইল সংরক্ষণ করা যায়নি');return true;});
+export const saveCategory=createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(input=>categorySchema.parse(input)).handler(async({data,context})=>{const db=context.supabase;const allowed=await db.rpc('has_role',{_user_id:context.userId,_role:'admin'});if(!allowed.data)throw Error('প্রশাসকের অনুমতি প্রয়োজন');const {id,...values}=data;const result=id?await db.from('categories').update(values).eq('id',id).select('id').single():await db.from('categories').insert(values).select('id').single();if(result.error)throw Error('ক্যাটাগরি সংরক্ষণ হয়নি; নাম ও অনন্য slug যাচাই করুন');return result.data;});
+export const moderateProduct=createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(input=>z.object({id:z.string().uuid(),status:z.enum(['active','draft','hidden'])}).parse(input)).handler(async({data,context})=>{const db=context.supabase;const allowed=await db.rpc('has_role',{_user_id:context.userId,_role:'admin'});if(!allowed.data)throw Error('প্রশাসকের অনুমতি প্রয়োজন');const result=await db.from('products').update({status:data.status}).eq('id',data.id).select('id').single();if(result.error)throw Error('পণ্য পরিবর্তন করা যায়নি');return true;});

@@ -14,10 +14,4 @@ describe("App routing", () => {
 
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
   });
-
-  it("matches marketplace pages through the dynamic page route", () => {
-    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
-    const matches = router.matchRoutes("/cart");
-    expect(matches.at(-1)?.routeId).toBe("/$page");
-  });
 });

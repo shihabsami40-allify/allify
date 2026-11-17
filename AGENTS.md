@@ -28,3 +28,11 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Application boundaries
+- Checkout is demo-only and browser-local; carts with real-store products show an 'unavailable' notice and never call order placement, so no real fulfillment or stock change can occur until the owner enables it.
+- Keep demo dashboards isolated in namespaced browser storage; real seller management uses authenticated server functions and owner-scoped access.
+- Keep private account and seller routes under the client-only authenticated layout; public catalog and demo routes remain crawlable.
+- Keep real admin management under the authenticated layout with a server-side role check on every operation; preserve `/admin` as the protected URL and `/demo/admin` as the isolated demo.
+- Apply compare-and-update lifecycle checks to order item changes so stale actions cannot skip or reverse fulfillment states.
+- Validate seller image links as public credential-free HTTPS URLs; never fetch submitted links server-side, and use neutral local placeholders on failures.

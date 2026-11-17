@@ -1,0 +1,7 @@
+import {createFileRoute,Link} from '@tanstack/react-router';
+import {metadata,money,statusName} from '@/lib/marketplace';
+import {useMarket} from '@/components/market-provider';
+import {PageTitle,Empty} from '@/components/market-shell';
+import {Button} from '@/components/ui/button';
+export const Route=createFileRoute('/orders')({head:()=>metadata('আমার ডেমো অর্ডার','ALLIFY ব্রাউজারে সংরক্ষিত ডেমো অর্ডারের তালিকা।'),component:Orders});
+function Orders(){const {demoOrders}=useMarket();return <main className="page-wrap py-9"><PageTitle eyebrow="YOUR ORDERS" title="আমার ডেমো অর্ডার"/><p className="notice mb-7">সব অর্ডার পরীক্ষামূলক; কোনো টাকা দিতে হবে না, বাস্তব ডেলিভারি হবে না।</p>{demoOrders.length?<div className="space-y-5">{demoOrders.map(o=><article key={o.id} className="rounded-lg border bg-card p-5"><div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-semibold">{o.id}</h2><p className="text-sm text-muted-foreground">{o.area} • ডেমো COD</p></div><span className="text-sm text-primary">{statusName[o.status]}</span></div><div className="my-4 border-y py-3">{o.items.map((l,i)=><p key={i} className="flex justify-between gap-4 py-1 text-sm"><span>{l.title} × {l.quantity}</span><span>{money(l.price*l.quantity)}</span></p>)}</div><p className="text-right font-semibold">নমুনা মোট {money(o.total)}</p></article>)}</div>:<Empty title="এখনো ডেমো অর্ডার নেই"><Button asChild><Link to="/browse" search={{q:'',category:'',sort:'popular'}}>পণ্য দেখুন</Link></Button></Empty>}</main>;}

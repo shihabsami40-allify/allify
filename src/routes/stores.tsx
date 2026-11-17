@@ -1,0 +1,8 @@
+import {createFileRoute,Link} from '@tanstack/react-router';
+import {useSuspenseQuery} from '@tanstack/react-query';
+import {Store,MapPin,ArrowUpRight} from 'lucide-react';
+import {catalogOptions} from '@/lib/catalog-query';
+import {metadata} from '@/lib/marketplace';
+import {PageTitle} from '@/components/market-shell';
+export const Route=createFileRoute('/stores')({head:()=>metadata('স্থানীয় দোকান','চট্টগ্রামের স্থানীয় বিক্রেতাদের ALLIFY storefront দেখুন।'),loader:({context})=>context.queryClient.ensureQueryData(catalogOptions),component:Stores});
+function Stores(){const {data}=useSuspenseQuery(catalogOptions);return <main className="page-wrap py-9"><PageTitle eyebrow="OUR NEIGHBORHOOD" title="চেনা শহরের প্রিয় দোকান"/><div className="grid gap-5 md:grid-cols-3">{data.stores.map(s=><Link to="/store/$slug" params={{slug:s.slug}} key={s.id} className="rounded-lg border bg-card p-6"><div className="mb-6 flex items-center justify-between"><div className="flex size-14 items-center justify-center rounded-md bg-secondary"><Store className="size-7 text-primary"/></div><ArrowUpRight className="size-5 text-muted-foreground"/></div><h2 className="font-display text-xl font-semibold">{s.name}</h2><p className="my-3 min-h-12 text-sm text-muted-foreground">{s.description}</p><p className="flex items-center gap-1 text-xs text-primary"><MapPin size={13}/>{s.area} • {s.is_demo?'ডেমো দোকান':'স্থানীয় বিক্রেতা'}</p></Link>)}</div></main>;}

@@ -12,6 +12,9 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { MarketProvider } from '@/components/market-provider';
+import { MarketShell } from '@/components/market-shell';
+import { Toaster } from '@/components/ui/sonner';
 
 function NotFoundComponent() {
   return (
@@ -83,13 +86,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "ALLIFY" },
       { name: "description", content: "ALLIFY — Chattogram digital bazaar" },
-      { name: "author", content: "ALLIFY" },
+      { name: "author", content: "Lovable" },
       { property: "og:title", content: "ALLIFY" },
       { property: "og:description", content: "ALLIFY — Chattogram digital bazaar" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "ALLIFY" },
-      { name: "twitter:description", content: "চট্টগ্রামের স্থানীয় ব্যবসার ডিজিটাল ঠিকানা।" },
+      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -126,7 +128,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <MarketProvider><MarketShell><Outlet /></MarketShell><Toaster /></MarketProvider>
     </QueryClientProvider>
   );
 }
