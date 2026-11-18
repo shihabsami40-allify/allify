@@ -2,7 +2,7 @@
 
 Source: Lovable project revision 2374410ebdb39a274e68fc9cade5cd64fb4dd54b
 Recovery branch: allify-recovery-2026-11-17
-Latest verified code commit: 9071d305b272a7d0a797d925e1c8061b4d8233db
+Latest verified code commit: 7877b343670d418de885e0921a04c7d42d3b6972
 
 ## Recovered and verified
 - Recovered the text source, route, test, configuration, and migration files from the Lovable revision into the recovery branch.
@@ -12,6 +12,7 @@ Latest verified code commit: 9071d305b272a7d0a797d925e1c8061b4d8233db
 - Public catalog filters suspended stores, cart stock-limit messaging is corrected, and unavailable cart entries can be removed individually.
 - Checkout now uses authenticated cash-on-delivery flow calling the existing live `place_order` RPC; order history uses authenticated Supabase data.
 - Product-detail add-to-cart now accounts for quantity already in the cart, prevents adding beyond available stock, and shows an error rather than a success toast when the limit is exceeded.
+- Product cards also enforce the 99-item cart cap, matching cart and product-detail controls; CI run 44238102831 passed lint, strict TypeScript, tests, and production build.
 
 ## Database safety
 - Lovable's environment and the existing Vercel project's Supabase URL point to project ref `htsvvotamlxlkncksssq`.
@@ -22,6 +23,7 @@ Latest verified code commit: 9071d305b272a7d0a797d925e1c8061b4d8233db
 
 ## Latest verified source update
 - Product-detail stock-overflow guard commit `9071d305`; CI run `44237881589` passed lint, strict TypeScript, 20 tests, and production build.
+- Product-card cart quantity cap commit `7877b343`; CI run `44238102831` passed lint, strict TypeScript, tests, and production build.
 - Bengali 404/error-page localization commit `e0955663`; CI run `44237769526` passed.
 - Added order-history refresh after checkout and seller/admin order-status changes.
 - CI for both cache-refresh commits passed lint, strict TypeScript, tests, and production build.
