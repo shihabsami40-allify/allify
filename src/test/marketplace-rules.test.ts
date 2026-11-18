@@ -206,3 +206,16 @@ describe('customer order history discovery',()=>{
   expect(orders).toContain('ফিল্টার মুছুন');
  });
 });
+ 
+describe('seller store contact details',()=>{
+ it('allows sellers to update store area and address and displays the address publicly',()=>{
+  const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
+  const functions=readFileSync(resolve(process.cwd(),'src/lib/marketplace.functions.ts'),'utf8');
+  const storefront=readFileSync(resolve(process.cwd(),'src/routes/store.$slug.tsx'),'utf8');
+  expect(dashboard).toContain('name="area"');
+  expect(dashboard).toContain('name="address"');
+  expect(dashboard).toContain("area:String(fd.get('area'))");
+  expect(functions).toContain("area:z.string().trim().min(2).max(100),address:z.string().trim().max(250)");
+  expect(storefront).toContain('{s.address&&');
+ });
+});
