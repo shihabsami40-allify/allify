@@ -351,3 +351,10 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Expanded marketplace rules tests to cover the allowed forward lifecycle and reject skipped, reverse, or cancellation transitions; added a regression assertion that seller actions use a confirmation prompt.
 - GitHub Actions run `44270416176` passed lint, strict typecheck, tests, and production build.
 - Source changes remain on `allify-recovery-2026-11-17`; no production deploy or live database mutation occurred.
+
+## 2026-11-18 — clearer order status confirmation details
+
+- Admin and Seller order status confirmation prompts now include the order number, product title, and quantity so staff can distinguish individual line items before changing status.
+- Regression tests check that both dashboards include the line-item details in the confirmation.
+- GitHub Actions run `44271343776` passed lint, typecheck, tests, and production build.
+- Changes remain on the recovery branch. No production deployment or live database updates were made.
