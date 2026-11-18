@@ -7,7 +7,8 @@
 - [x] CI lint, tests (16), and production build passed on recovery branch.
 
 ## Not yet launch-ready
-- [ ] Restore/replace missing image and favicon assets.
+- [x] Added a fallback SVG for missing product images and restored the ALLIFY SVG favicon.
+- [ ] Restore remaining original catalog/hero image assets.
 - [ ] Test buyer/seller/admin flows with real authenticated test accounts.
 - [ ] Validate COD checkout, stock decrement, cancellation/restoration, and status transitions using controlled test inventory.
 - [ ] Review security and permissions in a test environment.
