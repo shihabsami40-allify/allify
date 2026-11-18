@@ -134,6 +134,18 @@ describe('seller storefront product discovery',()=>{
 });
 
 
+describe('account page guidance',()=>{
+ it('provides next steps for empty order and seller application lists',()=>{
+  const account=readFileSync(resolve(process.cwd(),'src/routes/_authenticated/account.tsx'),'utf8');
+  expect(account).toContain('এই অ্যাকাউন্টে এখনো কোনো অর্ডার নেই।');
+  expect(account).toContain('পণ্য দেখুন');
+  expect(account).toContain('এখনো কোনো বিক্রেতা আবেদন নেই।');
+  expect(account).toContain('বিনামূল্যে আবেদন করুন');
+  expect(account).toContain('role="alert"');
+  expect(account).toContain('সংরক্ষণ হচ্ছে…');
+ });
+});
+
 describe('seller product list discovery',()=>{
  it('supports searching seller products and filtering by publication status',()=>{
   const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
