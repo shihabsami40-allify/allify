@@ -43,6 +43,13 @@
       "when": 1795000500000,
       "tag": "0007_harden_product_image_bucket_config",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795000800000,
+      "tag": "0008_block_admin_order_cancellation",
+      "breakpoints": true
     }
   ]
 }
