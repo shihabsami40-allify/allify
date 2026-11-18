@@ -71,3 +71,14 @@ describe('seller product stock warnings',()=>{
   expect(dashboard).toContain('p.stock<=5');
  });
 });
+
+
+describe('product card stock availability',()=>{
+ it('shows sold-out and low-stock labels and disables sold-out add action',()=>{
+  const card=readFileSync(resolve(process.cwd(),'src/components/product-card.tsx'),'utf8');
+  expect(card).toContain('স্টক শেষ</span>');
+  expect(card).toContain('স্টক কম</span>');
+  expect(card).toContain('disabled={p.stock===0}');
+  expect(card).toContain('title={p.stock===0?"স্টক শেষ":"ব্যাগে যোগ করুন"}');
+ });
+});
