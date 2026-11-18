@@ -10,8 +10,9 @@
 - [x] Added fallback SVG for missing product images and restored the ALLIFY SVG favicon.
 - [x] Public catalog hides products belonging to suspended stores.
 - [x] Cart stock-limit feedback and individual removal of unavailable products corrected.
+- [x] Product-detail add-to-cart prevents exceeding stock when quantity is already in the cart.
 - [x] Checkout and seller/admin status changes invalidate customer order-history cache.
-- [x] Latest changes passed lint, strict TypeScript, tests, and production build in CI.
+- [x] Latest changes passed lint, strict TypeScript, tests, and production build in CI (run 44237881589).
 - [ ] Restore remaining original catalog/hero image assets.
 - [ ] Test buyer/seller/admin flows with real authenticated test accounts.
 - [ ] Validate COD checkout, stock decrement, cancellation/restoration, and status transitions using controlled test inventory. Cancellation stock-restoration behavior is not yet verified; do not test against live inventory.
