@@ -150,3 +150,14 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - GitHub Actions run `44256375986` passed lint, strict typecheck, tests, and production build.
 - Vercel Preview for this commit is READY: `https://allify-chattogram-8jbzyoi0j-allify.vercel.app`.
 - This is server-function hardening only; authenticated browser QA and database-level policy verification remain outstanding. No live DB changes, production deployment, or merge to `main`.
+
+
+## 2026-11-18 — legacy dashboard order transition alignment
+
+- Reviewed the legacy consolidated route `src/routes/$page.tsx`, which is still part of the source tree even though the primary route files use dedicated dashboards.
+- Routed its admin product moderation and admin/seller order-status changes through the same guarded server functions used by the dedicated dashboards. This closes an alternate client-side mutation path.
+- Removed pending/confirmed cancellation options from the legacy dashboard controls so its visible actions match the currently supported app transitions. Cancellation remains unavailable pending database-level stock-restoration design.
+- Commits: `b50b731a34a514c10c60eeae93721b5a171b606c` (server-guarded legacy actions) and `b48c02d656dfe3e41c305f19acb6596914fdd579` (transition UI alignment).
+- CI run `44257328584` passed lint, strict typecheck, tests, and production build. CI run `44257565120` also passed all four checks for the transition UI alignment.
+- Latest Vercel Preview for `b48c02d6` is being verified separately; prior commit `b50b731a34` Preview is READY at `https://allify-chattogram-jo72ynkqy-allify.vercel.app`.
+- No authenticated browser QA, live database mutation, production deployment, or merge to `main` was performed.
