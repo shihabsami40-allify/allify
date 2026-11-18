@@ -24,7 +24,7 @@ export const getManagement = createServerFn({method:'POST'}).middleware([require
  if(data.admin){const {data:allowed}=await db.rpc('has_role',{_user_id:context.userId,_role:'admin'}); if(!allowed) throw Error('এই পৃষ্ঠায় প্রবেশের অনুমতি নেই');}
  let storesQuery=db.from('seller_stores').select('*'); if(!data.admin) storesQuery=storesQuery.eq('owner_id',context.userId);
  const stores=await storesQuery; const ids=(stores.data??[]).map(s=>s.id);
- let productsQuery=db.from('products').select('*,product_images(url),seller_stores(name,slug,is_demo,area)'); if(!data.admin) productsQuery=productsQuery.in('store_id',ids);
+ let productsQuery=db.from('products').select('*,product_images(url),seller_stores(name,slug,is_demo,area,address)'); if(!data.admin) productsQuery=productsQuery.in('store_id',ids);
  let itemsQuery=db.from('order_items').select('*,orders(order_no,recipient,phone,area,address_line,is_demo)'); if(!data.admin) itemsQuery=itemsQuery.in('store_id',ids);
  const [products,items,applications,categories,orders]=await Promise.all([!data.admin&&ids.length===0?Promise.resolve({data:[],error:null}):productsQuery.order('created_at',{ascending:false}),!data.admin&&ids.length===0?Promise.resolve({data:[],error:null}):itemsQuery,data.admin?db.from('seller_applications').select('*').order('created_at',{ascending:false}):Promise.resolve({data:[],error:null}),db.from('categories').select('*').order('sort_order'),data.admin?db.from('orders').select('*').order('created_at',{ascending:false}):Promise.resolve({data:[],error:null})]);
  if(stores.error||products.error||items.error||applications.error||categories.error||orders.error) throw Error('তথ্য লোড করা যায়নি');
