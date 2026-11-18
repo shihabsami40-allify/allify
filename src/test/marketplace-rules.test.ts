@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {safeImageUrl,canTransition,deliverySchema,applicationSchema,categorySchema,validQuantity,realOrderAllowed,cartTotal} from '@/lib/marketplace';
+import {safeImageUrl,productImageStoragePath,canTransition,deliverySchema,applicationSchema,categorySchema,validQuantity,realOrderAllowed,cartTotal} from '@/lib/marketplace';
 describe('marketplace validation',()=>{
  it('accepts credential-free HTTPS images',()=>expect(safeImageUrl('https://images.example.com/product.jpg')).toBe(true));
  it('rejects nonsecure image URLs',()=>expect(safeImageUrl('http://images.example.com/product.jpg')).toBe(false));
@@ -9,6 +9,8 @@ describe('marketplace validation',()=>{
  it('does not skip confirmation',()=>expect(canTransition('pending','shipped')).toBe(false));
  it('does not reverse completed delivery',()=>expect(canTransition('delivered','pending')).toBe(false));
  it('blocks cancellation until inventory restoration is implemented',()=>{expect(canTransition('pending','cancelled')).toBe(false);expect(canTransition('confirmed','cancelled')).toBe(false);});
+ it('extracts only this seller’s product image object path',()=>{const base='https://project.supabase.co/storage/v1/object/public/product-images/';const owner='11111111-1111-4111-8111-111111111111';const store='22222222-2222-4222-8222-222222222222';const file='33333333-3333-4333-8333-333333333333.webp';expect(productImageStoragePath(base+owner+'/'+store+'/'+file,base,owner,store)).toBe(owner+'/'+store+'/'+file);});
+ it('refuses external, cross-seller, and malformed product image paths',()=>{const base='https://project.supabase.co/storage/v1/object/public/product-images/';const owner='11111111-1111-4111-8111-111111111111';const store='22222222-2222-4222-8222-222222222222';expect(productImageStoragePath('https://other.example/x.jpg',base,owner,store)).toBeNull();expect(productImageStoragePath(base+'other/'+store+'/33333333-3333-4333-8333-333333333333.jpg',base,owner,store)).toBeNull();expect(productImageStoragePath(base+owner+'/'+store+'/../private.jpg',base,owner,store)).toBeNull();});
  it('accepts Bangladesh mobile format',()=>expect(deliverySchema.safeParse({recipient:'ক্রেতা',phone:'01712345678',area:'চট্টগ্রাম',address:'দোকানের ঠিকানা'}).success).toBe(true));
  it('rejects foreign mobile format',()=>expect(deliverySchema.safeParse({recipient:'ক্রেতা',phone:'+15551234567',area:'চট্টগ্রাম',address:'দোকানের ঠিকানা'}).success).toBe(false));
  it('rejects whitespace-only delivery area',()=>expect(deliverySchema.safeParse({recipient:'ক্রেতা',phone:'01712345678',area:'   ',address:'দোকানের ঠিকানা'}).success).toBe(false));
