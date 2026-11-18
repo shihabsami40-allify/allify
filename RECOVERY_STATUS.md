@@ -254,3 +254,13 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Registered migration 0007 in the Drizzle journal and added regression coverage for the bucket settings and public-read policy.
 - GitHub Actions run `44263630732` passed lint, strict typecheck, tests, and production build for commit `8b46ac25a83c76ddffe5814e7fa0866245c0ab18`.
 - Migration 0007 is source-controlled only and has NOT been applied to Supabase. No live database change, authenticated browser QA, production deployment, or merge to `main` was performed.
+
+
+## 2026-11-18 — seller temporary image cleanup retry tracking
+
+- The seller dashboard now tracks temporary Storage objects whose cleanup fails, including a newly uploaded replacement that cannot be removed after the previous temporary image cleanup fails.
+- Discarding or switching product forms retries cleanup for both the selected temporary image and queued orphan paths. Successfully removed paths are cleared from tracking; failed paths remain queued and the current form is preserved.
+- Failed cleanup after a product-save warning or failed save is also retained for a later retry instead of silently losing the object path.
+- Added regression tests for rollback cleanup tracking, retry-queue behavior, form-switch safety, and cleanup failures after save/upload errors.
+- GitHub Actions run `44264263493` passed lint, strict typecheck, tests, and production build for commit `6b0482fc006f65f6b1813df3f022c914b4247887`.
+- This is code/build verification only. No authenticated browser QA, live Supabase changes, production deployment, or merge to `main` was performed.
