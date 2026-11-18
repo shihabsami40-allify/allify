@@ -134,6 +134,18 @@ describe('seller storefront product discovery',()=>{
 });
 
 
+describe('seller product list discovery',()=>{
+ it('supports searching seller products and filtering by publication status',()=>{
+  const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
+  expect(dashboard).toContain('নিজের পণ্য খুঁজুন');
+  expect(dashboard).toContain("productFilter==='all'||product.status===productFilter");
+  expect(dashboard).toContain('<option value="active">সক্রিয়</option>');
+  expect(dashboard).toContain('<option value="draft">খসড়া</option>');
+  expect(dashboard).toContain('<option value="hidden">লুকানো</option>');
+  expect(dashboard).toContain('কোনো পণ্য মেলেনি। সার্চ বা ফিল্টার পরিবর্তন করুন।');
+ });
+});
+
 describe('store directory discovery',()=>{
  it('supports searching stores and filtering by area with reset recovery',()=>{
   const stores=readFileSync(resolve(process.cwd(),'src/routes/stores.tsx'),'utf8');
