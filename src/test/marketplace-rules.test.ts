@@ -216,6 +216,7 @@ describe('seller store contact details',()=>{
   expect(dashboard).toContain('name="address"');
   expect(dashboard).toContain("area:String(fd.get('area'))");
   expect(functions).toContain("area:z.string().trim().min(2).max(100),address:z.string().trim().max(250)");
+  expect(functions).toContain("select('id,name,name_en,slug,description,area,address,rating,is_demo,logo_url,banner_url,created_at,status')");
   expect(storefront).toContain('{s.address&&');
  });
 });
