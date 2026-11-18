@@ -43,7 +43,7 @@ export function CheckoutView(){
    const cartKey=`allify:checkout-request:${user.id}:${JSON.stringify(cart.map(line=>({id:line.id,quantity:line.quantity})).sort((a,b)=>a.id.localeCompare(b.id)))}`;
    let request=checkoutRequest.current;
    if(!request||request.key!==cartKey){
-    const stored=readStoredJson<string>(cartKey,'',value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value));
+    const stored=readStoredJson<string>(cartKey,'',(value):value is string=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value));
     request={key:cartKey,id:stored||crypto.randomUUID()};
     checkoutRequest.current=request;
     writeStoredJson(cartKey,request.id);
