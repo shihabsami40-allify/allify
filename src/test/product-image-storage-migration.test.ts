@@ -24,3 +24,15 @@ describe('product image storage ownership policies',()=>{
   expect(deletion).not.toContain('s.is_demo = false');
  });
 });
+
+const bucketConfig=readFileSync(resolve(process.cwd(),'drizzle/migrations/0007_harden_product_image_bucket_config.sql'),'utf8').toLowerCase();
+
+describe('product image bucket configuration',()=>{
+ it('enforces public image reads, a 5 MB limit, and supported image MIME types',()=>{
+  expect(bucketConfig).toContain("values ('product-images', 'product-images', true, 5242880");
+  expect(bucketConfig).toContain("array['image/jpeg','image/png','image/webp']");
+  expect(bucketConfig).toContain('on conflict (id) do update');
+  expect(bucketConfig).toContain('create policy "product images are publicly readable"');
+  expect(bucketConfig).toContain('using (bucket_id = \'product-images\')');
+ });
+});
