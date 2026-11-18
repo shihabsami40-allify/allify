@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { moderateProduct, updateItemStatus } from "@/lib/marketplace.functions";
 
 export const Route = createFileRoute("/$page")({ component: MarketplacePage });
 
@@ -275,8 +276,7 @@ function MarketplacePage() {
   const updateAdminProduct = async (id:string, status:string) => {
     setBusy(true); setError(""); setMessage("");
     try {
-      const {error} = await supabase.from("products").update({status}).eq("id",id);
-      if (error) throw error;
+      await moderateProduct({data:{id,status:status as "active"|"draft"|"hidden"}});
       setAdminProducts(rows=>rows.map(p=>p.id===id?{...p,status}:p));
       setMessage("পণ্যের প্রকাশ-অবস্থা আপডেট হয়েছে।");
     } catch(e:any) { setError(e.message || "পণ্য আপডেট করা যায়নি।"); }
@@ -286,8 +286,7 @@ function MarketplacePage() {
   const updateAdminOrderItemStatus = async (itemId:string, orderId:string, status:string) => {
     setBusy(true); setError(""); setMessage("");
     try {
-      const {error} = await supabase.from("order_items").update({status}).eq("id",itemId);
-      if (error) throw error;
+      await updateItemStatus({data:{id:itemId,status:status as "pending"|"confirmed"|"shipped"|"delivered"|"cancelled"}});
       setAdminOrders(rows=>rows.map(order=>order.id===orderId?{...order,order_items:(order.order_items||[]).map((item:any)=>item.id===itemId?{...item,status}:item)}:order));
       setMessage("অর্ডারের অবস্থা আপডেট হয়েছে।");
     } catch(e:any) { setError(e.message || "অর্ডার আপডেট করা যায়নি।"); }
@@ -308,8 +307,7 @@ function MarketplacePage() {
   const updateSellerOrderStatus = async (itemId:string, status:string) => {
     setBusy(true); setError(""); setMessage("");
     try {
-      const {error} = await supabase.from("order_items").update({status}).eq("id",itemId);
-      if (error) throw error;
+      await updateItemStatus({data:{id:itemId,status:status as "pending"|"confirmed"|"shipped"|"delivered"|"cancelled"}});
       setSellerOrders(rows=>rows.map(row=>row.id===itemId?{...row,status}:row));
       setMessage("অর্ডারের অবস্থা আপডেট হয়েছে।");
     } catch(e:any) { setError(e.message || "অর্ডার আপডেট করা যায়নি।"); }
