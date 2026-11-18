@@ -428,3 +428,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Recovery branch HEAD is `c40db94d17195b0892f227bd690fa66aaa39602c`. GitHub Actions run `44292890612` completed successfully for this latest documentation commit; its verify job passed. The preceding application-code commit `244fb415d21ebab705e7f6e7d9058dd0e36d4e59` also passed run `44292710750`.
 - Source review confirms server-side product image validation is performed against the configured public product-images bucket and authenticated owner/store folder. Its regression test is source-level; live Storage policy behavior still requires authenticated integration QA.
 - No Supabase migrations were applied, no live database/order/inventory data was changed, no Production deployment occurred, and `main` remains untouched.
+
+
+## 2026-11-18 — Supabase access check and source security audit
+
+- Reviewed the existing Storage migrations: seller uploads and updates are scoped to the authenticated owner's active, non-demo store folder; deletion remains available to the owner for cleanup after suspension; public reads are limited to the public product-images bucket. The bucket config restricts uploads to JPEG/PNG/WebP and 5 MB. These are source findings only; live policy state is not confirmed.
+- Reviewed server-side product saving and confirmed that non-empty image URLs are checked against the configured Supabase product-images origin/path plus the authenticated user and active store IDs before the product record is written.
+- Reviewed authenticated route gating and account data queries. The authenticated route requires a valid Supabase user; account queries are scoped by the authenticated user ID. Server-side functions also use the auth middleware.
+- Attempted read-only Supabase project and migration/advisor inspection for project `htsvvotamlxlkncksssq`; the connected Supabase account returned `You do not have permission to perform this action`. Therefore the live project status, applied migration list, and advisor findings cannot currently be verified. No SQL was run and no migration was applied.
+- No application source changes were made in this audit because live DB permission is unavailable and the reviewed source controls already have regression coverage. Continue with authenticated end-to-end QA and live migration verification once authorized Supabase access is available.
