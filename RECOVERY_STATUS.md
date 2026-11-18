@@ -300,3 +300,11 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Retrying the same checkout payload reuses the original request ID; intentionally changing delivery details produces a distinct request ID instead of accidentally replaying an earlier order with a different address expectation.
 - Added regression assertions for all delivery fields in the retry-key payload.
 - CI is pending. No Supabase migration was applied and no live orders or inventory were changed.
+
+
+## 2026-11-18 — demo order status database guard
+
+- Added migration `0011_block_demo_order_status_updates.sql` to reject order-item status changes whenever the parent order is marked `is_demo = true`, including direct authenticated Data API updates by administrators.
+- The trigger retains the existing cancellation block and the normal seller fulfillment transitions. It changes no demo rows; it only guards future updates after the migration is applied.
+- Registered migration journal entry 9 and added regression tests for demo-order immutability and preserved lifecycle rules.
+- CI is pending. Migration is source-controlled only and has NOT been applied to Supabase. No orders, stock, or live database rows were changed.
