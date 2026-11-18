@@ -140,3 +140,13 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - The secure marketplace migration's demo-stock trigger blocks internal stock updates for demo-store products. Do not infer that all demo-order or order-lifecycle concerns are solved by that trigger alone.
 - Supabase read-only inspection for the intended project remains permission-denied. Do not guess live schema state, write a speculative migration, or substitute the separately connected project.
 - `main`, Production, and live database state remain untouched.
+
+
+## 2026-11-18 — admin demo-product moderation hardening
+
+- Reviewed the admin server functions and found a secondary admin hide action that could update a product without first checking whether its store was a demo store. The visible dashboard already uses the separately guarded moderation function, but the unused/alternate server action still needed defense-in-depth.
+- Updated `adminAction` so its `hide` branch loads the product's store and rejects missing/demo stores before changing product status.
+- Commit: `4a808d64dff7b4a890d6141a85086322394874e1` (`Prevent admin hide action from modifying demo products`).
+- GitHub Actions run `44256375986` passed lint, strict typecheck, tests, and production build.
+- Vercel Preview for this commit is READY: `https://allify-chattogram-8jbzyoi0j-allify.vercel.app`.
+- This is server-function hardening only; authenticated browser QA and database-level policy verification remain outstanding. No live DB changes, production deployment, or merge to `main`.
