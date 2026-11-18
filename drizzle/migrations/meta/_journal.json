@@ -99,6 +99,13 @@
       "when": 1795004800000,
       "tag": "0015_derive_order_status_from_items",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795005400000,
+      "tag": "0016_atomic_order_item_cancellation",
+      "breakpoints": true
     }
   ]
 }
