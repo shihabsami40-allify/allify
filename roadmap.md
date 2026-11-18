@@ -11,8 +11,9 @@
 - [x] Public catalog hides products belonging to suspended stores.
 - [x] Cart stock-limit feedback and individual removal of unavailable products corrected.
 - [x] Product-detail add-to-cart prevents exceeding stock when quantity is already in the cart.
+- [x] Product cards enforce the same 99-item cart quantity cap as the cart and product-detail views.
 - [x] Checkout and seller/admin status changes invalidate customer order-history cache.
-- [x] Latest changes passed lint, strict TypeScript, tests, and production build in CI (run 44237881589).
+- [x] Latest changes passed lint, strict TypeScript, tests, and production build in CI (run 44238102831).
 - [ ] Restore remaining original catalog/hero image assets.
 - [ ] Test buyer/seller/admin flows with real authenticated test accounts.
 - [ ] Validate COD checkout, stock decrement, cancellation/restoration, and status transitions using controlled test inventory. Cancellation stock-restoration behavior is not yet verified; do not test against live inventory.
