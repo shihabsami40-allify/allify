@@ -43,6 +43,7 @@ Latest verified code commit: 772477924710570a6c14fa6fb2e79103e1664e07
 - Existing Vercel project: `allify-chattogram` (`prj_HrrHA2oTczJFEKdKUB9hAOsJ8DEV`) in team `allify`.
 - The existing project is now linked to GitHub repository `shihabsami40-allify/allify`; the Git provider connection was verified in Vercel's Git deployment context.
 - A fresh Preview deployment was created from branch `allify-recovery-2026-11-17`, commit `225c619da50be292bf008d89ed028a45abb6632b`: `https://allify-chattogram-5go72lc2f-allify.vercel.app`.
+- Git-triggered Preview deployment is now verified for later commits too. Latest recovery-branch commit `08bd585752d116301f73776f34a1303501944ebb` has deployment `dpl_7VgNxVnFc7AEMZod2pQ4nxy3uDHa`, state `READY`, URL `https://allify-chattogram-5ju3ugbqa-allify.vercel.app`.
 - Vercel build logs report `Build Completed` and `Deployment completed`; deployment state is `READY`. This confirms build/deploy completion, not successful authenticated app QA.
 - Project-level environment variables are present for Production, Preview, and Development: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, and `SUPABASE_PUBLISHABLE_KEY`. Secret values were not retrieved or recorded.
 - Vercel SSO protection is enabled for deployments on non-custom domains. The preview has not yet received an authenticated browser QA session; no runtime logs were observed during the inspection window. Do not disable SSO as a shortcut.
