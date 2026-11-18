@@ -36,3 +36,20 @@ describe('product image bucket configuration',()=>{
   expect(bucketConfig).toContain('using (bucket_id = \'product-images\')');
  });
 });
+
+
+const imageRowGuard=readFileSync(resolve(process.cwd(),'drizzle/migrations/0014_restrict_suspended_store_image_rows.sql'),'utf8').toLowerCase();
+
+describe('suspended seller product image row guard',()=>{
+ it('replaces the legacy permissive table policy and requires an active non-demo owned store',()=>{
+  expect(imageRowGuard).toContain('drop policy if exists "images owner write"');
+  expect(imageRowGuard).toContain('join public.seller_stores s on s.id = p.store_id');
+  expect(imageRowGuard).toContain("s.status = 'active'");
+  expect(imageRowGuard).toContain('s.is_demo = false');
+ });
+ it('retains admin access and checks both old and new image rows',()=>{
+  expect(imageRowGuard.match(/public.has_role\\(auth.uid\\(\\), 'admin'\\)/g)?.length).toBe(2);
+  expect(imageRowGuard).toContain('using (');
+  expect(imageRowGuard).toContain('with check (');
+ });
+});
