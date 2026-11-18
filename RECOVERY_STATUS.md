@@ -33,9 +33,12 @@ Latest verified code commit: 772477924710570a6c14fa6fb2e79103e1664e07
 
 ## Vercel deployment status
 - Existing Vercel project: `allify-chattogram` (`prj_HrrHA2oTczJFEKdKUB9hAOsJ8DEV`) in team `allify`.
-- The latest Git deployment context reports no Git-linked projects for the team.
-- The latest recorded deployment, `allify-chattogram-7g2mh5kn4-allify.vercel.app`, was created from older commit `ce891d6dac57583768ca553423bed9d97b555a42` on the recovery branch and ended in `ERROR` with `git_info_fail`; no build events were returned.
-- GitHub CI success does not prove that a Vercel preview is built or running. Reconnect the existing project to the repository and verify a fresh preview from the recovery branch before browser QA. Do not create a duplicate project or deploy production as a workaround.
+- The existing project is now linked to GitHub repository `shihabsami40-allify/allify`; the Git provider connection was verified in Vercel's Git deployment context.
+- A fresh Preview deployment was created from branch `allify-recovery-2026-11-17`, commit `225c619da50be292bf008d89ed028a45abb6632b`: `https://allify-chattogram-5go72lc2f-allify.vercel.app`.
+- Vercel build logs report `Build Completed` and `Deployment completed`; deployment state is `READY`. This confirms build/deploy completion, not successful authenticated app QA.
+- Project-level environment variables are present for Production, Preview, and Development: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, and `SUPABASE_PUBLISHABLE_KEY`. Secret values were not retrieved or recorded.
+- Vercel SSO protection is enabled for deployments on non-custom domains. The preview has not yet received an authenticated browser QA session; no runtime logs were observed during the inspection window. Do not disable SSO as a shortcut.
+- Production and `main` remain untouched. Do not create a duplicate project or promote this Preview to Production before launch gates are satisfied.
 
 ## Remaining before launch
 - Restore the remaining original catalog/hero binary assets; missing product images use a graceful SVG placeholder. Do not use corrupted text representations.
