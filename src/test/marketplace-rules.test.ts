@@ -182,3 +182,15 @@ describe('seller order list refresh',()=>{
   expect(dashboard).toContain('হালনাগাদ হচ্ছে…');
  });
 });
+
+describe('seller order discovery',()=>{
+ it('supports searching orders and filtering by fulfillment status with reset recovery',()=>{
+  const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
+  expect(dashboard).toContain('অর্ডার খুঁজুন');
+  expect(dashboard).toContain("orderFilter==='all'||item.status===orderFilter");
+  expect(dashboard).toContain('<option value="pending">অপেক্ষমাণ</option>');
+  expect(dashboard).toContain('<option value="delivered">ডেলিভারি সম্পন্ন</option>');
+  expect(dashboard).toContain('কোনো অর্ডার মেলেনি');
+  expect(dashboard).toContain('ফিল্টার মুছুন');
+ });
+});
