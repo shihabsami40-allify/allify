@@ -76,3 +76,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - CI run `44251012796` completed successfully (lint, typecheck, tests, production build).
 - Latest Vercel Preview is READY: `https://allify-chattogram-n13zyypu9-allify.vercel.app`, commit `55fad1036c53801da790f8d4abc80af050e1089c`.
 - Authenticated browser QA and live Supabase storage-policy verification remain outstanding; no live database changes, production deployment, or merge to `main` were performed.
+
+
+## 2026-11-18 — seller management empty-state handling
+
+- Seller management now returns empty product/order collections without issuing PostgREST `IN ()` filters when an authenticated seller account has no stores yet. This avoids a query error for newly approved/role-assigned accounts with no linked store.
+- Admin store activation/suspension already requires a returned row via `.select('id').single()`; reviewed and confirmed no change needed there.
+- CI run `44251286489` passed lint, typecheck, tests, and production build.
+- Vercel Preview READY: `https://allify-chattogram-9v2amhkmw-allify.vercel.app`, commit `356b20483dfabd652102f7be11622cfed869e4d0`.
+- Authenticated browser QA and live Supabase verification remain outstanding. No production deployment, live DB change, or merge to `main`.
