@@ -10,6 +10,15 @@ export function safeImageUrl(value:string) {
  if(value==='' || /^\/images\/products\/[a-z-]+\.(jpg|svg)$/.test(value)) return true;
  try { const url=new URL(value); const host=url.hostname.toLowerCase(); return url.protocol==='https:' && !url.username && !url.password && !url.port && host.includes('.') && !host.endsWith('.local') && !host.endsWith('.localhost') && !host.endsWith('.internal') && !/^[\d.]+$/.test(host) && !host.includes(':'); } catch { return false; }
 }
+export function productImageStoragePath(value:string, publicBaseUrl:string, ownerId:string, storeId:string):string|null {
+ try {
+  const base=new URL(publicBaseUrl); const url=new URL(value);
+  if(url.origin!==base.origin || !base.pathname.endsWith('/') || !url.pathname.startsWith(base.pathname)) return null;
+  const path=decodeURIComponent(url.pathname.slice(base.pathname.length)); const parts=path.split('/');
+  if(parts.length!==3 || parts[0]!==ownerId || parts[1]!==storeId || !/^[0-9a-f-]{36}\\.(jpg|png|webp)$/i.test(parts[2])) return null;
+  return path;
+ } catch { return null; }
+}
 export const categorySchema=z.object({id:z.string().uuid().optional(),name_bn:z.string().trim().min(2).max(80),name_en:z.string().trim().min(2).max(80),slug:z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(80),sort_order:z.coerce.number().int().min(0).max(1000)});
 export const productSchema = z.object({id:z.string().uuid().optional(), store_id:z.string().uuid(), title_bn:z.string().trim().min(2).max(120), title_en:z.string().max(120).default(''), description:z.string().max(3000).default(''), price:z.coerce.number().positive().max(9999999), stock:z.coerce.number().int().min(0).max(100000), category_id:z.string().uuid(), status:z.enum(['active','draft','hidden']), image:z.string().refine(safeImageUrl,'Use a secure public image URL') });
 export const applicationSchema = z.object({store_name:z.string().trim().min(2).max(80),owner_name:z.string().trim().min(2).max(100),phone:z.string().regex(/^01[3-9][0-9]{8}$/),area:z.string().trim().min(2).max(60),address:z.string().trim().min(5).max(300),description:z.string().max(1000).default('')});
