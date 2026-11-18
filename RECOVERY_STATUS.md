@@ -8,7 +8,7 @@ Latest reviewed commit: ce891d6dac57583768ca553423bed9d97b555a42
 - Recovered the text source, route, test, configuration, and migration files from the Lovable revision into the recovery branch.
 - Main branch remains unchanged.
 - Fixed lint issues and removed the missing homepage hero asset reference.
-- GitHub Actions verification on the latest recovery commit succeeded: lint, 16 tests, and production build.
+- GitHub Actions now runs lint, strict TypeScript checking (excluding the orphaned legacy `src/routes/$page.tsx`), 20 tests, and production build; latest verified run succeeded.
 - Checkout now uses authenticated cash-on-delivery flow calling the existing live `place_order` RPC; order history uses authenticated Supabase data.
 
 ## Database safety
@@ -19,7 +19,7 @@ Latest reviewed commit: ce891d6dac57583768ca553423bed9d97b555a42
 - RLS on orders/order-items was reviewed. No SQL writes, migrations, test orders, or real inventory changes were made.
 
 ## Remaining before launch
-- Restore/replace the 18 missing binary assets (favicon, product/catalog/hero images) from trustworthy originals; do not use corrupted text representations.
+- Restore the remaining original catalog/hero binary assets; missing product images now use a graceful SVG placeholder and the favicon is restored as SVG. Do not use corrupted text representations.
 - Verify buyer, seller, and admin flows in an authenticated browser session, including controlled COD order, inventory decrement, seller status changes, admin controls, cancellation/stock-restoration behavior. Use a dedicated test product and cleanup plan.
 - Review the security findings and order-status lifecycle carefully.
 - Payment gateway is not configured; only COD is implemented.
