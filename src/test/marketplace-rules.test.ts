@@ -15,7 +15,7 @@ describe('marketplace validation',()=>{
  it('allows manual confirmation before shipment',()=>expect(canTransition('pending','confirmed')).toBe(true));
  it('does not skip confirmation',()=>expect(canTransition('pending','shipped')).toBe(false));
  it('does not reverse completed delivery',()=>expect(canTransition('delivered','pending')).toBe(false));
- it('blocks cancellation until inventory restoration is implemented',()=>{expect(canTransition('pending','cancelled')).toBe(false);expect(canTransition('confirmed','cancelled')).toBe(false);});
+ it('allows cancellation only before shipment when stock can be restored',()=>{expect(canTransition('pending','cancelled')).toBe(true);expect(canTransition('confirmed','cancelled')).toBe(true);expect(canTransition('shipped','cancelled')).toBe(false);expect(canTransition('cancelled','pending')).toBe(false);});
  it('extracts only this seller’s product image object path',()=>{const base='https://project.supabase.co/storage/v1/object/public/product-images/';const owner='11111111-1111-4111-8111-111111111111';const store='22222222-2222-4222-8222-222222222222';const file='33333333-3333-4333-8333-333333333333.webp';expect(productImageStoragePath(base+owner+'/'+store+'/'+file,base,owner,store)).toBe(owner+'/'+store+'/'+file);});
  it('refuses external, cross-seller, and malformed product image paths',()=>{const base='https://project.supabase.co/storage/v1/object/public/product-images/';const owner='11111111-1111-4111-8111-111111111111';const store='22222222-2222-4222-8222-222222222222';expect(productImageStoragePath('https://other.example/x.jpg',base,owner,store)).toBeNull();expect(productImageStoragePath(base+'other/'+store+'/33333333-3333-4333-8333-333333333333.jpg',base,owner,store)).toBeNull();expect(productImageStoragePath(base+owner+'/'+store+'/../private.jpg',base,owner,store)).toBeNull();});
  it('accepts Bangladesh mobile format',()=>expect(deliverySchema.safeParse({recipient:'ক্রেতা',phone:'01712345678',area:'চট্টগ্রাম',address:'দোকানের ঠিকানা'}).success).toBe(true));
@@ -45,8 +45,8 @@ describe('order lifecycle transitions',()=>{
   expect(canTransition('pending','shipped')).toBe(false);
   expect(canTransition('confirmed','delivered')).toBe(false);
   expect(canTransition('delivered','confirmed')).toBe(false);
-  expect(canTransition('pending','cancelled')).toBe(false);
-  expect(canTransition('confirmed','cancelled')).toBe(false);
+  expect(canTransition('pending','cancelled')).toBe(true);
+  expect(canTransition('confirmed','cancelled')).toBe(true);
   expect(canTransition('shipped','cancelled')).toBe(false);
  });
 });
