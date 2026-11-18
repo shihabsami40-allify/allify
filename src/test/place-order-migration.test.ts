@@ -24,3 +24,20 @@ describe('COD order database patch',()=>{
   expect(cancellationGuard).not.toContain("new.status in ('shipped', 'cancelled')");
  });
 });
+
+const adminCancellationGuard=readFileSync(resolve(process.cwd(),'drizzle/migrations/0008_block_admin_order_cancellation.sql'),'utf8').toLowerCase();
+
+describe('admin order cancellation stock safety',()=>{
+ it('blocks cancellation for admins as well as sellers until stock restoration exists',()=>{
+  expect(adminCancellationGuard).toContain("if new.status = 'cancelled' then");
+  expect(adminCancellationGuard).toContain('order cancellation is unavailable until stock restoration is implemented');
+  expect(adminCancellationGuard.indexOf("if new.status = 'cancelled' then")).toBeLessThan(adminCancellationGuard.indexOf("if not public.has_role(auth.uid(), 'admin')"));
+ });
+ it('preserves forward admin status management while retaining seller lifecycle checks',()=>{
+  expect(adminCancellationGuard).toContain("if not public.has_role(auth.uid(), 'admin') and not (");
+  expect(adminCancellationGuard).toContain("(old.status = 'pending' and new.status = 'confirmed')");
+  expect(adminCancellationGuard).toContain("(old.status = 'confirmed' and new.status = 'shipped')");
+  expect(adminCancellationGuard).toContain("(old.status = 'shipped' and new.status = 'delivered')");
+  expect(adminCancellationGuard).toContain('revoke all on function public.guard_order_item_update() from public, anon, authenticated');
+ });
+});
