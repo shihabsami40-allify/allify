@@ -50,3 +50,14 @@ describe('order lifecycle transitions',()=>{
   expect(canTransition('shipped','cancelled')).toBe(false);
  });
 });
+
+describe('order status prompts include item details',()=>{
+ it('admin confirmation identifies the order, product and quantity',()=>{
+  const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/admin-dashboard.tsx'),'utf8');
+  expect(dashboard).toContain('${o.order_no} • ${i.title} × ${i.quantity}');
+ });
+ it('seller confirmation identifies the order, product and quantity',()=>{
+  const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
+  expect(dashboard).toContain('${item.orders?.order_no??'এই'} • ${item.title} × ${item.quantity}');
+ });
+});
