@@ -28,3 +28,10 @@ describe('seller temporary image replacement',()=>{
   expect(source).toContain('if(await discardPendingImage())setEdit(null)');
   expect(source).toContain('disabled={busy||imageUploading}');
  });
+
+
+describe('new product image form reset',()=>{
+ it('clears the previous image URL before reopening a new product form',()=>{
+  expect(source).toContain("if(await discardPendingImage()){setImageUrl('');setUploadedImagePath(null);setEdit('new');}");
+ });
+});
