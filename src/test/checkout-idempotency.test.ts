@@ -13,6 +13,7 @@ describe('COD checkout request idempotency',()=>{
   expect(migration).toContain('where checkout_request_id is not null');
  });
  it('serializes concurrent retries and returns the already-created order number',()=>{
+  expect(migration).toContain('drop function if exists public.place_order(jsonb, text, text, text, text, text, boolean)');
   expect(migration).toContain('pg_advisory_xact_lock(hashtextextended(v_uid::text');
   expect(migration).toContain('where customer_id = v_uid and checkout_request_id = p_request_id');
   expect(migration).toContain('if found then\n    return v_no;');
