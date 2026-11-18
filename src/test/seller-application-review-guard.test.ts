@@ -26,6 +26,7 @@ describe('seller application review database guard',()=>{
   expect(migration).toContain("values (v_app.user_id, 'seller')");
   expect(migration).toContain("set status = 'approved'");
   expect(migration).toContain("set status = 'rejected'");
+  expect(migration.indexOf('if not p_approve then')).toBeLessThan(migration.indexOf('if v_app.user_id is null then'));
   expect(migration).toContain("set_config('app.review_application', '1', true)");
   expect(migration).toContain('revoke execute on function public.review_seller_application(uuid, boolean, text) from anon, public');
   expect(migration).toContain('grant execute on function public.review_seller_application(uuid, boolean, text) to authenticated');
