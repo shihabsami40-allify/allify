@@ -27,12 +27,12 @@ Latest verified code commit: 7877b343670d418de885e0921a04c7d42d3b6972
 - Bengali 404/error-page localization commit `e0955663`; CI run `44237769526` passed.
 - Added order-history refresh after checkout and seller/admin order-status changes.
 - CI for both cache-refresh commits passed lint, strict TypeScript, tests, and production build.
-- Cancellation stock restoration remains unverified; avoid live inventory testing.
+- Source review of `0000_migration.sql`, `0001_secure_marketplace_controls.sql`, and `0003_order_status_lifecycle.sql` confirms that pending/confirmed items may transition to `cancelled`, but the recovered database functions contain no corresponding stock-restoration operation. The current seller/admin status-update path can therefore cancel an item without restoring product stock. This is a launch blocker; implement an authenticated, atomic, idempotent cancellation RPC (with authorization and concurrency protections) and test only against controlled test inventory. No live test was run.
 
 ## Remaining before launch
 - Restore the remaining original catalog/hero binary assets; missing product images now use a graceful SVG placeholder and the favicon is restored as SVG. Do not use corrupted text representations.
 - Verify buyer, seller, and admin flows in an authenticated browser session, including controlled COD order, inventory decrement, seller status changes, admin controls, cancellation/stock-restoration behavior. Use a dedicated test product and cleanup plan.
-- Review the security findings and order-status lifecycle carefully.
+- Review the security findings and order-status lifecycle carefully; specifically, do not expose cancellation as a normal operational action until the stock-restoration blocker is resolved.
 - Payment gateway is not configured; only COD is implemented.
 - Vercel project has no Git repository link yet. A preview deployment attempt failed with `git_info_fail`; subsequent API request was rate-limited by GitHub. The GitHub app was just installed for the repository, but Vercel's linked-project state still needs re-checking.
 - Do not merge recovery into main or deploy production until source/assets, authenticated checks, and preview are verified.
