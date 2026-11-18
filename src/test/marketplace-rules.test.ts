@@ -184,6 +184,16 @@ describe('seller product list refresh',()=>{
 });
 
 
+
+describe('seller product empty-state recovery',()=>{
+ it('distinguishes an empty inventory and lets sellers clear combined filters',()=>{
+  const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
+  expect(dashboard).toContain('এখনো কোনো পণ্য যোগ করা হয়নি।');
+  expect(dashboard).toContain('সব ফিল্টার মুছুন');
+  expect(dashboard).toContain("setProductQuery('');setProductFilter('all');setStockFilter('all')");
+ });
+});
+
 describe('seller product stock filters',()=>{
  it('supports filtering products by sold-out and low-stock quantities',()=>{
   const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
