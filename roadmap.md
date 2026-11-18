@@ -4,10 +4,12 @@
 - [x] Recovered project source into a protected recovery branch; main remains unchanged.
 - [x] Public routes and demo buyer/seller/admin views are implemented.
 - [x] Authenticated COD checkout and customer order history code are implemented.
-- [x] CI lint, tests (16), and production build passed on recovery branch.
+- [x] CI lint, strict TypeScript, 20 tests, and production build passed on recovery branch (latest fixes included).
 
 ## Not yet launch-ready
-- [x] Added a fallback SVG for missing product images and restored the ALLIFY SVG favicon.
+- [x] Added fallback SVG for missing product images and restored the ALLIFY SVG favicon.
+- [x] Public catalog hides products belonging to suspended stores.
+- [x] Cart stock-limit feedback and individual removal of unavailable products corrected.
 - [ ] Restore remaining original catalog/hero image assets.
 - [ ] Test buyer/seller/admin flows with real authenticated test accounts.
 - [ ] Validate COD checkout, stock decrement, cancellation/restoration, and status transitions using controlled test inventory.
