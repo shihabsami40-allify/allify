@@ -205,3 +205,13 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - GitHub Actions run `44261190359` passed lint, strict typecheck, tests, and production build for commit `b8266826663320befb3e2eea4b5679b34a5d8d9f`.
 - Vercel Preview is READY at `https://allify-chattogram-14xwehscd-allify.vercel.app` for the same commit.
 - Authenticated browser QA remains pending; no live database changes, production deployment, or merge to `main`.
+
+
+## 2026-11-18 — seller temporary image replacement cleanup fix
+
+- When replacing an uncommitted seller image, the previous temporary object cleanup result was previously ignored. If removal failed, the UI could switch its tracked temporary path to the new upload, leaving the older object untracked.
+- The seller dashboard now checks the previous-object removal result. If cleanup fails, it removes the just-uploaded replacement best-effort and retains the previous temporary image as the tracked selection; it does not silently advance the UI state.
+- Added a regression test for this failure path.
+- GitHub Actions run `44261816396` (implementation) and `44261829126` (regression test) both passed lint, strict typecheck, tests, and production build.
+- Latest recovery-branch Preview for commit `79f6b1d323a1e0eba89d25e28c39eaa2c3f0887c` is READY: `https://allify-chattogram-92d7xiybn-allify.vercel.app`.
+- This does not verify storage policies against live Supabase or authenticated browser behavior. No live database changes, production deployment, or merge to `main` were performed.
