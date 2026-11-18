@@ -308,3 +308,11 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - The trigger retains the existing cancellation block and the normal seller fulfillment transitions. It changes no demo rows; it only guards future updates after the migration is applied.
 - Registered migration journal entry 9 and added regression tests for demo-order immutability and preserved lifecycle rules.
 - CI is pending. Migration is source-controlled only and has NOT been applied to Supabase. No orders, stock, or live database rows were changed.
+
+
+## 2026-11-18 — seller application concurrency guard
+
+- Added migration `0012_serialize_seller_application_submissions.sql`. The application insert trigger now takes a transaction-scoped advisory lock keyed by applicant user ID before checking for an existing pending application.
+- This closes the race where two simultaneous submissions could both pass the prior existence check. Existing pending-only defaults, admin-note reset, reviewed-at reset, and existing-store check are retained.
+- Added regression tests and registered Drizzle journal entry 10.
+- CI is pending. Migration is source-controlled only and has NOT been applied to Supabase. No applications or live database rows were changed.
