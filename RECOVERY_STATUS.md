@@ -365,3 +365,10 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Seller product list now calls out zero-stock items (“স্টক শেষ”) and low stock (5 or fewer, but above zero) so merchants can spot products needing replenishment at a glance.
 - Added regression coverage for both labels and the threshold condition.
 - Source-only code update on recovery branch; no live inventory was changed and no authenticated browser QA was performed.
+
+
+## 2026-11-18 — buyer-facing product stock visibility
+
+- Product cards now show an explicit “স্টক শেষ” badge for zero-stock items and “স্টক কম” for stock from one to five. The sold-out add-to-bag control remains disabled and its title now explains why.
+- Added regression coverage for both labels and the disabled sold-out action.
+- Recovery branch only; no inventory values or live data were modified. Authenticated browser QA remains outstanding.
