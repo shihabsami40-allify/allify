@@ -1,8 +1,19 @@
-# ALLIFY MVP
-- [x] Build/typecheck clean; 17 tests pass.
-- [x] Public pages (home, browse, stores, product, cart, checkout, orders, sell, auth, help, demo seller/admin) load on desktop and 390px phone with no page errors.
-- [x] Checkout demo-only (browser-local); real-store carts show 'unavailable'.
-- [x] Help page with COD, Chattogram delivery, free seller and demo info.
-- [ ] Signed-in buyer/seller/admin end-to-end checks — blocked: no real seller store or admin account exists yet.
-- [ ] Security scan and publish — pending after signed-in checks.
-- [ ] Owner: create first admin role for owner account (one-time, done by Lovable on request after owner signs up).
+# ALLIFY MVP launch checklist
+
+## Completed
+- [x] Recovered project source into a protected recovery branch; main remains unchanged.
+- [x] Public routes and demo buyer/seller/admin views are implemented.
+- [x] Authenticated COD checkout and customer order history code are implemented.
+- [x] CI lint, tests (16), and production build passed on recovery branch.
+
+## Not yet launch-ready
+- [ ] Restore/replace missing image and favicon assets.
+- [ ] Test buyer/seller/admin flows with real authenticated test accounts.
+- [ ] Validate COD checkout, stock decrement, cancellation/restoration, and status transitions using controlled test inventory.
+- [ ] Review security and permissions in a test environment.
+- [ ] Verify a preview deployment and confirm it works on desktop and mobile.
+- [ ] Only then review/merge recovery changes and release to production.
+- [ ] Configure online payments later; current checkout is COD-only.
+
+## Initial admin setup
+- [ ] Create the first owner admin role through a safe one-time process after owner account signup; do not grant admin to arbitrary users.
