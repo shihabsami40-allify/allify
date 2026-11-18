@@ -1,7 +1,8 @@
 import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
 import {describe,expect,it} from 'vitest';
 
-const migration=readFileSync(new URL('../../drizzle/migrations/0004_fix_place_order_internal_guard.sql',import.meta.url),'utf8').toLowerCase();
+const migration=readFileSync(resolve(process.cwd(),'drizzle/migrations/0004_fix_place_order_internal_guard.sql'),'utf8').toLowerCase();
 
 describe('COD order database patch',()=>{
  it('keeps the internal guard enabled through the protected order-total update',()=>{
