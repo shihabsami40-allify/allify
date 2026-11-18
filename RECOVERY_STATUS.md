@@ -498,3 +498,13 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Improved /reset-password to recognize both the implicit-flow type=recovery URL hash and Supabase's PASSWORD_RECOVERY auth event, with unsubscribe cleanup. Added a regression test for both paths. Commits: ffa30d2e4be263d417663db25542332c89638279 and 82564e3ebe3f7e42be33a04bfd551cbec5dbcebb.
 - Current recovery branch HEAD is 82564e3ebe3f7e42be33a04bfd551cbec5dbcebb. Its combined GitHub status currently reports a Vercel failure whose target is the Vercel build-rate-limit page; no GitHub Actions result is currently reported for this exact commit. Do not claim latest CI passed.
 - No live SQL, database rows, Storage objects/policies, Production deployment, or main branch changes were made.
+
+
+## 2026-11-18 — password recovery parser tests
+
+- Extracted Supabase recovery-hash detection into src/lib/auth.ts so it can be unit-tested independently.
+- Reset-password route now uses the tested helper while retaining PASSWORD_RECOVERY event handling and subscription cleanup.
+- Added unit cases for recovery hashes, signup hashes, missing tokens, and unrelated hashes.
+- Commits: 7047d3212bb037446043c722a025aa01fe2485e2, 9beaea14ea0174c74c16f3e65cb2db61fd5946f5, c6d6cb1a490978476168605492b5797be1267372.
+- Latest commit has no GitHub Actions workflow run reported; Vercel status is blocked by the team's build-rate-limit plan restriction. Tests have not been executed in CI or locally in this session.
+- Live database query remains blocked by Lovable Free-plan MCP database-action limit; no database mutation was attempted.
