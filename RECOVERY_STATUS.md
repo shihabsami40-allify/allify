@@ -264,3 +264,11 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Added regression tests for rollback cleanup tracking, retry-queue behavior, form-switch safety, and cleanup failures after save/upload errors.
 - GitHub Actions run `44264263493` passed lint, strict typecheck, tests, and production build for commit `6b0482fc006f65f6b1813df3f022c914b4247887`.
 - This is code/build verification only. No authenticated browser QA, live Supabase changes, production deployment, or merge to `main` was performed.
+
+
+## 2026-11-18 — block admin order cancellation until stock restoration exists
+
+- Review found that migration 0005 restricted seller cancellation but retained the admin bypass. Because cancellation still has no atomic stock-restoration implementation, a privileged direct database update could mark an order item cancelled without restoring inventory.
+- Added migration `0008_block_admin_order_cancellation.sql`: it rejects transitions to `cancelled` for every role, including admins, while retaining existing seller forward transitions and the admin's other status-management bypass.
+- Registered migration 0008 and added regression tests ensuring the cancellation rejection runs before the admin exception and that forward transitions remain intact.
+- Migration is source-controlled only and has NOT been applied to Supabase. No order, inventory, or production data was changed.
