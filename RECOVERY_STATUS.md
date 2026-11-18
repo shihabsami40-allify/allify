@@ -419,3 +419,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - A further server-boundary audit found that the product-save server function relied on client-side URL validation and could accept an arbitrary external HTTPS image URL. It now validates non-empty image URLs against the configured Supabase product-image bucket and the authenticated seller/store folder using `productImageStoragePath`; regression coverage was added.
 - GitHub Actions run `44292710750` passed lint, typecheck, tests, and production build for branch commit `244fb415d21ebab705e7f6e7d9058dd0e36d4e59`.
 - No Supabase migration was applied, no live database/order/inventory data was changed, no production deployment occurred, and `main` remains untouched. Preview refresh and authenticated browser QA remain outstanding; Vercel's daily deployment API quota had blocked a manual Preview refresh earlier today.
+
+
+## 2026-11-18 — Preview refresh confirmation and latest recovery checkpoint
+
+- Follow-up Vercel deployment history confirms that the seller-image server-validation source commit `f5dc77da0d14fbaa9e4761efad96ad90f3fb77eb` was deployed to a Preview deployment and reached `READY`: `allify-chattogram-79pie5dib-allify.vercel.app`. This corrects the earlier note above that the Preview refresh was still outstanding.
+- The deployment is a Preview, not Production. Its READY state confirms the deployment completed; it does not establish authenticated buyer/seller/admin browser QA or prove that Supabase migrations are applied.
+- Recovery branch HEAD is `c40db94d17195b0892f227bd690fa66aaa39602c`. GitHub Actions run `44292890612` completed successfully for this latest documentation commit; its verify job passed. The preceding application-code commit `244fb415d21ebab705e7f6e7d9058dd0e36d4e59` also passed run `44292710750`.
+- Source review confirms server-side product image validation is performed against the configured public product-images bucket and authenticated owner/store folder. Its regression test is source-level; live Storage policy behavior still requires authenticated integration QA.
+- No Supabase migrations were applied, no live database/order/inventory data was changed, no Production deployment occurred, and `main` remains untouched.
