@@ -448,3 +448,15 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - No new source defect was established by this read-only review, so no application code was changed merely to create activity. Existing static regression tests cover the key idempotency, stock-locking, demo exclusion, order lifecycle, and cancellation guards.
 - Latest branch HEAD before this audit was `325e1012690009f18489378b2c4360a8454e2513`; GitHub Actions run `44297536237` completed successfully (verify job passed). Latest Preview for that branch commit is READY at `https://allify-chattogram-pfw8uemwd-allify.vercel.app`; this is a Preview deployment only.
 - Important limitation: these are source and CI findings, not live database or authenticated end-to-end results. Supabase read access remains blocked, so migrations including `0009` and `0016` are not confirmed applied. No test orders, live stock changes, SQL/migrations, Production deployment, or merge to `main` were performed.
+
+
+## 2026-11-18 — authoritative Lovable database and recovery migration-history reconciliation
+
+- Reconfirmed that the active application backend is the Lovable Cloud Supabase database; the separately visible Supabase project `onqadpqdontbdvecnvby` is not the ALLIFY database and must not be substituted.
+- Read-only Lovable inspection found 13 public application tables and the previously recorded demo/catalog data. No live database rows or schema were changed.
+- The recovery branch's Drizzle journal currently contains 15 entries: `0000_migration`, `0001_secure_marketplace_controls`, and `0004` through `0016`.
+- The Lovable project's own journal at the inspected project revision contained only three entries (`0000_migration`, `0001_secure_marketplace_controls`, and `0002_restrict_internal_function_access`); its migration tracking table also showed three applied rows at the time of inspection.
+- This is a material source/migration-history divergence. Do NOT bulk-apply the recovery branch migrations, assume they are applied, or overwrite the Lovable project's migration journal. First compare the live schema, function definitions, RLS policies, Storage policies, and each migration's preconditions/ordering; then prepare a reviewed, non-destructive reconciliation plan.
+- The Lovable database read-only query limit was reached during the policy/function/storage audit. Retry only after the connector's cooldown; no writes were attempted.
+- Recovery-branch CI run `44298363342` was independently checked: lint, strict typecheck, tests, and production build all completed successfully. This is source/CI verification, not authenticated end-to-end QA.
+- `main`, Production, and live database remain untouched. Buyer/seller/admin authenticated browser QA and live migration/policy verification remain launch gates.
