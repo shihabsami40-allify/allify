@@ -332,3 +332,16 @@ describe('seller order fulfillment details',()=>{
   expect(dashboard).toContain("item.orders?.payment_method==='cod'?'ক্যাশ অন ডেলিভারি'");
  });
 });
+
+
+describe('admin order discovery',()=>{
+ it('supports searching order identity, buyer contact, delivery address and product with status filtering',()=>{
+  const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/admin-dashboard.tsx'),'utf8');
+  expect(dashboard).toContain('প্রশাসক অর্ডার খুঁজুন');
+  expect(dashboard).toContain('o.order_no,o.recipient,o.phone,o.area,o.address_line');
+  expect(dashboard).toContain('data.items.filter(i=>i.order_id===o.id).map(i=>i.title)');
+  expect(dashboard).toContain("orderStatus==='all'||o.status===orderStatus");
+  expect(dashboard).toContain('কোনো অর্ডার মেলেনি');
+  expect(dashboard).toContain('ফিল্টার মুছুন');
+ });
+});
