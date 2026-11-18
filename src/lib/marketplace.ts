@@ -41,6 +41,5 @@ export function validQuantity(quantity:number,stock:number) { return Number.isIn
 export function canTransition(from:Status,to:Status) { return (transitions[from] as readonly string[]).includes(to); }
 export function realOrderAllowed(products:Product[]) {return products.length>0 && products.every(p=>p.seller_stores?.is_demo===false);}
 export function metadata(title:string,description:string) { return {meta:[{title:`${title} | ALLIFY`},{name:'description',content:description},{property:'og:title',content:`${title} | ALLIFY`},{property:'og:description',content:description},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary_large_image'}]}; }
-export function productPageMetadata(product:Product|undefined) { const title=product?.title_bn??'পণ্য খুঁজে পাওয়া যায়নি'; const description=(product?.description?.trim()||`${title} — চট্টগ্রামের স্থানীয় দোকানের পণ্য ALLIFY-তে দেখুন।`).slice(0,160); return metadata(title,description); }
 export const imagePlaceholder='/images/products/placeholder.svg';
 export function productImage(p:Product) {const url=p.product_images[0]?.url;return url&&safeImageUrl(url)?url:imagePlaceholder;}
