@@ -1,6 +1,7 @@
 name: ALLIFY build check
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, allify-recovery-2026-11-17]
   pull_request:
