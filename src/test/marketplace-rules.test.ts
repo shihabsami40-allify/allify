@@ -99,3 +99,13 @@ describe('cart availability explanations',()=>{
   expect(cart).toContain('নমুনা পণ্য বাস্তব অর্ডারের জন্য নয়');
  });
 });
+
+
+describe('customer order progress display',()=>{
+ it('shows the forward fulfillment steps and a separate cancelled state',()=>{
+  const orders=readFileSync(resolve(process.cwd(),'src/routes/orders.tsx'),'utf8');
+  expect(orders).toContain("const fulfillmentSteps:Status[]=['pending','confirmed','shipped','delivered']");
+  expect(orders).toContain('aria-label="অর্ডারের অগ্রগতি"');
+  expect(orders).toContain('এই অর্ডারটি বাতিল করা হয়েছে।');
+ });
+});
