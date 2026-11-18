@@ -31,6 +31,15 @@ describe('marketplace validation',()=>{
  it('excludes cancelled and demo orders from admin revenue while retaining real order count',()=>{const totals=orderReportTotals([{is_demo:false,status:'pending',total:500},{is_demo:false,status:'cancelled',total:900},{is_demo:false,status:'delivered',total:300},{is_demo:true,status:'delivered',total:700}]);expect(totals).toEqual({orderCount:3,orderValue:800,deliveredValue:300});});
  it('calculates cart total using product prices and delivery fee',()=>{const p1={id:'a',price:100} as any;const p2={id:'b',price:250} as any;expect(cartTotal([{id:'a',quantity:2},{id:'b',quantity:1}],[p1,p2],50)).toBe(500);});
 });
+describe('server-side seller product image ownership',()=>{
+ it('validates uploaded product image URLs against the authenticated seller and store before saving',()=>{
+  const functions=readFileSync(resolve(process.cwd(),'src/lib/marketplace.functions.ts'),'utf8');
+  expect(functions).toContain('productImageStoragePath(image,imageBaseUrl,context.userId,store.id)');
+  expect(functions).toContain("new URL('/storage/v1/object/public/product-images/',process.env['SUPABASE_URL'])");
+  expect(functions).toContain('পণ্যের ছবি নিজের সক্রিয় দোকানে আপলোড করা নিরাপদ ছবিই হতে হবে');
+ });
+});
+
 describe('seller order status confirmation',()=>{
  it('requires confirmation before seller order status changes',()=>{
   const sellerDashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
