@@ -61,3 +61,13 @@ describe('order status prompts include item details',()=>{
   expect(dashboard).toContain("${item.orders?.order_no??'এই'} • ${item.title} × ${item.quantity}");
  });
 });
+
+
+describe('seller product stock warnings',()=>{
+ it('shows sold-out and low-stock labels in seller product list',()=>{
+  const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
+  expect(dashboard).toContain("' • স্টক শেষ'");
+  expect(dashboard).toContain("' • স্টক কম'");
+  expect(dashboard).toContain('p.stock<=5');
+ });
+});
