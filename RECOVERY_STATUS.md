@@ -15,6 +15,14 @@ Latest verified code commit: 772477924710570a6c14fa6fb2e79103e1664e07
 - Bengali 404/error-page localization and customer order-history cache invalidation are implemented.
 - Seller/admin app-layer cancellation actions are blocked until database stock restoration is safe; regression test covers pending and confirmed cancellation attempts.
 
+## Source-level order lifecycle review (2026-11-18)
+- Checkout calls the authenticated `place_order` RPC. The recovered SQL validates the signed-in customer and delivery details, locks each active product row, checks stock, decrements stock, creates order/order-item records, and clears the customer's saved cart within the transaction.
+- The secure marketplace migration adds a database trigger preventing the internal stock-update path from processing demo-store products as real orders.
+- Seller/admin status changes pass through the server function, which checks the allowed app transition, verifies admin role or store ownership, and uses a conditional update against the previously observed status.
+- The database order-item trigger still permits `pending -> cancelled` and `confirmed -> cancelled` for direct authenticated updates. There is no stock-restoration routine in the recovered order flow. App-level blocking is not a database security boundary; cancellation remains a launch blocker.
+- Supabase MCP read-only schema/migration inspection was attempted for project `htsvvotamlxlkncksssq` but the connected tool returned a permission-denied response. No database schema, migration, data, or inventory was changed. Reconnect/authorize Supabase access before designing and validating a new migration against the actual live schema.
+- No real checkout, test order, stock mutation, browser-authenticated flow, or production deployment was performed during this review.
+
 ## Database safety
 - Lovable's environment and the existing Vercel project's Supabase URL point to project ref `htsvvotamlxlkncksssq`.
 - A separately connected Supabase project `onqadpqdontbdvecnvby` is not substituted.
