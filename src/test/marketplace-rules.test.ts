@@ -8,6 +8,7 @@ describe('marketplace validation',()=>{
  it('allows manual confirmation before shipment',()=>expect(canTransition('pending','confirmed')).toBe(true));
  it('does not skip confirmation',()=>expect(canTransition('pending','shipped')).toBe(false));
  it('does not reverse completed delivery',()=>expect(canTransition('delivered','pending')).toBe(false));
+ it('blocks cancellation until inventory restoration is implemented',()=>{expect(canTransition('pending','cancelled')).toBe(false);expect(canTransition('confirmed','cancelled')).toBe(false);});
  it('accepts Bangladesh mobile format',()=>expect(deliverySchema.safeParse({recipient:'ক্রেতা',phone:'01712345678',area:'চট্টগ্রাম',address:'দোকানের ঠিকানা'}).success).toBe(true));
  it('rejects foreign mobile format',()=>expect(deliverySchema.safeParse({recipient:'ক্রেতা',phone:'+15551234567',area:'চট্টগ্রাম',address:'দোকানের ঠিকানা'}).success).toBe(false));
  it('rejects invalid category slug',()=>expect(categorySchema.safeParse({name_bn:'পোশাক',name_en:'Clothing',slug:'../../bad',sort_order:0}).success).toBe(false));
