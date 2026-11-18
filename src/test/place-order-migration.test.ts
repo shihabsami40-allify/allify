@@ -41,3 +41,22 @@ describe('admin order cancellation stock safety',()=>{
   expect(adminCancellationGuard).toContain('revoke all on function public.guard_order_item_update() from public, anon, authenticated');
  });
 });
+
+
+const demoStatusGuard=readFileSync(resolve(process.cwd(),'drizzle/migrations/0011_block_demo_order_status_updates.sql'),'utf8').toLowerCase();
+
+describe('demo order status immutability',()=>{
+ it('blocks direct status changes to demo order items before admin or seller transition checks',()=>{
+  expect(demoStatusGuard).toContain('from public.orders o');
+  expect(demoStatusGuard).toContain('where o.id = old.order_id and o.is_demo = true');
+  expect(demoStatusGuard).toContain('demo order status cannot be changed');
+  expect(demoStatusGuard.indexOf('demo order status cannot be changed')).toBeLessThan(demoStatusGuard.indexOf("if new.status = 'cancelled' then"));
+  expect(demoStatusGuard).toContain('revoke all on function public.guard_order_item_update() from public, anon, authenticated');
+ });
+ it('retains cancellation blocking and normal seller fulfillment transitions',()=>{
+  expect(demoStatusGuard).toContain('order cancellation is unavailable until stock restoration is implemented');
+  expect(demoStatusGuard).toContain("(old.status = 'pending' and new.status = 'confirmed')");
+  expect(demoStatusGuard).toContain("(old.status = 'confirmed' and new.status = 'shipped')");
+  expect(demoStatusGuard).toContain("(old.status = 'shipped' and new.status = 'delivered')");
+ });
+});
