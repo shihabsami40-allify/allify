@@ -296,3 +296,12 @@ describe('buyer product detail seller information',()=>{
   expect(detail).toContain('এই পণ্যের বিস্তারিত বিবরণ এখনো যোগ করা হয়নি।');
  });
 });
+
+describe('buyer related product section',()=>{
+ it('renders related products only when matching products exist',()=>{
+  const detail=readFileSync(resolve(process.cwd(),'src/routes/product.$slug.tsx'),'utf8');
+  expect(detail).toContain('const relatedProducts=data.products.filter');
+  expect(detail).toContain('relatedProducts.length>0');
+  expect(detail).toContain('<ProductGrid products={relatedProducts}/>');
+ });
+});
