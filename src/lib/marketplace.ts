@@ -25,6 +25,16 @@ export const applicationSchema = z.object({store_name:z.string().trim().min(2).m
 export const transitions = {pending:['confirmed'],confirmed:['shipped'],shipped:['delivered'],delivered:[],cancelled:[]} as const;
 export type Status = keyof typeof transitions;
 export const statusName:Record<Status,string> = {pending:'অপেক্ষমাণ',confirmed:'নিশ্চিত',shipped:'পথে আছে',delivered:'ডেলিভারি সম্পন্ন',cancelled:'বাতিল'};
+export function checkoutErrorMessage(error:unknown) {
+ const message=error instanceof Error?error.message:typeof error==='object'&&error!==null&&'message' in error&&typeof error.message==='string'?error.message:'';
+ if(message.includes('Please sign in')) return 'অর্ডার করতে আবার লগইন করুন।';
+ if(message.includes('Cart is empty')||message.includes('Invalid quantity')) return 'আপনার বাজারের ব্যাগে পণ্যের পরিমাণ যাচাই করে আবার চেষ্টা করুন।';
+ if(message.includes('Invalid name')||message.includes('Invalid phone number')||message.includes('Invalid address')||message.includes('Note too long')) return 'নাম, মোবাইল নম্বর ও ঠিকানা সঠিকভাবে পূরণ করুন।';
+ if(message.includes('Delivery not available')) return 'নির্বাচিত এলাকায় এখন ডেলিভারি দেওয়া যাচ্ছে না। অন্য এলাকা নির্বাচন করুন।';
+ if(message.includes('A product is no longer available')) return 'আপনার ব্যাগের একটি পণ্য আর পাওয়া যাচ্ছে না। ব্যাগে ফিরে পণ্যটি সরিয়ে আবার চেষ্টা করুন।';
+ if(message.includes('Not enough stock')) return 'একটি পণ্যের পর্যাপ্ত স্টক নেই। পরিমাণ কমিয়ে আবার চেষ্টা করুন।';
+ return 'অর্ডার সম্পন্ন হয়নি। আপনার ব্যাগ অক্ষত আছে; কিছুক্ষণ পর আবার চেষ্টা করুন।';
+}
 export function cartTotal(lines:CartLine[],products:Product[],fee:number) { return lines.reduce((sum,line)=>sum+(products.find(p=>p.id===line.id)?.price??0)*line.quantity,0)+fee; }
 export function validQuantity(quantity:number,stock:number) { return Number.isInteger(quantity)&&quantity>=1&&quantity<=Math.min(99,stock); }
 export function canTransition(from:Status,to:Status) { return (transitions[from] as readonly string[]).includes(to); }
