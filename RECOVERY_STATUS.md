@@ -237,3 +237,11 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - GitHub Actions run `44262582717` passed lint, strict typecheck, all tests, and production build for commit `3fd726e3fb34488814b9058ce72f3d212a705c6b`.
 - Vercel Preview for that commit is READY at `https://allify-chattogram-bt3jzutjp-allify.vercel.app`.
 - The migration is source-controlled only and has NOT been applied to Supabase. The connected Supabase project has not been changed. Authenticated Storage-policy behavior still needs verification after authorized migration application. No production deployment or merge to `main` was performed.
+
+
+## 2026-11-18 — reset stale image URL when starting a new product
+
+- A seller could cancel an edit after changing the image and then open a new-product form while the previous image URL remained in component state. The new-product action now clears the prior image URL and temporary upload tracking after cleanup succeeds, before opening a blank form.
+- Added a regression assertion for the reset behavior. The first test attempt exposed an outdated assertion expecting the previous one-line handler; the assertion was updated to check the new guarded reset.
+- GitHub Actions run `44263104581` passed lint, typecheck, tests, and production build for commit `5b7ae2211ab772981884f7d961b846f8099afbf7`. Vercel Preview is READY at `https://allify-chattogram-c7p9wyf9z-allify.vercel.app`.
+- This is source/build verification only. No authenticated browser QA, live Supabase migration, production deployment, or merge to `main` was performed.
