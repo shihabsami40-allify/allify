@@ -64,6 +64,13 @@
       "when": 1795001800000,
       "tag": "0010_restrict_suspended_store_product_writes",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795002400000,
+      "tag": "0011_block_demo_order_status_updates",
+      "breakpoints": true
     }
   ]
 }
