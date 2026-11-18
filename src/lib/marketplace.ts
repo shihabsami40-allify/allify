@@ -23,7 +23,7 @@ export function productImageStoragePath(value:string, publicBaseUrl:string, owne
 export const categorySchema=z.object({id:z.string().uuid().optional(),name_bn:z.string().trim().min(2).max(80),name_en:z.string().trim().min(2).max(80),slug:z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(80),sort_order:z.coerce.number().int().min(0).max(1000)});
 export const productSchema = z.object({id:z.string().uuid().optional(), store_id:z.string().uuid(), title_bn:z.string().trim().min(2).max(120), title_en:z.string().max(120).default(''), description:z.string().max(3000).default(''), price:z.coerce.number().positive().max(9999999), stock:z.coerce.number().int().min(0).max(100000), category_id:z.string().uuid(), status:z.enum(['active','draft','hidden']), image:z.string().refine(safeImageUrl,'Use a secure public image URL') });
 export const applicationSchema = z.object({store_name:z.string().trim().min(2).max(80),owner_name:z.string().trim().min(2).max(100),phone:z.string().regex(/^01[3-9][0-9]{8}$/),area:z.string().trim().min(2).max(60),address:z.string().trim().min(5).max(300),description:z.string().max(1000).default('')});
-export const transitions = {pending:['confirmed'],confirmed:['shipped'],shipped:['delivered'],delivered:[],cancelled:[]} as const;
+export const transitions = {pending:['confirmed','cancelled'],confirmed:['shipped','cancelled'],shipped:['delivered'],delivered:[],cancelled:[]} as const;
 export type Status = keyof typeof transitions;
 export const statusName:Record<Status,string> = {pending:'অপেক্ষমাণ',confirmed:'নিশ্চিত',shipped:'পথে আছে',delivered:'ডেলিভারি সম্পন্ন',cancelled:'বাতিল'};
 export function checkoutErrorMessage(error:unknown) {
