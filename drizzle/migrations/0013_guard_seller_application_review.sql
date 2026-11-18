@@ -59,13 +59,6 @@ BEGIN
     RAISE EXCEPTION 'Already reviewed';
   END IF;
 
-  IF v_app.user_id IS NULL THEN
-    RAISE EXCEPTION 'Demo application has no account';
-  END IF;
-
-  -- Serialize all approvals/rejections for this applicant, not only one application row.
-  PERFORM pg_advisory_xact_lock(hashtextextended(v_app.user_id::text, 0));
-
   IF NOT p_approve THEN
     PERFORM set_config('app.review_application', '1', true);
     UPDATE public.seller_applications
@@ -75,6 +68,13 @@ BEGIN
     WHERE id = p_app_id;
     RETURN NULL;
   END IF;
+
+  IF v_app.user_id IS NULL THEN
+    RAISE EXCEPTION 'Demo application has no account';
+  END IF;
+
+  -- Serialize approval attempts for the same applicant, not only one application row.
+  PERFORM pg_advisory_xact_lock(hashtextextended(v_app.user_id::text, 0));
 
   IF EXISTS (
     SELECT 1 FROM public.seller_stores
