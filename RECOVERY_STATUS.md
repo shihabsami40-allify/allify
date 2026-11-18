@@ -437,3 +437,14 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Reviewed authenticated route gating and account data queries. The authenticated route requires a valid Supabase user; account queries are scoped by the authenticated user ID. Server-side functions also use the auth middleware.
 - Attempted read-only Supabase project and migration/advisor inspection for project `htsvvotamlxlkncksssq`; the connected Supabase account returned `You do not have permission to perform this action`. Therefore the live project status, applied migration list, and advisor findings cannot currently be verified. No SQL was run and no migration was applied.
 - No application source changes were made in this audit because live DB permission is unavailable and the reviewed source controls already have regression coverage. Continue with authenticated end-to-end QA and live migration verification once authorized Supabase access is available.
+
+
+## 2026-11-18 — checkout and order-flow source audit
+
+- Reviewed the buyer checkout UI, delivery validation, demo-order exclusion, COD RPC, request-idempotency migration, order-status guards, and atomic cancellation RPC.
+- Confirmed in source that the checkout retry key is tied to the signed-in customer and normalized cart plus recipient, phone, area, address, and note. The database migration adds a customer-scoped unique request key and serializes duplicate retries before creating another order.
+- Confirmed the COD RPC validates the authenticated customer, delivery area, recipient/phone/address, quantity, active product and active non-demo store; it locks product rows, checks stock, derives subtotal from database prices, and updates stock and order rows in one transaction.
+- Confirmed source-level order protections: aggregate order status is derived from item statuses; direct cancellation is blocked; the protected cancellation RPC checks admin/store ownership and non-demo status, restores stock and adjusts sold count transactionally, and is idempotent for repeated cancellation attempts.
+- No new source defect was established by this read-only review, so no application code was changed merely to create activity. Existing static regression tests cover the key idempotency, stock-locking, demo exclusion, order lifecycle, and cancellation guards.
+- Latest branch HEAD before this audit was `325e1012690009f18489378b2c4360a8454e2513`; GitHub Actions run `44297536237` completed successfully (verify job passed). Latest Preview for that branch commit is READY at `https://allify-chattogram-pfw8uemwd-allify.vercel.app`; this is a Preview deployment only.
+- Important limitation: these are source and CI findings, not live database or authenticated end-to-end results. Supabase read access remains blocked, so migrations including `0009` and `0016` are not confirmed applied. No test orders, live stock changes, SQL/migrations, Production deployment, or merge to `main` were performed.
