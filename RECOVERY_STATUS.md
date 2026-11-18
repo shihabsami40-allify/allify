@@ -2,7 +2,7 @@
 
 Source: Lovable project revision 2374410ebdb39a274e68fc9cade5cd64fb4dd54b
 Recovery branch: allify-recovery-2026-11-17
-Latest verified code commit: 772477924710570a6c14fa6fb2e79103e1664e07
+Latest verified code commit: b8266826663320befb3e2eea4b5679b34a5d8d9f
 
 ## Recovered and verified
 - Recovered the text source, route, test, configuration, and migration files from the Lovable revision into the recovery branch.
@@ -195,3 +195,13 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Added a concise Chattogram/ALLIFY description for product-page search and social previews.
 - GitHub Actions run `44260571383` passed lint, typecheck, tests, and production build for commit `b0ee8a74aeb4f91f996db85c892f9d1d20e4ac37`. Vercel Preview is READY at `https://allify-chattogram-4wpa59vfi-allify.vercel.app`.
 - This is code/build verification only. Authenticated browser QA and live database migration/checkout verification remain outstanding. No production deployment or merge to `main`.
+
+
+## 2026-11-18 — admin revenue report correction
+
+- Admin report totals previously included cancelled real orders in the overall order-value figure, which could overstate sales value.
+- Added a shared `orderReportTotals` calculation: real order count still includes cancelled orders for transparent order volume, but cancelled and demo orders are excluded from revenue; delivered value includes only delivered real orders.
+- Added regression coverage for pending, cancelled, delivered, and demo orders.
+- GitHub Actions run `44261190359` passed lint, strict typecheck, tests, and production build for commit `b8266826663320befb3e2eea4b5679b34a5d8d9f`.
+- Vercel Preview is READY at `https://allify-chattogram-14xwehscd-allify.vercel.app` for the same commit.
+- Authenticated browser QA remains pending; no live database changes, production deployment, or merge to `main`.
