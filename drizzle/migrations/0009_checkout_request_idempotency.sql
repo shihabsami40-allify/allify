@@ -1,6 +1,6 @@
--- Repair the authenticated COD order RPC after the secure order-update trigger.
--- Keep the internal flag enabled through the subtotal/total update, then clear it.
--- Exclude demo stores at the database boundary, not only in the checkout UI.
+-- Add a customer-scoped idempotency key to the authenticated COD order RPC.
+-- Repeated calls with the same request ID return the original order number.
+-- Preserve transactional stock locking and the existing demo-store exclusion.
 DROP FUNCTION IF EXISTS public.place_order(jsonb, text, text, text, text, text, boolean);
 
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS checkout_request_id uuid;
@@ -41,7 +41,7 @@ BEGIN
     RAISE EXCEPTION 'Checkout request ID is required';
   END IF;
 
-  -- Serialize retries for this customer/request pair, including concurrent tabs.
+  -- Serialize concurrent retries that carry the same customer/request pair.
   PERFORM pg_advisory_xact_lock(hashtextextended(v_uid::text || ':' || p_request_id::text, 0));
   SELECT order_no INTO v_no
   FROM public.orders
