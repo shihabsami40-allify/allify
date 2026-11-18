@@ -324,7 +324,7 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - The trigger makes submitted application identity/details immutable after submission while allowing review metadata. The RPC serializes approval attempts per applicant, checks for an existing store, then creates the store, seller role, and approved status in one transaction.
 - Rejection of demo applications without a user account remains supported.
 - Added regression tests and registered Drizzle journal entry 11.
-- CI is pending. Migration is source-controlled only and has NOT been applied to Supabase. No seller applications, stores, or live rows were changed.
+- GitHub Actions run `44267844473` passed lint, strict typecheck, tests, and production build; related test, journal, and docs runs `44267893944`, `44267853320`, and `44267898534` also passed. Migration is source-controlled only and has NOT been applied to Supabase. No seller applications, stores, or live rows were changed.
 
 
 ## 2026-11-18 — suspended seller product image row guard
@@ -333,4 +333,4 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Added migration `0014_restrict_suspended_store_image_rows.sql` to require an owned, active, non-demo store for seller image-row writes; admin access is retained.
 - The Storage delete policy remains unchanged so owners can clean up their own old files after suspension.
 - Added regression coverage and registered Drizzle journal entry 12.
-- CI is pending. Migration is source-controlled only and has NOT been applied to Supabase. No product images or live database rows were changed.
+- GitHub Actions runs `44268141074`, `44268146543`, `44268180733`, and `44268187697` passed lint, strict typecheck, tests, and production build. The initial test-only run `44268150720` failed because of a test assertion typo; it was corrected and the subsequent full run passed. Migration is source-controlled only and has NOT been applied to Supabase. No product images or live database rows were changed.
