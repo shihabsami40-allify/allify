@@ -9,9 +9,9 @@ export const getCatalog = createServerFn({method:'GET'}).handler(async ():Promis
  const url=process.env['SUPABASE_URL']; const key=process.env['SUPABASE_PUBLISHABLE_KEY'];
  if(!url||!key) return {products:[],stores:[],categories:[],areas:[],unavailable:true};
  const db=createClient<Database>(url,key,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:(input,init)=>{const headers=new Headers(init?.headers); if(key.startsWith('sb_')&&headers.get('Authorization')===`Bearer ${key}`) headers.delete('Authorization'); headers.set('apikey',key); return fetch(input,{...init,headers});}}});
- const [products,categories,stores,areas]=await Promise.all([db.from('products').select('*,product_images(url),seller_stores(name,slug,is_demo,area)').eq('status','active').order('sold_count',{ascending:false}),db.from('categories').select('*').order('sort_order'),db.from('seller_stores').select('*').eq('status','active'),db.from('delivery_areas').select('*').eq('active',true).order('sort_order')]);
+ const [products,categories,stores,areas]=await Promise.all([db.from('products').select('*,product_images(url),seller_stores(name,slug,is_demo,area,status)').eq('status','active').order('sold_count',{ascending:false}),db.from('categories').select('*').order('sort_order'),db.from('seller_stores').select('*').eq('status','active'),db.from('delivery_areas').select('*').eq('active',true).order('sort_order')]);
  if(products.error||categories.error||stores.error||areas.error) return {products:[],categories:[],stores:[],areas:[],unavailable:true};
- return {products:products.data??[],categories:categories.data??[],stores:stores.data??[],areas:areas.data??[]};
+ return {products:(products.data??[]).filter(p=>p.seller_stores?.status==='active'),categories:categories.data??[],stores:stores.data??[],areas:areas.data??[]};
 });
 export const getAccount = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).handler(async({context})=>{
  const db=context.supabase;
