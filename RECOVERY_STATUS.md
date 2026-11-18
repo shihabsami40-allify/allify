@@ -358,3 +358,10 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Regression tests check that both dashboards include the line-item details in the confirmation.
 - GitHub Actions run `44271343776` passed lint, typecheck, tests, and production build.
 - Changes remain on the recovery branch. No production deployment or live database updates were made.
+
+
+## 2026-11-18 — seller inventory visibility
+
+- Seller product list now calls out zero-stock items (“স্টক শেষ”) and low stock (5 or fewer, but above zero) so merchants can spot products needing replenishment at a glance.
+- Added regression coverage for both labels and the threshold condition.
+- Source-only code update on recovery branch; no live inventory was changed and no authenticated browser QA was performed.
