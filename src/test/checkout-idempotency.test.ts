@@ -31,5 +31,10 @@ describe('COD checkout request idempotency',()=>{
   expect(checkout).toContain('writeStoredJson(cartKey,request.id)');
   expect(checkout).toContain('p_request_id:request.id');
   expect(checkout).toContain('removeStoredValue(cartKey)');
+  expect(checkout).toContain('recipient:parsed.data.recipient');
+  expect(checkout).toContain('phone:parsed.data.phone');
+  expect(checkout).toContain('area:parsed.data.area');
+  expect(checkout).toContain('address:parsed.data.address');
+  expect(checkout).toContain("note:parsed.data.note||''");
  });
 });
