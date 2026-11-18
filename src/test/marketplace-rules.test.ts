@@ -132,3 +132,15 @@ describe('seller storefront product discovery',()=>{
   expect(storefront).toContain('সার্চ মুছুন');
  });
 });
+
+
+describe('store directory discovery',()=>{
+ it('supports searching stores and filtering by area with reset recovery',()=>{
+  const stores=readFileSync(resolve(process.cwd(),'src/routes/stores.tsx'),'utf8');
+  expect(stores).toContain('দোকান খুঁজুন');
+  expect(stores).toContain("area==='all'||s.area===area");
+  expect(stores).toContain('সব এলাকা');
+  expect(stores).toContain('কোনো দোকান মেলেনি');
+  expect(stores).toContain('ফিল্টার মুছুন');
+ });
+});
