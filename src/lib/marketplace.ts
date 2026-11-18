@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { Database } from '@/integrations/supabase/types';
 export type Row<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
 export type Product = Row<'products'> & { product_images: {url:string}[]; seller_stores: (Pick<Row<'seller_stores'>,'name'|'slug'|'is_demo'|'area'> & Partial<Pick<Row<'seller_stores'>,'status'>>) | null };
-export type PublicStore = Pick<Row<'seller_stores'>,'id'|'name'|'name_en'|'slug'|'description'|'area'|'rating'|'is_demo'|'logo_url'|'banner_url'|'created_at'|'status'>;
+export type PublicStore = Pick<Row<'seller_stores'>,'id'|'name'|'name_en'|'slug'|'description'|'area'|'address'|'rating'|'is_demo'|'logo_url'|'banner_url'|'created_at'|'status'>;
 export type Catalog = { products: Product[]; categories: Row<'categories'>[]; stores: PublicStore[]; areas: Row<'delivery_areas'>[]; unavailable?: boolean };
 export type CartLine = {id:string; quantity:number};
 export const money = (n:number) => '৳'+Number(n).toLocaleString('bn-BD');
