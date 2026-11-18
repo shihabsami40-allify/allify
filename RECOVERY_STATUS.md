@@ -2,13 +2,14 @@
 
 Source: Lovable project revision 2374410ebdb39a274e68fc9cade5cd64fb4dd54b
 Recovery branch: allify-recovery-2026-11-17
-Latest reviewed commit: ce891d6dac57583768ca553423bed9d97b555a42
+Latest verified code commit: f8b49f72e37d7fa797baf1921870e3137d040584
 
 ## Recovered and verified
 - Recovered the text source, route, test, configuration, and migration files from the Lovable revision into the recovery branch.
 - Main branch remains unchanged.
 - Fixed lint issues and removed the missing homepage hero asset reference.
-- GitHub Actions now runs lint, strict TypeScript checking (excluding the orphaned legacy `src/routes/$page.tsx`), 20 tests, and production build; latest verified run succeeded.
+- GitHub Actions runs lint, strict TypeScript checking (excluding the orphaned legacy `src/routes/$page.tsx`), 20 tests, and production build; latest verified run succeeded.
+- Public catalog filters suspended stores, cart stock-limit messaging is corrected, and unavailable cart entries can be removed individually.
 - Checkout now uses authenticated cash-on-delivery flow calling the existing live `place_order` RPC; order history uses authenticated Supabase data.
 
 ## Database safety
