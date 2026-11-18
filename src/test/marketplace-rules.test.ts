@@ -28,3 +28,23 @@ describe('marketplace validation',()=>{
  it('excludes cancelled and demo orders from admin revenue while retaining real order count',()=>{const totals=orderReportTotals([{is_demo:false,status:'pending',total:500},{is_demo:false,status:'cancelled',total:900},{is_demo:false,status:'delivered',total:300},{is_demo:true,status:'delivered',total:700}]);expect(totals).toEqual({orderCount:3,orderValue:800,deliveredValue:300});});
  it('calculates cart total using product prices and delivery fee',()=>{const p1={id:'a',price:100} as any;const p2={id:'b',price:250} as any;expect(cartTotal([{id:'a',quantity:2},{id:'b',quantity:1}],[p1,p2],50)).toBe(500);});
 });
+describe('seller order status confirmation',()=>{
+ it('requires confirmation before seller order status changes',()=>{
+  const sellerDashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
+  expect(sellerDashboard).toContain('window.confirm');
+  expect(sellerDashboard).toContain('অর্ডার ${statusName[status]} করবেন?');
+ });
+});
+describe('order lifecycle transitions',()=>{
+ it('allows only the forward fulfillment sequence',()=>{
+  expect(canTransition('pending','confirmed')).toBe(true);
+  expect(canTransition('confirmed','shipped')).toBe(true);
+  expect(canTransition('shipped','delivered')).toBe(true);
+  expect(canTransition('pending','shipped')).toBe(false);
+  expect(canTransition('confirmed','delivered')).toBe(false);
+  expect(canTransition('delivered','confirmed')).toBe(false);
+  expect(canTransition('pending','cancelled')).toBe(false);
+  expect(canTransition('confirmed','cancelled')).toBe(false);
+  expect(canTransition('shipped','cancelled')).toBe(false);
+ });
+});
