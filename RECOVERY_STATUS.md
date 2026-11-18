@@ -94,3 +94,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - CI runs `44251602518` and `44251626245` passed lint, typecheck, tests, and production build.
 - Latest Preview READY: `https://allify-chattogram-hrtfl7k30-allify.vercel.app`, commit `d622d81b189249370ec41c498be6b1074af8ad42`.
 - Authenticated browser QA and live Supabase storage/database verification remain outstanding. No production deployment, live DB mutation, or merge to `main`.
+
+
+## 2026-11-18 — admin demo-data protection
+
+- Admin order status updates now load the related order's `is_demo` flag and reject demo-order changes server-side; the admin UI labels demo orders as read-only.
+- Admin store activation/suspension now updates only rows with `is_demo=false`. Product moderation verifies the product's store and rejects demo-store products server-side; the UI labels and disables moderation controls for demo products.
+- CI runs `44251973297` and `44252003498` passed lint, strict typecheck, tests, and production build.
+- Latest Vercel Preview READY: `https://allify-chattogram-qsw4xz0zn-allify.vercel.app`, commit `c40e06a5054dbee23df09c78818d6a40e859f272`.
+- These are application/server-function protections, not a replacement for database RLS/trigger hardening. Authenticated browser QA and live Supabase verification remain outstanding. No production deployment, live DB mutation, or merge to `main`.
