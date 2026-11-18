@@ -14,3 +14,17 @@ describe('seller temporary image replacement',()=>{
   expect(source.slice(cleanupCheck,stateSwitch)).toContain("throw new Error('আগের অস্থায়ী ছবিটি পরিষ্কার করা যায়নি; নতুন ছবি যোগ করা হয়নি।')");
  });
 });
+
+ it('does not discard a temporary upload when storage cleanup fails',()=>{
+  const discard=source.slice(source.indexOf('const discardPendingImage='),source.indexOf('useEffect('));
+  expect(discard).toContain('await supabase.storage.from(\'product-images\').remove([uploadedImagePath])');
+  expect(discard.indexOf('if(cleanup.error)')).toBeGreaterThan(-1);
+  expect(discard.indexOf('setUploadedImagePath(null)')).toBeGreaterThan(discard.indexOf('if(cleanup.error)'));
+  expect(discard).toContain('return false');
+ });
+ it('waits for temporary-image cleanup before switching product forms',()=>{
+  expect(source).toContain('if(await discardPendingImage())setEdit(\'new\')');
+  expect(source).toContain('if(await discardPendingImage())setEdit(p)');
+  expect(source).toContain('if(await discardPendingImage())setEdit(null)');
+  expect(source).toContain('disabled={busy||imageUploading}');
+ });
