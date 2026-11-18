@@ -334,3 +334,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - The Storage delete policy remains unchanged so owners can clean up their own old files after suspension.
 - Added regression coverage and registered Drizzle journal entry 12.
 - GitHub Actions runs `44268141074`, `44268146543`, `44268180733`, and `44268187697` passed lint, strict typecheck, tests, and production build. The initial test-only run `44268150720` failed because of a test assertion typo; it was corrected and the subsequent full run passed. Migration is source-controlled only and has NOT been applied to Supabase. No product images or live database rows were changed.
+
+
+## 2026-11-18 — aggregate order status integrity
+
+- Review found that the admin-only `orders` UPDATE policy still allowed direct updates to the parent order status, bypassing the guarded `order_items` lifecycle and potentially marking an order cancelled without restoring stock.
+- Added migration `0015_derive_order_status_from_items.sql`: direct changes to aggregate order status and order snapshot/delivery fields are rejected. The trusted item-status sync trigger temporarily sets the transaction-local internal flag only around its parent-order status update, then restores the previous flag.
+- The existing checkout RPC retains its internal update path for initial subtotal/total writes. Item-level cancellation remains disabled until a complete atomic stock-restoration workflow is implemented.
+- Added regression tests and registered Drizzle journal entry 13.
+- CI is pending. Migration is source-controlled only and has NOT been applied to Supabase. No orders, stock, or live database rows were changed.
