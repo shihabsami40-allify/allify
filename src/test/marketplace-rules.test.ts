@@ -1,3 +1,5 @@
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
 import {describe,it,expect} from 'vitest';
 import {safeImageUrl,productImageStoragePath,canTransition,deliverySchema,applicationSchema,categorySchema,validQuantity,realOrderAllowed,cartTotal,checkoutErrorMessage,orderReportTotals} from '@/lib/marketplace';
 describe('checkout error messages',()=>{
