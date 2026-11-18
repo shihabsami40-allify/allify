@@ -2,7 +2,7 @@
 
 Source: Lovable project revision 2374410ebdb39a274e68fc9cade5cd64fb4dd54b
 Recovery branch: allify-recovery-2026-11-17
-Latest verified code commit: f8b49f72e37d7fa797baf1921870e3137d040584
+Latest verified code commit: 9071d305b272a7d0a797d925e1c8061b4d8233db
 
 ## Recovered and verified
 - Recovered the text source, route, test, configuration, and migration files from the Lovable revision into the recovery branch.
@@ -11,6 +11,7 @@ Latest verified code commit: f8b49f72e37d7fa797baf1921870e3137d040584
 - GitHub Actions runs lint, strict TypeScript checking (excluding the orphaned legacy `src/routes/$page.tsx`), 20 tests, and production build; latest verified run succeeded.
 - Public catalog filters suspended stores, cart stock-limit messaging is corrected, and unavailable cart entries can be removed individually.
 - Checkout now uses authenticated cash-on-delivery flow calling the existing live `place_order` RPC; order history uses authenticated Supabase data.
+- Product-detail add-to-cart now accounts for quantity already in the cart, prevents adding beyond available stock, and shows an error rather than a success toast when the limit is exceeded.
 
 ## Database safety
 - Lovable's environment and the existing Vercel project's Supabase URL point to project ref `htsvvotamlxlkncksssq`.
@@ -20,6 +21,8 @@ Latest verified code commit: f8b49f72e37d7fa797baf1921870e3137d040584
 - RLS on orders/order-items was reviewed. No SQL writes, migrations, test orders, or real inventory changes were made.
 
 ## Latest verified source update
+- Product-detail stock-overflow guard commit `9071d305`; CI run `44237881589` passed lint, strict TypeScript, 20 tests, and production build.
+- Bengali 404/error-page localization commit `e0955663`; CI run `44237769526` passed.
 - Added order-history refresh after checkout and seller/admin order-status changes.
 - CI for both cache-refresh commits passed lint, strict TypeScript, tests, and production build.
 - Cancellation stock restoration remains unverified; avoid live inventory testing.
