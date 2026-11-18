@@ -460,3 +460,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - The Lovable database read-only query limit was reached during the policy/function/storage audit. Retry only after the connector's cooldown; no writes were attempted.
 - Recovery-branch CI run `44298363342` was independently checked: lint, strict typecheck, tests, and production build all completed successfully. This is source/CI verification, not authenticated end-to-end QA.
 - `main`, Production, and live database remain untouched. Buyer/seller/admin authenticated browser QA and live migration/policy verification remain launch gates.
+
+
+## 2026-11-18 — restore missing applied security migration in recovery history
+
+- Compared the authoritative Lovable migration journal and SQL with the recovery branch. The Lovable project has already applied `0002_restrict_internal_function_access`, but the recovery branch had omitted that migration and had assigned the next migration to journal index 2.
+- Restored the exact read-only security migration SQL from the Lovable project into `drizzle/migrations/0002_restrict_internal_function_access.sql` and inserted its original timestamp/tag into the recovery Drizzle journal. Existing later migrations were retained and re-indexed in chronological order; the journal now has 16 entries.
+- This aligns the source history with the known applied baseline; it does NOT apply any migration to the live database and does not prove that later recovery migrations are compatible with the live schema.
+- The Vercel status check for the journal commit reported a build-rate-limit failure. Treat the change as unverified by CI until a GitHub Actions verify run completes. Do not interpret the Vercel quota failure as an application build failure.
+- No live database, Production deployment, or `main` changes were made.
