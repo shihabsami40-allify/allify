@@ -469,3 +469,13 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - This aligns the source history with the known applied baseline; it does NOT apply any migration to the live database and does not prove that later recovery migrations are compatible with the live schema.
 - The Vercel status check for the journal commit reported a build-rate-limit failure. Treat the change as unverified by CI until a GitHub Actions verify run completes. Do not interpret the Vercel quota failure as an application build failure.
 - No live database, Production deployment, or `main` changes were made.
+
+
+## 2026-11-18 — complete recovery migration journal inventory
+
+- Continued comparing the migration files with the Drizzle journal. Found that `0003_order_status_lifecycle.sql` already existed in the recovery branch but was also missing from `_journal.json`.
+- Added the missing `0003` journal entry in chronological position between the confirmed Lovable baseline migration `0002` and recovery migration `0004`. The timestamp is an ordering value for this recovery journal, not evidence that the migration ran in the live database.
+- Re-indexed the journal. It now contains 17 ordered entries from `0000` through `0016`, with the deliberate historical tag sequence preserved.
+- Independently checked every journal tag against its corresponding SQL file: all 17 files are present; no journal entry points to a missing migration file.
+- The CI workflow is configured for pushes to `main` and pull requests targeting `main`, not direct pushes to this recovery branch. The Vercel status on the recent recovery commits reports a build-rate-limit failure; no successful build is claimed for these latest journal edits.
+- No migration was applied to the live database. Live schema/policy reconciliation, authenticated QA, and a verified build remain outstanding. `main`, Production, and live data remain untouched.
