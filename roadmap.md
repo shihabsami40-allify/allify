@@ -16,7 +16,7 @@
 - [x] Latest changes passed lint, strict TypeScript, tests, and production build in CI (run 44238102831).
 - [ ] Restore remaining original catalog/hero image assets.
 - [ ] Test buyer/seller/admin flows with real authenticated test accounts.
-- [ ] Validate COD checkout, stock decrement, cancellation/restoration, and status transitions using controlled test inventory. Cancellation stock-restoration behavior is not yet verified; do not test against live inventory.
+- [ ] Validate COD checkout, stock decrement, cancellation/restoration, and status transitions using controlled test inventory. Source review confirms cancellation transitions exist for pending/confirmed order items, but no stock-restoration logic exists in the recovered migrations/RPC; treat cancellation as a launch blocker until an atomic, idempotent restore path is implemented and tested. Do not test against live inventory.
 - [ ] Review security and permissions in a test environment.
 - [ ] Verify a preview deployment and confirm it works on desktop and mobile.
 - [ ] Only then review/merge recovery changes and release to production.
