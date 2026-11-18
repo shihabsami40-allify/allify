@@ -85,6 +85,13 @@
       "when": 1795003600000,
       "tag": "0013_guard_seller_application_review",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795004200000,
+      "tag": "0014_restrict_suspended_store_image_rows",
+      "breakpoints": true
     }
   ]
 }
