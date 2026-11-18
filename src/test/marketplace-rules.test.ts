@@ -305,3 +305,14 @@ describe('buyer related product section',()=>{
   expect(detail).toContain('<ProductGrid products={relatedProducts}/>');
  });
 });
+
+describe('customer order cost and delivery notes',()=>{
+ it('shows the item subtotal, delivery fee, payment method, and optional customer note',()=>{
+  const orders=readFileSync(resolve(process.cwd(),'src/routes/orders.tsx'),'utf8');
+  expect(orders).toContain('order.note&&');
+  expect(orders).toContain('আপনার নির্দেশনা:');
+  expect(orders).toContain('money(order.subtotal)');
+  expect(orders).toContain('money(order.delivery_fee)');
+  expect(orders).toContain("order.payment_method==='cod'?'ক্যাশ অন ডেলিভারি'");
+ });
+});
