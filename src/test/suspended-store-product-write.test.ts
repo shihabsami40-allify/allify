@@ -20,4 +20,13 @@ describe('suspended seller product write RLS',()=>{
   expect(migration).toContain('with check (');
   expect(migration).toContain("public.has_role(auth.uid(), 'admin')");
  });
+ it('also restricts product deletion for suspended and demo stores',()=>{
+  expect(migration).toContain('drop policy if exists "products owner delete"');
+  expect(migration).toContain('create policy "products owner delete"');
+  expect(migration).toContain('for delete to authenticated');
+  expect(migration).toContain('public.owns_store(store_id)');
+  expect(migration).toContain("s.status = 'active'");
+  expect(migration).toContain('s.is_demo = false');
+  expect(migration).toContain("public.has_role(auth.uid(), 'admin')");
+ });
 });
