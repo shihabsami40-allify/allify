@@ -3,6 +3,7 @@ import {resolve} from 'node:path';
 import {describe,expect,it} from 'vitest';
 
 const migration=readFileSync(resolve(process.cwd(),'drizzle/migrations/0004_fix_place_order_internal_guard.sql'),'utf8').toLowerCase();
+const cancellationGuard=readFileSync(resolve(process.cwd(),'drizzle/migrations/0005_block_unrestored_order_cancellation.sql'),'utf8').toLowerCase();
 
 describe('COD order database patch',()=>{
  it('keeps the internal guard enabled through the protected order-total update',()=>{
@@ -14,5 +15,12 @@ describe('COD order database patch',()=>{
  it('rejects demo stores in the locked product lookup',()=>{
   expect(migration).toContain('and s.is_demo = false');
   expect(migration).toContain('for update of p');
+ });
+ it('blocks direct seller cancellation until stock restoration is implemented',()=>{
+  expect(cancellationGuard).toContain("old.status = 'pending' and new.status = 'confirmed'");
+  expect(cancellationGuard).toContain("old.status = 'confirmed' and new.status = 'shipped'");
+  expect(cancellationGuard).toContain("old.status = 'shipped' and new.status = 'delivered'");
+  expect(cancellationGuard).not.toContain("new.status in ('confirmed', 'cancelled')");
+  expect(cancellationGuard).not.toContain("new.status in ('shipped', 'cancelled')");
  });
 });
