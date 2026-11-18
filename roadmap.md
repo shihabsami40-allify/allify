@@ -10,9 +10,11 @@
 - [x] Added fallback SVG for missing product images and restored the ALLIFY SVG favicon.
 - [x] Public catalog hides products belonging to suspended stores.
 - [x] Cart stock-limit feedback and individual removal of unavailable products corrected.
+- [x] Checkout and seller/admin status changes invalidate customer order-history cache.
+- [x] Latest changes passed lint, strict TypeScript, tests, and production build in CI.
 - [ ] Restore remaining original catalog/hero image assets.
 - [ ] Test buyer/seller/admin flows with real authenticated test accounts.
-- [ ] Validate COD checkout, stock decrement, cancellation/restoration, and status transitions using controlled test inventory.
+- [ ] Validate COD checkout, stock decrement, cancellation/restoration, and status transitions using controlled test inventory. Cancellation stock-restoration behavior is not yet verified; do not test against live inventory.
 - [ ] Review security and permissions in a test environment.
 - [ ] Verify a preview deployment and confirm it works on desktop and mobile.
 - [ ] Only then review/merge recovery changes and release to production.
