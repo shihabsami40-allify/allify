@@ -2,7 +2,7 @@
 
 Source: Lovable project revision 2374410ebdb39a274e68fc9cade5cd64fb4dd54b
 Recovery branch: allify-recovery-2026-11-17
-Latest verified code commit: b8266826663320befb3e2eea4b5679b34a5d8d9f
+Latest verified code commit: a158fdb36bcd8fe0e56e846557bd982b7a23e22e
 
 ## Recovered and verified
 - Recovered the text source, route, test, configuration, and migration files from the Lovable revision into the recovery branch.
@@ -215,3 +215,14 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - GitHub Actions run `44261816396` (implementation) and `44261829126` (regression test) both passed lint, strict typecheck, tests, and production build.
 - Latest recovery-branch Preview for commit `79f6b1d323a1e0eba89d25e28c39eaa2c3f0887c` is READY: `https://allify-chattogram-92d7xiybn-allify.vercel.app`.
 - This does not verify storage policies against live Supabase or authenticated browser behavior. No live database changes, production deployment, or merge to `main` were performed.
+
+
+## 2026-11-18 — preserve temporary seller image on failed discard
+
+- Seller dashboard previously ignored errors while discarding an uncommitted temporary product image before switching to another product form or cancelling the edit. This could leave an orphaned storage object while clearing the only tracked path.
+- Temporary-image discard now checks the Storage removal result. If removal fails, it shows an error and keeps the current form and tracked image intact. Switching to a new product, another product, or closing the form waits for successful cleanup.
+- The cancel action is also disabled while a product save is in progress to avoid racing an in-flight save.
+- Added regression tests for cleanup failure and all three form-switch paths.
+- GitHub Actions run `44262285708` (code) and `44262289643` (tests) both passed lint, strict typecheck, tests, and production build.
+- Preview for code commit `ec40fe59f07564e389b8f3df800dad7312aba630` is READY at `https://allify-chattogram-f59re022n-allify.vercel.app`. Latest test commit `a158fdb36bcd8fe0e56e846557bd982b7a23e22e` Preview is still building at the time of this update.
+- No live database changes, production deployment, or merge to `main` were performed. Authenticated browser QA and live Supabase Storage policy verification remain outstanding.
