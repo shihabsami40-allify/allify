@@ -178,3 +178,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Added `0005_block_unrestored_order_cancellation.sql`: the database trigger now permits only pending → confirmed → shipped → delivered for non-admins. This closes the seller Data API bypass until an atomic stock-restoration workflow is designed and tested.
 - Added static regression assertions for the allowed transitions and cancellation exclusion.
 - **Not applied to Supabase.** Live schema/migration permissions remain unavailable; verify existing applied migration state and any historical data before applying. Admins remain privileged and may still change status through direct DB access. No production deployment or live data change.
+
+
+## 2026-11-18 — Public catalog data minimization
+
+- The public `getCatalog` server function previously selected every column from active `seller_stores` rows. The returned catalog therefore included fields not needed by public storefront UI, including `owner_id`, `phone`, and `address`.
+- Added a `PublicStore` response type and restricted the public catalog query to storefront display fields only. Private owner/contact/address fields are no longer included in the catalog response.
+- Added a regression test asserting the public store query uses an explicit field allowlist.
+- GitHub Actions run `44259700176` passed lint, strict typecheck, tests, and production build for commit `49872602727f66ea278e4c12f642e46430546865`. Vercel Preview is READY at `https://allify-chattogram-ejsi8k7xe-allify.vercel.app`.
+- This is source/build verification only; authenticated browser QA remains pending. No production deployment, live database mutation, or merge to `main`.
