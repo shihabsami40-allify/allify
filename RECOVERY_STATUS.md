@@ -1,8 +1,18 @@
 # ALLIFY recovery status
 
+## 2026-11-18 — atomic order-item cancellation with stock restoration (source only)
+
+- Added migration `0016_atomic_order_item_cancellation.sql` and registered it in the Drizzle journal.
+- Cancellation now has a dedicated authenticated RPC. It locks the order item, checks admin/store ownership and demo status, accepts only pending or confirmed items, restores stock and reverses sold_count in the same transaction, then marks the item cancelled. Repeated requests for an already-cancelled item are idempotent; cancelled items cannot be reopened.
+- Direct Data API cancellation remains blocked; only the protected RPC can set the internal transaction flag needed by the database trigger.
+- Seller/admin server actions now route cancellation through the RPC. The UI transition map exposes cancellation only before shipment.
+- Added regression tests for transition rules and migration security/atomicity invariants.
+- IMPORTANT: this migration is source-controlled only and has NOT been applied to Supabase. It has not yet been executed against PostgreSQL or verified against the live project schema. Do not enable production cancellation or launch until the migration is reviewed, applied to the intended project, and exercised with controlled test data. No live stock, order, or database rows were changed.
+
+
 Source: Lovable project revision 2374410ebdb39a274e68fc9cade5cd64fb4dd54b
 Recovery branch: allify-recovery-2026-11-17
-Latest verified code commit: pending CI for suspended-store product write hardening
+Latest source update: atomic order-item cancellation and stock restoration workflow; CI pending
 
 ## Recovered and verified
 - Recovered the text source, route, test, configuration, and migration files from the Lovable revision into the recovery branch.
