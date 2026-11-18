@@ -85,3 +85,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - CI run `44251286489` passed lint, typecheck, tests, and production build.
 - Vercel Preview READY: `https://allify-chattogram-9v2amhkmw-allify.vercel.app`, commit `356b20483dfabd652102f7be11622cfed869e4d0`.
 - Authenticated browser QA and live Supabase verification remain outstanding. No production deployment, live DB change, or merge to `main`.
+
+
+## 2026-11-18 — product/image partial-save feedback
+
+- A product row may be saved successfully while the related `product_images` insert/update fails. The server function now reports this as a partial-success warning instead of making the seller think the entire product save failed.
+- Seller UI cleans up the newly uploaded temporary file best-effort when image metadata persistence fails, and retains the product record so it can be edited and retried without creating a duplicate.
+- CI runs `44251602518` and `44251626245` passed lint, typecheck, tests, and production build.
+- Latest Preview READY: `https://allify-chattogram-hrtfl7k30-allify.vercel.app`, commit `d622d81b189249370ec41c498be6b1074af8ad42`.
+- Authenticated browser QA and live Supabase storage/database verification remain outstanding. No production deployment, live DB mutation, or merge to `main`.
