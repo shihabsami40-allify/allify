@@ -4,7 +4,7 @@ import {useState} from 'react';
 import {CheckCircle2,Truck} from 'lucide-react';
 import {toast} from 'sonner';
 import {catalogOptions} from '@/lib/catalog-query';
-import {deliverySchema,money,cartTotal,realOrderAllowed,validQuantity} from '@/lib/marketplace';
+import {deliverySchema,money,cartTotal,realOrderAllowed,validQuantity,checkoutErrorMessage} from '@/lib/marketplace';
 import {useMarket} from '@/components/market-provider';
 import {supabase} from '@/integrations/supabase/client';
 import {PageTitle,Empty} from '@/components/market-shell';
@@ -57,7 +57,7 @@ export function CheckoutView(){
     toast.success('অর্ডার সফলভাবে নিশ্চিত হয়েছে: '+orderNo);
     await navigate({to:'/orders'});
    }catch(error){
-    toast.error(error instanceof Error?error.message:'অর্ডার সম্পন্ন হয়নি। আবার চেষ্টা করুন।');
+    toast.error(checkoutErrorMessage(error));
    }finally{setBusy(false);}
   }}>
    <section className="space-y-5">
