@@ -103,3 +103,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - CI runs `44251973297` and `44252003498` passed lint, strict typecheck, tests, and production build.
 - Latest Vercel Preview READY: `https://allify-chattogram-qsw4xz0zn-allify.vercel.app`, commit `c40e06a5054dbee23df09c78818d6a40e859f272`.
 - These are application/server-function protections, not a replacement for database RLS/trigger hardening. Authenticated browser QA and live Supabase verification remain outstanding. No production deployment, live DB mutation, or merge to `main`.
+
+
+## 2026-11-18 — safer checkout error handling
+
+- Checkout now translates known RPC failures (sign-in, invalid delivery details, unavailable area/product, and insufficient stock) into clear Bengali guidance.
+- Unknown backend errors now show a generic safe message instead of exposing raw database/PostgREST details to customers. The local cart is still retained on failure; it is cleared only after a successful order number is returned.
+- Added regression tests for stock/area messages and for suppressing internal database details. CI runs `44252363948`, `44252378392`, and `44252398488` passed lint, strict typecheck, tests, and production build.
+- Latest Preview READY: `https://allify-chattogram-dgtgp8nc4-allify.vercel.app`, code/test commit `83f1558cf4fc634675031bae7d61212f388b92a3`.
+- Authenticated browser checkout remains untested; this does not validate live RPC/database behavior. No live DB mutation, production deployment, or merge to `main`.
