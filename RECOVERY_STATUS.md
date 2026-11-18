@@ -19,6 +19,11 @@ Latest verified code commit: f8b49f72e37d7fa797baf1921870e3137d040584
 - The live `place_order(jsonb,text,text,text,text,text,boolean)` function validates customer input/delivery area, locks products, checks stock, decrements inventory, creates order and order-items transactionally, and clears cart.
 - RLS on orders/order-items was reviewed. No SQL writes, migrations, test orders, or real inventory changes were made.
 
+## Latest verified source update
+- Added order-history refresh after checkout and seller/admin order-status changes.
+- CI for both cache-refresh commits passed lint, strict TypeScript, tests, and production build.
+- Cancellation stock restoration remains unverified; avoid live inventory testing.
+
 ## Remaining before launch
 - Restore the remaining original catalog/hero binary assets; missing product images now use a graceful SVG placeholder and the favicon is restored as SVG. Do not use corrupted text representations.
 - Verify buyer, seller, and admin flows in an authenticated browser session, including controlled COD order, inventory decrement, seller status changes, admin controls, cancellation/stock-restoration behavior. Use a dedicated test product and cleanup plan.
