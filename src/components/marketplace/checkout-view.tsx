@@ -1,5 +1,5 @@
 import {Link,useNavigate} from '@tanstack/react-router';
-import {useSuspenseQuery} from '@tanstack/react-query';
+import {useSuspenseQuery,useQueryClient} from '@tanstack/react-query';
 import {useState} from 'react';
 import {CheckCircle2,Truck} from 'lucide-react';
 import {toast} from 'sonner';
@@ -14,6 +14,7 @@ import {Textarea} from '@/components/ui/textarea';
 
 export function CheckoutView(){
  const {data}=useSuspenseQuery(catalogOptions);
+ const qc=useQueryClient();
  const {cart,clearCart,user,authReady}=useMarket();
  const navigate=useNavigate();
  const [area,setArea]=useState('');
@@ -51,6 +52,8 @@ export function CheckoutView(){
     if(error)throw error;
     if(!orderNo)throw new Error('অর্ডার নম্বর পাওয়া যায়নি');
     clearCart();
+    await qc.invalidateQueries({queryKey:['customer-orders',user.id]});
+    await qc.invalidateQueries({queryKey:['account',user.id]});
     toast.success('অর্ডার সফলভাবে নিশ্চিত হয়েছে: '+orderNo);
     await navigate({to:'/orders'});
    }catch(error){
