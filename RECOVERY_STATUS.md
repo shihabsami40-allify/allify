@@ -170,3 +170,11 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Added static regression checks for the guard-flag ordering and demo-store exclusion. These tests verify migration source intent, not execution against PostgreSQL.
 - **Not applied to Supabase.** Live schema/migration inspection for the intended project previously returned permission denied; the connected project must be authorized and the live migration state checked before applying. No real checkout, test order, stock change, database migration, production deployment, or merge to `main` was performed.
 - GitHub Actions run `44258906618` passed lint, strict typecheck, tests, and production build for commit `e35d4bdaa0b8ee4b8c84180e4c85421959a21988`. Vercel Preview is READY at `https://allify-chattogram-n8jmfo80l-allify.vercel.app` for that commit. This verifies source/build only; it does not apply the SQL migration or validate checkout against PostgreSQL. The fix must not be described as live until the migration is applied and a controlled authenticated COD test is completed.
+
+
+## 2026-11-18 — Direct order-cancellation guard
+
+- Review confirmed migration `0003_order_status_lifecycle.sql` still permits seller-side direct API transitions from pending/confirmed to cancelled, while the application rejects cancellation because it does not restore stock.
+- Added `0005_block_unrestored_order_cancellation.sql`: the database trigger now permits only pending → confirmed → shipped → delivered for non-admins. This closes the seller Data API bypass until an atomic stock-restoration workflow is designed and tested.
+- Added static regression assertions for the allowed transitions and cancellation exclusion.
+- **Not applied to Supabase.** Live schema/migration permissions remain unavailable; verify existing applied migration state and any historical data before applying. Admins remain privileged and may still change status through direct DB access. No production deployment or live data change.
