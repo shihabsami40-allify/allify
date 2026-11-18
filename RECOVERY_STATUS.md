@@ -2,7 +2,7 @@
 
 Source: Lovable project revision 2374410ebdb39a274e68fc9cade5cd64fb4dd54b
 Recovery branch: allify-recovery-2026-11-17
-Latest verified code commit: 3fd726e3fb34488814b9058ce72f3d212a705c6b
+Latest verified code commit: pending CI for suspended-store product write hardening
 
 ## Recovered and verified
 - Recovered the text source, route, test, configuration, and migration files from the Lovable revision into the recovery branch.
@@ -283,3 +283,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Migration is source-controlled only and has NOT been applied to Supabase. No test orders, inventory updates, production deployment, or merge to `main` were performed. Authenticated end-to-end checkout testing remains required after authorized migration application.
 - GitHub Actions run `44265574016` passed lint, strict typecheck, all tests, and production build for the typed implementation; follow-up run `44265737533` also passed after adding the assertion that replay returns before stock mutation.
 - Vercel Preview for the initial implementation commit is READY at `https://allify-chattogram-1xk1n72sd-allify.vercel.app`; it is not yet the final test-only revision. No authenticated browser QA was possible because Preview access is SSO-protected.
+
+
+## 2026-11-18 — suspended-store product write hardening
+
+- Replaced the permissive seller product insert/update RLS policies. Store owners can now insert or update products only while their own store is active and non-demo; admin access is retained.
+- This closes the direct authenticated Data API bypass where a suspended seller could write product rows despite the dashboard disabling product editing.
+- Added migration `0010_restrict_suspended_store_product_writes.sql`, registered as Drizzle journal entry 8, plus regression tests for insert/update policy conditions.
+- CI is pending for this change. The migration is source-controlled only and has NOT been applied to Supabase. No live database rows, inventory, or orders were changed.
+- Production and `main` remain untouched. Authenticated browser QA is still outstanding.
