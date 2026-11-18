@@ -11,6 +11,8 @@ describe('marketplace validation',()=>{
  it('blocks cancellation until inventory restoration is implemented',()=>{expect(canTransition('pending','cancelled')).toBe(false);expect(canTransition('confirmed','cancelled')).toBe(false);});
  it('accepts Bangladesh mobile format',()=>expect(deliverySchema.safeParse({recipient:'ক্রেতা',phone:'01712345678',area:'চট্টগ্রাম',address:'দোকানের ঠিকানা'}).success).toBe(true));
  it('rejects foreign mobile format',()=>expect(deliverySchema.safeParse({recipient:'ক্রেতা',phone:'+15551234567',area:'চট্টগ্রাম',address:'দোকানের ঠিকানা'}).success).toBe(false));
+ it('rejects whitespace-only delivery area',()=>expect(deliverySchema.safeParse({recipient:'ক্রেতা',phone:'01712345678',area:'   ',address:'দোকানের ঠিকানা'}).success).toBe(false));
+ it('normalizes surrounding whitespace in delivery area',()=>expect(deliverySchema.parse({recipient:'ক্রেতা',phone:'01712345678',area:'  চট্টগ্রাম  ',address:'দোকানের ঠিকানা'}).area).toBe('চট্টগ্রাম'));
  it('rejects invalid category slug',()=>expect(categorySchema.safeParse({name_bn:'পোশাক',name_en:'Clothing',slug:'../../bad',sort_order:0}).success).toBe(false));
  it('enforces integer quantities within stock and cart limits',()=>{expect(validQuantity(1,1)).toBe(true);expect(validQuantity(2,1)).toBe(false);expect(validQuantity(1.5,10)).toBe(false);expect(validQuantity(100,200)).toBe(false);});
  it('allows real orders only from non-demo stores',()=>{const real={id:'p',price:100,seller_stores:{is_demo:false}} as any;const demo={...real,seller_stores:{is_demo:true}};expect(realOrderAllowed([real])).toBe(true);expect(realOrderAllowed([demo])).toBe(false);expect(realOrderAllowed([])).toBe(false);});
