@@ -187,3 +187,11 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Added a regression test asserting the public store query uses an explicit field allowlist.
 - GitHub Actions run `44259700176` passed lint, strict typecheck, tests, and production build for commit `49872602727f66ea278e4c12f642e46430546865`. Vercel Preview is READY at `https://allify-chattogram-ejsi8k7xe-allify.vercel.app`.
 - This is source/build verification only; authenticated browser QA remains pending. No production deployment, live database mutation, or merge to `main`.
+
+
+## 2026-11-18 — Product-page metadata
+
+- Product detail routes now emit route-specific page titles based on the product slug instead of reusing one generic title for every product URL.
+- Added a concise Chattogram/ALLIFY description for product-page search and social previews.
+- GitHub Actions run `44260571383` passed lint, typecheck, tests, and production build for commit `b0ee8a74aeb4f91f996db85c892f9d1d20e4ac37`. Vercel Preview is READY at `https://allify-chattogram-4wpa59vfi-allify.vercel.app`.
+- This is code/build verification only. Authenticated browser QA and live database migration/checkout verification remain outstanding. No production deployment or merge to `main`.
