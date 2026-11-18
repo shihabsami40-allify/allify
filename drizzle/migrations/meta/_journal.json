@@ -29,6 +29,13 @@
       "when": 1794987000000,
       "tag": "0005_block_unrestored_order_cancellation",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795000000000,
+      "tag": "0006_secure_product_image_storage",
+      "breakpoints": true
     }
   ]
 }
