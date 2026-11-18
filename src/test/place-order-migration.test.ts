@@ -60,3 +60,28 @@ describe('demo order status immutability',()=>{
   expect(demoStatusGuard).toContain("(old.status = 'shipped' and new.status = 'delivered')");
  });
 });
+
+
+const aggregateOrderGuard=readFileSync(resolve(process.cwd(),'drizzle/migrations/0015_derive_order_status_from_items.sql'),'utf8').toLowerCase();
+
+describe('aggregate order status integrity',()=>{
+ it('rejects direct order status changes even for administrators',()=>{
+  expect(aggregateOrderGuard).toContain("raise exception 'order status is derived from order items'");
+  expect(aggregateOrderGuard).toContain("if new.status is distinct from old.status then");
+  expect(aggregateOrderGuard).toContain("coalesce(current_setting('app.internal', true), '') = '1'");
+ });
+ it('prevents direct changes to order snapshot and delivery fields',()=>{
+  expect(aggregateOrderGuard).toContain("(to_jsonb(new) - 'status') is distinct from (to_jsonb(old) - 'status')");
+  expect(aggregateOrderGuard).toContain('order fields can only be changed by internal order workflows');
+ });
+ it('allows only the trusted item-status sync trigger to update aggregate order status',()=>{
+  const setFlag=aggregateOrderGuard.indexOf("perform set_config('app.internal', '1', true)");
+  const updateOrder=aggregateOrderGuard.indexOf('update public.orders');
+  const restoreFlag=aggregateOrderGuard.indexOf("perform set_config('app.internal', v_previous_internal, true)");
+  expect(setFlag).toBeGreaterThan(-1);
+  expect(updateOrder).toBeGreaterThan(setFlag);
+  expect(restoreFlag).toBeGreaterThan(updateOrder);
+  expect(aggregateOrderGuard).toContain('revoke all on function public.guard_order_update() from public, anon, authenticated');
+  expect(aggregateOrderGuard).toContain('revoke all on function public.sync_order_status_from_items() from public, anon, authenticated');
+ });
+});
