@@ -161,3 +161,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - CI run `44257328584` passed lint, strict typecheck, tests, and production build. CI run `44257565120` also passed all four checks for the transition UI alignment.
 - Latest Vercel Preview for `b48c02d6` is being verified separately; prior commit `b50b731a34` Preview is READY at `https://allify-chattogram-jo72ynkqy-allify.vercel.app`.
 - No authenticated browser QA, live database mutation, production deployment, or merge to `main` was performed.
+
+
+## 2026-11-18 — COD order RPC trigger compatibility review
+
+- Source-level review found that the secured `orders_guard` trigger rejects non-status order updates unless the transaction-local `app.internal` flag is enabled. The recovered `place_order` RPC cleared that flag before updating `orders.subtotal` and `orders.total`, which can cause the checkout transaction to fail when this trigger is present.
+- Prepared migration `0004_fix_place_order_internal_guard.sql` and registered it in the Drizzle journal. It keeps the internal flag enabled until protected order writes are complete and excludes demo stores in the locked product lookup (`s.is_demo = false`).
+- Added static regression checks for the guard-flag ordering and demo-store exclusion. These tests verify migration source intent, not execution against PostgreSQL.
+- **Not applied to Supabase.** Live schema/migration inspection for the intended project previously returned permission denied; the connected project must be authorized and the live migration state checked before applying. No real checkout, test order, stock change, database migration, production deployment, or merge to `main` was performed.
+- CI and Preview verification for this migration are pending. The fix must not be described as live until the migration is applied and a controlled authenticated COD test is completed.
