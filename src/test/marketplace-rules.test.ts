@@ -272,3 +272,14 @@ describe('buyer product detail stock guidance',()=>{
   expect(detail).toContain('disabled={remainingStock===0||qty>remainingStock}');
  });
 });
+
+describe('buyer product image gallery',()=>{
+ it('shows selectable thumbnails only for validated product image URLs',()=>{
+  const detail=readFileSync(resolve(process.cwd(),'src/routes/product.$slug.tsx'),'utf8');
+  expect(detail).toContain('p.product_images.filter(image=>safeImageUrl(image.url))');
+  expect(detail).toContain('পণ্যের অন্যান্য ছবি');
+  expect(detail).toContain('aria-pressed={selectedImage===index}');
+  expect(detail).toContain('onClick={()=>setSelectedImage(index)}');
+  expect(detail).toContain('const activeImage=galleryImages[selectedImage]?.url??productImage(p)');
+ });
+});
