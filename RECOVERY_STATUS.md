@@ -120,3 +120,23 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - CI runs `44252803421` and `44252824422` passed lint, strict typecheck, tests, and production build.
 - Preview for the server-function change: `https://allify-chattogram-55p24grpc-allify.vercel.app` (READY, commit `08837b98b1a891e958e3f3d1d84ad1a7f5a1dc61`). UI feedback commit `fdd88d08d1b23394bac1b69370e1b1c8652b8645` is separately deployed as a Preview build; its final state is checked separately.
 - This is an application-level duplicate guard. A database unique partial index/RPC would be needed to eliminate simultaneous-request races; no live DB migration was attempted. No production deployment or merge to `main`.
+
+
+## 2026-11-18 — latest public-page and seller-state review
+
+- Corrected the homepage copy to distinguish demo sample listings from active real seller listings; active non-demo products may be ordered subject to availability and delivery area.
+- Browse results now distinguish catalog loading failures from a genuinely empty search result. Product detail distinguishes catalog errors from a missing product. Store detail distinguishes loading errors, missing stores, and stores with no products.
+- Seller dashboard now explains when a store is suspended and disables product add/edit controls while suspended.
+- Latest verified recovery-branch commit: `e979d7f9704fc0a72e08f7d9644cc06034a16bc7` (`Explain suspended seller product editing restrictions`).
+- GitHub Actions run `44255489341` completed successfully: lint, strict typecheck, tests, and production build.
+- Latest Vercel Preview deployment `dpl_oQzG5RnvtipktKaNzPbubbRRurSc` is READY at `https://allify-chattogram-i2vfcir8a-allify.vercel.app`, sourced from the same recovery-branch commit.
+- The authenticated browser QA gate is still open; READY means deployment completed, not that buyer/seller/admin workflows have been browser-tested.
+
+## Outstanding database hardening — do not bypass
+
+- The recovered `0003_order_status_lifecycle.sql` trigger still permits direct authenticated Data API cancellation transitions from pending/confirmed to cancelled. The app currently blocks these transitions, but that is not a database boundary.
+- No atomic, idempotent stock-restoration routine exists for cancellations. Treat cancellation as a launch blocker until a reviewed migration closes the direct-API path and safely restores stock.
+- The product RLS update policy also permits an owner to update their own product rows without requiring the store to remain active. The seller UI disables editing for suspended stores, but direct Data API writes may bypass that UI restriction. Review and enforce the suspended-store restriction in the database after authorized live-schema inspection.
+- The secure marketplace migration's demo-stock trigger blocks internal stock updates for demo-store products. Do not infer that all demo-order or order-lifecycle concerns are solved by that trigger alone.
+- Supabase read-only inspection for the intended project remains permission-denied. Do not guess live schema state, write a speculative migration, or substitute the separately connected project.
+- `main`, Production, and live database state remain untouched.
