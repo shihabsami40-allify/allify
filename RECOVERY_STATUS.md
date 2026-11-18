@@ -1,5 +1,15 @@
 # ALLIFY recovery status
 
+## 2026-11-18 — missing demo product image fallback
+
+- Preview inspection found that demo records referenced local `/images/products/*.jpg` paths that are not present in the repository's public assets; direct requests to sample paths returned HTTP 404.
+- Updated `safeImageUrl` to allow only the shipped local placeholder asset and reject missing local image paths. Product cards and detail pages now fall back to the existing `/images/products/placeholder.svg` rather than attempting known-missing local files; secure HTTPS seller-uploaded images remain supported.
+- Added regression tests for the shipped placeholder and missing demo image paths.
+- GitHub Actions run `44290351233` passed lint, strict typecheck, tests, and production build on commit `a2c6008c06855af0c6ce65bbcea242e3332c3137`.
+- Latest preview source prior to this image fix was reachable and returned HTTP 200 for the homepage; sample missing demo image paths returned 404 and the placeholder returned 200. Authenticated browser QA remains outstanding.
+- A manual Preview deployment of the image fix was blocked by Vercel's API deployment quota (over 100 deployments for the day; retry after 24 hours). No Production deployment was attempted.
+
+
 ## 2026-11-18 — cancellation workflow CI and source review follow-up
 
 - Latest branch HEAD: `3b6383ba663072d37a22c43a0e2dd4d9302fc6e2`.
