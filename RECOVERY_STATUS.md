@@ -343,3 +343,11 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - The existing checkout RPC retains its internal update path for initial subtotal/total writes. Item-level cancellation remains disabled until a complete atomic stock-restoration workflow is implemented.
 - Added regression tests and registered Drizzle journal entry 13.
 - CI is pending. Migration is source-controlled only and has NOT been applied to Supabase. No orders, stock, or live database rows were changed.
+
+
+## 2026-11-18 — seller order confirmation and lifecycle coverage
+
+- Seller dashboard now asks for confirmation before applying a fulfillment status transition, matching the admin dashboard's confirmation behavior.
+- Expanded marketplace rules tests to cover the allowed forward lifecycle and reject skipped, reverse, or cancellation transitions; added a regression assertion that seller actions use a confirmation prompt.
+- GitHub Actions run `44270416176` passed lint, strict typecheck, tests, and production build.
+- Source changes remain on `allify-recovery-2026-11-17`; no production deploy or live database mutation occurred.
