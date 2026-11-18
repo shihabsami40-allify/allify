@@ -2,7 +2,7 @@
 
 Source: Lovable project revision 2374410ebdb39a274e68fc9cade5cd64fb4dd54b
 Recovery branch: allify-recovery-2026-11-17
-Latest verified code commit: a158fdb36bcd8fe0e56e846557bd982b7a23e22e
+Latest verified code commit: 3fd726e3fb34488814b9058ce72f3d212a705c6b
 
 ## Recovered and verified
 - Recovered the text source, route, test, configuration, and migration files from the Lovable revision into the recovery branch.
@@ -226,3 +226,14 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - GitHub Actions run `44262285708` (code) and `44262289643` (tests) both passed lint, strict typecheck, tests, and production build.
 - Preview for code commit `ec40fe59f07564e389b8f3df800dad7312aba630` is READY at `https://allify-chattogram-f59re022n-allify.vercel.app`. Latest test commit `a158fdb36bcd8fe0e56e846557bd982b7a23e22e` Preview is still building at the time of this update.
 - No live database changes, production deployment, or merge to `main` were performed. Authenticated browser QA and live Supabase Storage policy verification remain outstanding.
+
+
+## 2026-11-18 — product image storage policy hardening
+
+- Added migration `0006_secure_product_image_storage.sql` and registered it in the Drizzle migration journal.
+- Storage insert/update now require the exact `<user-id>/<store-id>/<file>` folder shape and verify the store belongs to the authenticated user, is active, and is not a demo store.
+- Storage deletion verifies the same user/store ownership but intentionally does not require an active status, so a seller can clean up old images after a store is suspended.
+- Added regression tests for upload ownership, update old/new object checks, and suspended-store cleanup.
+- GitHub Actions run `44262582717` passed lint, strict typecheck, all tests, and production build for commit `3fd726e3fb34488814b9058ce72f3d212a705c6b`.
+- Vercel Preview for that commit is READY at `https://allify-chattogram-bt3jzutjp-allify.vercel.app`.
+- The migration is source-controlled only and has NOT been applied to Supabase. The connected Supabase project has not been changed. Authenticated Storage-policy behavior still needs verification after authorized migration application. No production deployment or merge to `main` was performed.
