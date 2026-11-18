@@ -1,6 +1,7 @@
 import {Link,useNavigate} from '@tanstack/react-router';
 import {useSuspenseQuery,useQueryClient} from '@tanstack/react-query';
-import {useState} from 'react';
+import {useRef,useState} from 'react';
+import {readStoredJson,writeStoredJson,removeStoredValue} from '@/lib/browser-storage';
 import {CheckCircle2,Truck} from 'lucide-react';
 import {toast} from 'sonner';
 import {catalogOptions} from '@/lib/catalog-query';
@@ -19,6 +20,7 @@ export function CheckoutView(){
  const navigate=useNavigate();
  const [area,setArea]=useState('');
  const [busy,setBusy]=useState(false);
+ const checkoutRequest=useRef<{key:string;id:string}|null>(null);
  const selected=data.areas.find(a=>a.name_bn===area);
  const fee=selected?.fee??0;
  const total=cartTotal(cart,data.products,fee);
@@ -38,6 +40,14 @@ export function CheckoutView(){
    const fd=new FormData(e.currentTarget);
    const parsed=deliverySchema.safeParse({recipient:fd.get('recipient'),phone:fd.get('phone'),area:selected.name_en,address:fd.get('address'),note:fd.get('note')||''});
    if(!parsed.success){toast.error('নাম, ফোন নম্বর, এলাকা ও ঠিকানা সঠিকভাবে পূরণ করুন');return;}
+   const cartKey=`allify:checkout-request:${user.id}:${JSON.stringify(cart.map(line=>({id:line.id,quantity:line.quantity})).sort((a,b)=>a.id.localeCompare(b.id)))}`;
+   let request=checkoutRequest.current;
+   if(!request||request.key!==cartKey){
+    const stored=readStoredJson<string>(cartKey,'',value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value));
+    request={key:cartKey,id:stored||crypto.randomUUID()};
+    checkoutRequest.current=request;
+    writeStoredJson(cartKey,request.id);
+   }
    setBusy(true);
    try{
     const {data:orderNo,error}=await supabase.rpc('place_order',{
@@ -46,11 +56,14 @@ export function CheckoutView(){
      p_phone:parsed.data.phone,
      p_area:parsed.data.area,
      p_address:parsed.data.address,
+     p_request_id:request.id,
      ...(parsed.data.note?{p_note:parsed.data.note}:{}),
      p_save_address:false
     });
     if(error)throw error;
     if(!orderNo)throw new Error('অর্ডার নম্বর পাওয়া যায়নি');
+    removeStoredValue(cartKey);
+    if(checkoutRequest.current?.key===cartKey)checkoutRequest.current=null;
     clearCart();
     await qc.invalidateQueries({queryKey:['customer-orders',user.id]});
     await qc.invalidateQueries({queryKey:['account',user.id]});
