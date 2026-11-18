@@ -82,3 +82,20 @@ describe('product card stock availability',()=>{
   expect(card).toContain('title={p.stock===0?"স্টক শেষ":"ব্যাগে যোগ করুন"}');
  });
 });
+
+
+describe('cart availability explanations',()=>{
+ it('shows an item-level reason when a product is sold out, over stock, or demo-only',()=>{
+  const cart=readFileSync(resolve(process.cwd(),'src/components/marketplace/cart-view.tsx'),'utf8');
+  expect(cart).toContain('স্টক শেষ—অর্ডারের আগে ব্যাগ থেকে সরান');
+  expect(cart).toContain('বর্তমান স্টক {p.stock.toLocaleString');
+  expect(cart).toContain('নমুনা পণ্য—বাস্তব অর্ডার করা যাবে না');
+ });
+ it('explains each checkout blocker instead of showing one generic message',()=>{
+  const cart=readFileSync(resolve(process.cwd(),'src/components/marketplace/cart-view.tsx'),'utf8');
+  expect(cart).toContain('পণ্য আর পাওয়া যাচ্ছে না—সরিয়ে দিন');
+  expect(cart).toContain('পণ্যের স্টক শেষ—সরিয়ে দিন');
+  expect(cart).toContain('পরিমাণ বর্তমান স্টকের চেয়ে বেশি—কমান');
+  expect(cart).toContain('নমুনা পণ্য বাস্তব অর্ডারের জন্য নয়');
+ });
+});
