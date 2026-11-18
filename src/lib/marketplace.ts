@@ -14,8 +14,8 @@ export function productImageStoragePath(value:string, publicBaseUrl:string, owne
  try {
   const base=new URL(publicBaseUrl); const url=new URL(value);
   if(url.origin!==base.origin || !base.pathname.endsWith('/') || !url.pathname.startsWith(base.pathname)) return null;
-  const path=decodeURIComponent(url.pathname.slice(base.pathname.length)); const parts=path.split('/');
-  if(parts.length!==3 || parts[0]!==ownerId || parts[1]!==storeId || !/^[0-9a-f-]{36}\\.(jpg|png|webp)$/i.test(parts[2])) return null;
+  const path=decodeURIComponent(url.pathname.slice(base.pathname.length)); const parts=path.split('/'); const filename=parts[2];
+  if(parts.length!==3 || parts[0]!==ownerId || parts[1]!==storeId || !filename || !/^[0-9a-f-]{36}\\.(jpg|png|webp)$/i.test(filename)) return null;
   return path;
  } catch { return null; }
 }
