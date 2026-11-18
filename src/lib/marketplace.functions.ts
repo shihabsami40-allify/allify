@@ -44,7 +44,7 @@ export const adminAction = createServerFn({method:'POST'}).middleware([requireSu
  const db=context.supabase; const {data:allowed}=await db.rpc('has_role',{_user_id:context.userId,_role:'admin'}); if(!allowed) throw Error('প্রশাসকের অনুমতি প্রয়োজন');
  let error;
  if(data.action==='approve'||data.action==='reject') {({error}=await db.rpc('review_seller_application',{p_app_id:data.id,p_approve:data.action==='approve',p_note:data.note}));}
- else if(data.action==='hide') {const result=await db.from('products').update({status:'hidden'}).eq('id',data.id).select('id').single();error=result.error;}
+ else if(data.action==='hide') {const product=await db.from('products').select('store_id').eq('id',data.id).single();if(product.error||!product.data) throw Error('পণ্য পাওয়া যায়নি');const store=await db.from('seller_stores').select('is_demo').eq('id',product.data.store_id).single();if(store.error||!store.data||store.data.is_demo) throw Error('ডেমো পণ্য পরিবর্তন করা যাবে না');const result=await db.from('products').update({status:'hidden'}).eq('id',data.id).select('id').single();error=result.error;}
  else {const result=await db.from('seller_stores').update({status:data.action==='suspend'?'suspended':'active'}).eq('id',data.id).eq('is_demo',false).select('id').single();error=result.error;}
  if(error) throw Error('পরিবর্তন করা যায়নি। ডেমো আবেদন বাস্তব অ্যাকাউন্ট নয়।'); return true;
 });
