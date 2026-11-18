@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import type { Database } from '@/integrations/supabase/types';
-import { applicationSchema, categorySchema, canTransition, productSchema, type Catalog } from './marketplace';
+import { applicationSchema, categorySchema, canTransition, productImageStoragePath, productSchema, type Catalog } from './marketplace';
 
 export const getCatalog = createServerFn({method:'GET'}).handler(async ():Promise<Catalog>=>{
  const url=process.env['SUPABASE_URL']; const key=process.env['SUPABASE_PUBLISHABLE_KEY'];
@@ -32,7 +32,7 @@ export const getManagement = createServerFn({method:'POST'}).middleware([require
 });
 export const saveProduct = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(input=>productSchema.parse(input)).handler(async({data,context})=>{
  const {image,id,...values}=data; const db=context.supabase;
- const {data:store}=await db.from('seller_stores').select('id').eq('id',data.store_id).eq('owner_id',context.userId).eq('status','active').single(); if(!store) throw Error('সক্রিয় দোকানের মালিকের অনুমতি প্রয়োজন');
+ const {data:store}=await db.from('seller_stores').select('id').eq('id',data.store_id).eq('owner_id',context.userId).eq('status','active').single(); if(!store) throw Error('সক্রিয় দোকানের মালিকের অনুমতি প্রয়োজন'); if(image){const imageBaseUrl=new URL('/storage/v1/object/public/product-images/',process.env['SUPABASE_URL']).toString();if(!productImageStoragePath(image,imageBaseUrl,context.userId,store.id))throw Error('পণ্যের ছবি নিজের সক্রিয় দোকানে আপলোড করা নিরাপদ ছবিই হতে হবে');}
  const result=id?await db.from('products').update(values).eq('id',id).eq('store_id',data.store_id).select('id').single():await db.from('products').insert({...values,slug:'product-'+crypto.randomUUID()}).select('id').single();
  if(result.error||!result.data) throw Error('পণ্য সংরক্ষণ করা যায়নি');
  if(image){ const old=await db.from('product_images').select('id').eq('product_id',result.data.id).order('sort_order').limit(1); const saved=old.data?.[0]?await db.from('product_images').update({url:image}).eq('id',old.data[0].id):await db.from('product_images').insert({product_id:result.data.id,url:image}); if(saved.error) return {id:result.data.id,warning:'পণ্য সংরক্ষিত হয়েছে; ছবিটি সংরক্ষণ করা যায়নি। সম্পাদনা করে আবার ছবি যোগ করুন।'}; }
