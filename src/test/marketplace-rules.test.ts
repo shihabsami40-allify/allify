@@ -261,3 +261,14 @@ describe('buyer catalog filter reset',()=>{
   expect(browse).toContain('onClick={clearFilters}');
  });
 });
+
+describe('buyer product detail stock guidance',()=>{
+ it('shows low-stock guidance and remaining quantity already available in the bag',()=>{
+  const detail=readFileSync(resolve(process.cwd(),'src/routes/product.$slug.tsx'),'utf8');
+  expect(detail).toContain('স্টক কম—মাত্র');
+  expect(detail).toContain('আপনার ব্যাগে ইতিমধ্যে');
+  expect(detail).toContain('আরও {remainingStock.toLocaleString');
+  expect(detail).toContain('disabled={qty>=remainingStock}');
+  expect(detail).toContain('disabled={remainingStock===0||qty>remainingStock}');
+ });
+});
