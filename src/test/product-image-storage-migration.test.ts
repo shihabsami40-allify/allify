@@ -48,7 +48,7 @@ describe('suspended seller product image row guard',()=>{
   expect(imageRowGuard).toContain('s.is_demo = false');
  });
  it('retains admin access and checks both old and new image rows',()=>{
-  expect(imageRowGuard.match(/public.has_role\\(auth.uid\\(\\), 'admin'\\)/g)?.length).toBe(2);
+  expect(imageRowGuard.split("public.has_role(auth.uid(), 'admin')").length - 1).toBe(2);
   expect(imageRowGuard).toContain('using (');
   expect(imageRowGuard).toContain('with check (');
  });
