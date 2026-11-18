@@ -292,3 +292,11 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Added migration `0010_restrict_suspended_store_product_writes.sql`, registered as Drizzle journal entry 8, plus regression tests for insert/update/delete policy conditions.
 - Initial CI runs passed all checks; the follow-up that adds delete-policy coverage is pending. The migration is source-controlled only and has NOT been applied to Supabase. No live database rows, inventory, or orders were changed.
 - Production and `main` remain untouched. Authenticated browser QA is still outstanding.
+
+
+## 2026-11-18 — checkout retry payload binding
+
+- Tightened client-side checkout idempotency: the persisted request key now includes the normalized cart plus recipient, phone, delivery area, address, and note.
+- Retrying the same checkout payload reuses the original request ID; intentionally changing delivery details produces a distinct request ID instead of accidentally replaying an earlier order with a different address expectation.
+- Added regression assertions for all delivery fields in the retry-key payload.
+- CI is pending. No Supabase migration was applied and no live orders or inventory were changed.
