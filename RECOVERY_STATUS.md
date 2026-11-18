@@ -287,8 +287,8 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 
 ## 2026-11-18 — suspended-store product write hardening
 
-- Replaced the permissive seller product insert/update RLS policies. Store owners can now insert or update products only while their own store is active and non-demo; admin access is retained.
+- Replaced the permissive seller product insert/update/delete RLS policies. Store owners can now insert, update, or delete products only while their own store is active and non-demo; admin access is retained.
 - This closes the direct authenticated Data API bypass where a suspended seller could write product rows despite the dashboard disabling product editing.
-- Added migration `0010_restrict_suspended_store_product_writes.sql`, registered as Drizzle journal entry 8, plus regression tests for insert/update policy conditions.
-- CI is pending for this change. The migration is source-controlled only and has NOT been applied to Supabase. No live database rows, inventory, or orders were changed.
+- Added migration `0010_restrict_suspended_store_product_writes.sql`, registered as Drizzle journal entry 8, plus regression tests for insert/update/delete policy conditions.
+- Initial CI runs passed all checks; the follow-up that adds delete-policy coverage is pending. The migration is source-controlled only and has NOT been applied to Supabase. No live database rows, inventory, or orders were changed.
 - Production and `main` remain untouched. Authenticated browser QA is still outstanding.
