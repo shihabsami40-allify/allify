@@ -1,5 +1,10 @@
 import {describe,it,expect} from 'vitest';
-import {safeImageUrl,productImageStoragePath,canTransition,deliverySchema,applicationSchema,categorySchema,validQuantity,realOrderAllowed,cartTotal} from '@/lib/marketplace';
+import {safeImageUrl,productImageStoragePath,canTransition,deliverySchema,applicationSchema,categorySchema,validQuantity,realOrderAllowed,cartTotal,checkoutErrorMessage} from '@/lib/marketplace';
+describe('checkout error messages',()=>{
+ it('explains stock shortages without exposing database details',()=>expect(checkoutErrorMessage(new Error('Not enough stock for product'))).toContain('পর্যাপ্ত স্টক নেই'));
+ it('explains unavailable delivery areas',()=>expect(checkoutErrorMessage(new Error('Delivery not available in this area'))).toContain('ডেলিভারি দেওয়া যাচ্ছে না'));
+ it('uses a safe fallback for unknown database errors',()=>expect(checkoutErrorMessage({message:'relation private_table does not exist'})).not.toContain('private_table'));
+});
 describe('marketplace validation',()=>{
  it('accepts credential-free HTTPS images',()=>expect(safeImageUrl('https://images.example.com/product.jpg')).toBe(true));
  it('rejects nonsecure image URLs',()=>expect(safeImageUrl('http://images.example.com/product.jpg')).toBe(false));
