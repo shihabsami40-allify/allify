@@ -23,7 +23,7 @@ describe('seller temporary image replacement',()=>{
   expect(discard).toContain('return false');
  });
  it('waits for temporary-image cleanup before switching product forms',()=>{
-  expect(source).toContain('if(await discardPendingImage())setEdit(\'new\')');
+  expect(source).toContain("if(await discardPendingImage()){setImageUrl('');setUploadedImagePath(null);setEdit('new');}");
   expect(source).toContain('if(await discardPendingImage())setEdit(p)');
   expect(source).toContain('if(await discardPendingImage())setEdit(null)');
   expect(source).toContain('disabled={busy||imageUploading}');
