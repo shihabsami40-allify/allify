@@ -58,3 +58,12 @@ Latest verified code commit: 772477924710570a6c14fa6fb2e79103e1664e07
 
 ## Environment
 See `.env.example` for variable names only. Never commit real keys or `.env` files.
+
+
+## 2026-11-18 — seller product image lifecycle follow-up
+
+- Added safe extraction of product image object paths. Cleanup is limited to HTTPS URLs matching this Supabase project's public `product-images` bucket and the authenticated seller/store folder; external or other sellers' URLs are never removed.
+- Seller image replacement now attempts to remove the previous owned image only after the product save succeeds. If a newly uploaded image is abandoned or the product save fails, the new upload is cleaned up best-effort. Replacing a just-uploaded file also removes the prior temporary upload best-effort.
+- Added tests for owned image path extraction and rejection of external, cross-seller, and malformed paths. Corrected filename extension matching after CI caught a regex escaping issue.
+- Latest verification: GitHub Actions run `44249101598` passed lint, typecheck, tests, and production build. Latest Vercel Preview for branch `allify-recovery-2026-11-17` is READY at `https://allify-chattogram-qa997ykwx-allify.vercel.app` (commit `9ffef61c1b71afb3222e1123b83610ae2153d96c`).
+- Still not verified in an authenticated browser. Storage bucket/policies may require the migration to be applied in the intended Supabase project; no live DB changes were made. Preview SSO protection remains enabled. No production deployment or merge to `main` was performed.
