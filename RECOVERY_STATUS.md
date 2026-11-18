@@ -1,5 +1,14 @@
 # ALLIFY recovery status
 
+## 2026-11-18 — cancellation workflow CI and source review follow-up
+
+- Latest branch HEAD: `3b6383ba663072d37a22c43a0e2dd4d9302fc6e2`.
+- GitHub Actions run `44289444333` completed successfully: Lint, Typecheck, Tests, and Production Build all passed.
+- Reviewed the checkout stock-decrement path against the new cancellation restoration path: checkout locks product rows, decrements stock, and increments `sold_count`; cancellation restores stock and reverses `sold_count` in the same transaction as the item status update.
+- Migration `0016` remains source-only. The direct authenticated Data API cancellation guard and the protected RPC are effective only after the migration is applied to the intended Supabase project. PostgreSQL execution, migration-order validation against the live schema, and controlled test-data verification remain outstanding.
+- No live database changes, test orders, inventory mutations, production deployment, or `main` branch changes were made.
+
+
 ## 2026-11-18 — atomic order-item cancellation with stock restoration (source only)
 
 - Added migration `0016_atomic_order_item_cancellation.sql` and registered it in the Drizzle journal.
@@ -12,7 +21,7 @@
 
 Source: Lovable project revision 2374410ebdb39a274e68fc9cade5cd64fb4dd54b
 Recovery branch: allify-recovery-2026-11-17
-Latest source update: atomic order-item cancellation and stock restoration workflow; CI pending
+Latest source update: atomic order-item cancellation and stock restoration workflow; GitHub Actions run 44289444333 passed lint, strict typecheck, tests, and production build.
 
 ## Recovered and verified
 - Recovered the text source, route, test, configuration, and migration files from the Lovable revision into the recovery branch.
