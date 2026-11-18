@@ -272,3 +272,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Added migration `0008_block_admin_order_cancellation.sql`: it rejects transitions to `cancelled` for every role, including admins, while retaining existing seller forward transitions and the admin's other status-management bypass.
 - Registered migration 0008 and added regression tests ensuring the cancellation rejection runs before the admin exception and that forward transitions remain intact.
 - Migration is source-controlled only and has NOT been applied to Supabase. No order, inventory, or production data was changed.
+
+
+## 2026-11-18 — COD checkout request idempotency
+
+- Review identified a duplicate-order risk if the COD order transaction commits but the client loses the response and retries.
+- Added migration `0009_checkout_request_idempotency.sql`: orders gain a nullable customer-scoped request UUID with a unique index; the RPC serializes repeated calls carrying the same key and returns the original order number instead of creating a second order. The RPC retains row locking, stock validation/decrement, demo-store exclusion, and authenticated-only execution.
+- Checkout now persists a request UUID against the signed-in customer and normalized cart contents, reuses it after a failed/uncertain response (including a page reload when browser storage is available), and clears it only after the RPC returns success.
+- Added regression tests for the database uniqueness/lock/replay path and client key reuse.
+- Migration is source-controlled only and has NOT been applied to Supabase. No test orders, inventory updates, production deployment, or merge to `main` were performed. Authenticated end-to-end checkout testing remains required after authorized migration application.
