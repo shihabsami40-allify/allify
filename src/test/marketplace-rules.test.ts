@@ -142,6 +142,7 @@ describe('account page guidance',()=>{
   expect(account).toContain('এখনো কোনো বিক্রেতা আবেদন নেই।');
   expect(account).toContain('বিনামূল্যে আবেদন করুন');
   expect(account).toContain('role="alert"');
+  expect(account).toContain('প্রোফাইল সংরক্ষণ করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।');
   expect(account).toContain('সংরক্ষণ হচ্ছে…');
  });
 });
