@@ -10,6 +10,7 @@ describe('seller temporary image replacement',()=>{
   const stateSwitch=source.indexOf("setUploadedImagePath(uploaded.data.path)",cleanupCheck);
   expect(cleanupCheck).toBeGreaterThan(-1);
   expect(source.indexOf("remove([uploaded.data.path])",cleanupCheck)).toBeGreaterThan(cleanupCheck);
+  expect(source.slice(cleanupCheck,stateSwitch)).toContain('if(rollback.error)setOrphanedImagePaths');
   expect(stateSwitch).toBeGreaterThan(cleanupCheck);
   expect(source.slice(cleanupCheck,stateSwitch)).toContain("throw new Error('আগের অস্থায়ী ছবিটি পরিষ্কার করা যায়নি; নতুন ছবি যোগ করা হয়নি।')");
  });
@@ -33,5 +34,17 @@ describe('seller temporary image replacement',()=>{
 describe('new product image form reset',()=>{
  it('clears the previous image URL before reopening a new product form',()=>{
   expect(source).toContain("if(await discardPendingImage()){setImageUrl('');setUploadedImagePath(null);setEdit('new');}");
+ });
+});
+
+describe('seller image cleanup retry queue',()=>{
+ it('retains failed rollback uploads so a later discard can retry them',()=>{
+  expect(source).toContain('if(rollback.error)setOrphanedImagePaths');
+  expect(source).toContain('setOrphanedImagePaths(failed.filter(path=>path!==uploadedImagePath))');
+  expect(source).toContain('if(failed.length){toast.error');
+ });
+ it('tracks temporary image cleanup failures after save or upload errors',()=>{
+  expect(source).toContain('if(cleanup.error)setOrphanedImagePaths(paths=>[...new Set([...paths,pendingUpload])])');
+  expect(source).toContain('if(cleanup.error){setOrphanedImagePaths(paths=>[...new Set([...paths,pendingUpload])])');
  });
 });
