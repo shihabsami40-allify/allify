@@ -2,6 +2,7 @@ import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {describe,it,expect} from 'vitest';
 import {safeImageUrl,productImageStoragePath,canTransition,deliverySchema,applicationSchema,categorySchema,validQuantity,realOrderAllowed,cartTotal,checkoutErrorMessage,orderReportTotals} from '@/lib/marketplace';
+import {hasRecoveryHash} from '@/lib/auth';
 describe('checkout error messages',()=>{
  it('explains stock shortages without exposing database details',()=>expect(checkoutErrorMessage(new Error('Not enough stock for product'))).toContain('পর্যাপ্ত স্টক নেই'));
  it('explains unavailable delivery areas',()=>expect(checkoutErrorMessage(new Error('Delivery not available in this area'))).toContain('ডেলিভারি দেওয়া যাচ্ছে না'));
@@ -360,9 +361,22 @@ describe('admin order discovery',()=>{
 describe('password recovery link handling',()=>{
  it('supports both implicit recovery hashes and the Supabase PASSWORD_RECOVERY auth event',()=>{
   const reset=readFileSync(resolve(process.cwd(),'src/routes/reset-password.tsx'),'utf8');
-  expect(reset).toContain("get('type')==='recovery'");
+  expect(reset).toContain('hasRecoveryHash(window.location.hash)');
   expect(reset).toContain("event==='PASSWORD_RECOVERY'");
   expect(reset).toContain('subscription.unsubscribe()');
   expect(reset).toContain('supabase.auth.updateUser({password})');
+ });
+});
+
+
+describe('password recovery URL detection',()=>{
+ it('accepts Supabase recovery links in URL hashes',()=>{
+  expect(hasRecoveryHash('#access_token=abc&type=recovery')).toBe(true);
+  expect(hasRecoveryHash('#type=recovery&token=abc')).toBe(true);
+ });
+ it('rejects signup, missing, and unrelated URL hashes',()=>{
+  expect(hasRecoveryHash('#type=signup')).toBe(false);
+  expect(hasRecoveryHash('#access_token=abc')).toBe(false);
+  expect(hasRecoveryHash('')).toBe(false);
  });
 });
