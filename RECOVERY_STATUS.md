@@ -409,3 +409,13 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Product cards now show an explicit “স্টক শেষ” badge for zero-stock items and “স্টক কম” for stock from one to five. The sold-out add-to-bag control remains disabled and its title now explains why.
 - Added regression coverage for both labels and the disabled sold-out action.
 - Recovery branch only; no inventory values or live data were modified. Authenticated browser QA remains outstanding.
+
+
+## 2026-11-18 — atomic cancellation, image fallback, and server-side image ownership
+
+- Added migration `0016_atomic_order_item_cancellation.sql` and its Drizzle journal entry. The guarded `cancel_order_item(uuid)` RPC locks an eligible order item, verifies the authenticated seller/admin and non-demo order, restores stock and adjusts sold count in the same transaction, then marks the item cancelled. Direct Data API cancellation remains blocked. This migration is source-controlled only and has NOT been applied or tested against the live Supabase database.
+- Updated the seller/admin cancellation call path to use the RPC and added migration regression tests. No live orders or inventory were changed.
+- Fixed missing local demo product image paths by allowing the shipped placeholder and rejecting nonexistent root-relative product image paths; empty optional image values remain valid. This is source-level validation only; the updated code has not yet been refreshed in a Vercel Preview deployment.
+- A further server-boundary audit found that the product-save server function relied on client-side URL validation and could accept an arbitrary external HTTPS image URL. It now validates non-empty image URLs against the configured Supabase product-image bucket and the authenticated seller/store folder using `productImageStoragePath`; regression coverage was added.
+- GitHub Actions run `44292710750` passed lint, typecheck, tests, and production build for branch commit `244fb415d21ebab705e7f6e7d9058dd0e36d4e59`.
+- No Supabase migration was applied, no live database/order/inventory data was changed, no production deployment occurred, and `main` remains untouched. Preview refresh and authenticated browser QA remain outstanding; Vercel's daily deployment API quota had blocked a manual Preview refresh earlier today.
