@@ -15,6 +15,13 @@
       "when": 1794475492585,
       "tag": "0001_secure_marketplace_controls",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794986600000,
+      "tag": "0004_fix_place_order_internal_guard",
+      "breakpoints": true
     }
   ]
 }
