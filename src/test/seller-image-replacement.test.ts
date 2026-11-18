@@ -14,15 +14,17 @@ describe('seller temporary image replacement',()=>{
   expect(stateSwitch).toBeGreaterThan(cleanupCheck);
   expect(source.slice(cleanupCheck,stateSwitch)).toContain("throw new Error('আগের অস্থায়ী ছবিটি পরিষ্কার করা যায়নি; নতুন ছবি যোগ করা হয়নি।')");
  });
-});
 
- it('does not discard a temporary upload when storage cleanup fails',()=>{
+ it('retains selected and orphaned temporary files when storage cleanup fails',()=>{
   const discard=source.slice(source.indexOf('const discardPendingImage='),source.indexOf('useEffect('));
-  expect(discard).toContain('await supabase.storage.from(\'product-images\').remove([uploadedImagePath])');
-  expect(discard.indexOf('if(cleanup.error)')).toBeGreaterThan(-1);
-  expect(discard.indexOf('setUploadedImagePath(null)')).toBeGreaterThan(discard.indexOf('if(cleanup.error)'));
+  expect(discard).toContain('...orphanedImagePaths');
+  expect(discard).toContain('for(const path of paths)');
+  expect(discard).toContain('if(cleanup.error)failed.push(path)');
+  expect(discard).toContain('setOrphanedImagePaths(failed.filter(path=>path!==uploadedImagePath))');
+  expect(discard).toContain('if(failed.length)');
   expect(discard).toContain('return false');
  });
+
  it('waits for temporary-image cleanup before switching product forms',()=>{
   expect(source).toContain("if(await discardPendingImage()){setImageUrl('');setUploadedImagePath(null);setEdit('new');}");
   expect(source).toContain('if(await discardPendingImage())setEdit(p)');
@@ -30,21 +32,19 @@ describe('seller temporary image replacement',()=>{
   expect(source).toContain('disabled={busy||imageUploading}');
  });
 
+ it('tracks failed rollback uploads so a later cleanup can retry them',()=>{
+  expect(source).toContain('if(rollback.error)setOrphanedImagePaths');
+  expect(source).toContain('setOrphanedImagePaths(paths=>[...new Set([...paths,uploaded.data.path])])');
+ });
+
+ it('tracks temporary-image cleanup failures after save or upload errors',()=>{
+  expect(source).toContain('if(cleanup.error)setOrphanedImagePaths(paths=>[...new Set([...paths,pendingUpload])])');
+  expect(source).toContain('if(cleanup.error){setOrphanedImagePaths(paths=>[...new Set([...paths,pendingUpload])])');
+ });
+});
 
 describe('new product image form reset',()=>{
  it('clears the previous image URL before reopening a new product form',()=>{
   expect(source).toContain("if(await discardPendingImage()){setImageUrl('');setUploadedImagePath(null);setEdit('new');}");
- });
-});
-
-describe('seller image cleanup retry queue',()=>{
- it('retains failed rollback uploads so a later discard can retry them',()=>{
-  expect(source).toContain('if(rollback.error)setOrphanedImagePaths');
-  expect(source).toContain('setOrphanedImagePaths(failed.filter(path=>path!==uploadedImagePath))');
-  expect(source).toContain('if(failed.length){toast.error');
- });
- it('tracks temporary image cleanup failures after save or upload errors',()=>{
-  expect(source).toContain('if(cleanup.error)setOrphanedImagePaths(paths=>[...new Set([...paths,pendingUpload])])');
-  expect(source).toContain('if(cleanup.error){setOrphanedImagePaths(paths=>[...new Set([...paths,pendingUpload])])');
  });
 });
