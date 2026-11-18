@@ -119,3 +119,16 @@ describe('browse empty search recovery',()=>{
   expect(browse).toContain("search={{q:'',category:'',sort:'popular'}}");
  });
 });
+
+
+describe('seller storefront product discovery',()=>{
+ it('provides store-scoped search, price sorting, and empty-search recovery',()=>{
+  const storefront=readFileSync(resolve(process.cwd(),'src/routes/store.$slug.tsx'),'utf8');
+  expect(storefront).toContain('এই দোকানে পণ্য খুঁজুন');
+  expect(storefront).toContain("sort==='low'?a.price-b.price");
+  expect(storefront).toContain("sort==='high'?b.price-a.price");
+  expect(storefront).toContain("sort==='new'?b.created_at.localeCompare(a.created_at)");
+  expect(storefront).toContain('এই নামে কোনো পণ্য মেলেনি');
+  expect(storefront).toContain('সার্চ মুছুন');
+ });
+});
