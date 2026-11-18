@@ -355,3 +355,14 @@ describe('admin order discovery',()=>{
   expect(dashboard).toContain('ফিল্টার মুছুন');
  });
 });
+
+
+describe('password recovery link handling',()=>{
+ it('supports both implicit recovery hashes and the Supabase PASSWORD_RECOVERY auth event',()=>{
+  const reset=readFileSync(resolve(process.cwd(),'src/routes/reset-password.tsx'),'utf8');
+  expect(reset).toContain("get('type')==='recovery'");
+  expect(reset).toContain("event==='PASSWORD_RECOVERY'");
+  expect(reset).toContain('subscription.unsubscribe()');
+  expect(reset).toContain('supabase.auth.updateUser({password})');
+ });
+});
