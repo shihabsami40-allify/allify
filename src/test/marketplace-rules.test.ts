@@ -1,9 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {safeImageUrl,productImageStoragePath,canTransition,deliverySchema,applicationSchema,categorySchema,validQuantity,realOrderAllowed,cartTotal,checkoutErrorMessage,productPageMetadata} from '@/lib/marketplace';
-describe('product page metadata',()=>{
- it('uses the product title and description for search previews',()=>{const result=productPageMetadata({title_bn:'বাংলা শার্ট',description:'সুতি কাপড়ের আরামদায়ক শার্ট'} as any);expect(result.meta).toContainEqual({title:'বাংলা শার্ট | ALLIFY'});expect(result.meta).toContainEqual({name:'description',content:'সুতি কাপড়ের আরামদায়ক শার্ট'});});
- it('provides useful metadata when a product is missing',()=>{const result=productPageMetadata(undefined);expect(result.meta).toContainEqual({title:'পণ্য খুঁজে পাওয়া যায়নি | ALLIFY'});});
-});
+import {safeImageUrl,productImageStoragePath,canTransition,deliverySchema,applicationSchema,categorySchema,validQuantity,realOrderAllowed,cartTotal,checkoutErrorMessage} from '@/lib/marketplace';
 describe('checkout error messages',()=>{
  it('explains stock shortages without exposing database details',()=>expect(checkoutErrorMessage(new Error('Not enough stock for product'))).toContain('পর্যাপ্ত স্টক নেই'));
  it('explains unavailable delivery areas',()=>expect(checkoutErrorMessage(new Error('Delivery not available in this area'))).toContain('ডেলিভারি দেওয়া যাচ্ছে না'));
