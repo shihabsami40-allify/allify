@@ -251,3 +251,13 @@ describe('seller store contact details',()=>{
   expect(storefront).toContain('{s.address&&');
  });
 });
+
+describe('buyer catalog filter reset',()=>{
+ it('shows a reset control for active search, category, or sort and clears all three',()=>{
+  const browse=readFileSync(resolve(process.cwd(),'src/routes/browse.tsx'),'utf8');
+  expect(browse).toContain("const hasActiveFilters=Boolean(search.q||search.category||search.sort!=='popular')");
+  expect(browse).toContain("search:{q:'',category:'',sort:'popular'}");
+  expect(browse).toContain('ফিল্টার মুছুন');
+  expect(browse).toContain('onClick={clearFilters}');
+ });
+});
