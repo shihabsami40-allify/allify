@@ -109,3 +109,13 @@ describe('customer order progress display',()=>{
   expect(orders).toContain('এই অর্ডারটি বাতিল করা হয়েছে।');
  });
 });
+
+
+describe('browse empty search recovery',()=>{
+ it('explains empty search results and provides a clear-all-products link',()=>{
+  const browse=readFileSync(resolve(process.cwd(),'src/routes/browse.tsx'),'utf8');
+  expect(browse).toContain('আপনার খোঁজ বা নির্বাচিত ক্যাটাগরিতে কোনো পণ্য মেলেনি।');
+  expect(browse).toContain('সব পণ্য দেখুন');
+  expect(browse).toContain("search={{q:'',category:'',sort:'popular'}}");
+ });
+});
