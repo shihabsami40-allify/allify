@@ -479,3 +479,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Independently checked every journal tag against its corresponding SQL file: all 17 files are present; no journal entry points to a missing migration file.
 - The CI workflow is configured for pushes to `main` and pull requests targeting `main`, not direct pushes to this recovery branch. The Vercel status on the recent recovery commits reports a build-rate-limit failure; no successful build is claimed for these latest journal edits.
 - No migration was applied to the live database. Live schema/policy reconciliation, authenticated QA, and a verified build remain outstanding. `main`, Production, and live data remain untouched.
+
+
+## 2026-11-18 — CI coverage extended to the recovery branch
+
+- Updated `.github/workflows/ci.yml` so pushes and pull requests for both `main` and `allify-recovery-2026-11-17` are included.
+- The verification job now explicitly runs dependency installation, ESLint, TypeScript `tsc --noEmit`, Vitest, and the production build.
+- This fixes the previous workflow gap where the recovery branch was not covered by the workflow's branch filters.
+- The latest commit has not yet reported a GitHub Actions result through the available status check; Vercel continues to report its build-rate-limit failure. Do not claim the new workflow has passed until a run is visible and all steps succeed.
+- Live database queries remain blocked by the Lovable Free-plan MCP action cooldown. No live database writes, Production deployment, or `main` changes were made.
