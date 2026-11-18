@@ -106,6 +106,9 @@ describe('customer order progress display',()=>{
   const orders=readFileSync(resolve(process.cwd(),'src/routes/orders.tsx'),'utf8');
   expect(orders).toContain("const fulfillmentSteps:Status[]=['pending','confirmed','shipped','delivered']");
   expect(orders).toContain('aria-label="অর্ডারের অগ্রগতি"');
+  expect(orders).toContain('অর্ডার হালনাগাদ করুন');
+  expect(orders).toContain('disabled={q.isFetching}');
+  expect(orders).toContain('হালনাগাদ হচ্ছে…');
   expect(orders).toContain('এই অর্ডারটি বাতিল করা হয়েছে।');
  });
 });
