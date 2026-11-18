@@ -12,7 +12,7 @@ describe('product image storage ownership policies',()=>{
   expect(migration).toContain('s.is_demo = false');
  });
  it('checks both old and new object ownership for updates',()=>{
-  const update=migration.slice(migration.indexOf('create policy "sellers update'));
+  const update=migration.slice(migration.indexOf('create policy "sellers update'),migration.indexOf('drop policy if exists "sellers delete'));
   expect(update).toContain('using (');
   expect(update).toContain('with check (');
   expect(update.match(/s.owner_id = \(select auth.uid\(\)\)/g)?.length).toBe(2);
