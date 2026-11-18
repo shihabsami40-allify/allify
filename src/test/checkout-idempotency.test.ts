@@ -17,6 +17,7 @@ describe('COD checkout request idempotency',()=>{
   expect(migration).toContain('pg_advisory_xact_lock(hashtextextended(v_uid::text');
   expect(migration).toContain('where customer_id = v_uid and checkout_request_id = p_request_id');
   expect(migration).toContain('if found then\n    return v_no;');
+  expect(migration.indexOf('if found then\n    return v_no;')).toBeLessThan(migration.indexOf('update public.products'));
  });
  it('keeps the existing transactional stock checks and protects the new RPC signature',()=>{
   expect(migration).toContain('for update of p');
