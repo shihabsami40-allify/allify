@@ -183,6 +183,17 @@ describe('seller product list refresh',()=>{
  });
 });
 
+
+describe('seller product stock filters',()=>{
+ it('supports filtering products by sold-out and low-stock quantities',()=>{
+  const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
+  expect(dashboard).toContain("stockFilter==='all'||(stockFilter==='out'&&product.stock===0)||(stockFilter==='low'&&product.stock>0&&product.stock<=5)");
+  expect(dashboard).toContain('স্টকের অবস্থা অনুযায়ী ফিল্টার');
+  expect(dashboard).toContain('<option value="out">স্টক শেষ</option>');
+  expect(dashboard).toContain('<option value="low">স্টক কম (১–৫)</option>');
+ });
+});
+
 describe('seller order list refresh',()=>{
  it('lets sellers refresh order data and indicates an active fetch',()=>{
   const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
