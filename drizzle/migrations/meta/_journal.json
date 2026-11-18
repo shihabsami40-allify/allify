@@ -19,89 +19,96 @@
     {
       "idx": 2,
       "version": "7",
+      "when": 1794973266730,
+      "tag": "0002_restrict_internal_function_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
       "when": 1794986600000,
       "tag": "0004_fix_place_order_internal_guard",
       "breakpoints": true
     },
     {
-      "idx": 3,
+      "idx": 4,
       "version": "7",
       "when": 1794987000000,
       "tag": "0005_block_unrestored_order_cancellation",
       "breakpoints": true
     },
     {
-      "idx": 4,
+      "idx": 5,
       "version": "7",
       "when": 1795000000000,
       "tag": "0006_secure_product_image_storage",
       "breakpoints": true
     },
     {
-      "idx": 5,
+      "idx": 6,
       "version": "7",
       "when": 1795000500000,
       "tag": "0007_harden_product_image_bucket_config",
       "breakpoints": true
     },
     {
-      "idx": 6,
+      "idx": 7,
       "version": "7",
       "when": 1795000800000,
       "tag": "0008_block_admin_order_cancellation",
       "breakpoints": true
     },
     {
-      "idx": 7,
+      "idx": 8,
       "version": "7",
       "when": 1795001200000,
       "tag": "0009_checkout_request_idempotency",
       "breakpoints": true
     },
     {
-      "idx": 8,
+      "idx": 9,
       "version": "7",
       "when": 1795001800000,
       "tag": "0010_restrict_suspended_store_product_writes",
       "breakpoints": true
     },
     {
-      "idx": 9,
+      "idx": 10,
       "version": "7",
       "when": 1795002400000,
       "tag": "0011_block_demo_order_status_updates",
       "breakpoints": true
     },
     {
-      "idx": 10,
+      "idx": 11,
       "version": "7",
       "when": 1795003000000,
       "tag": "0012_serialize_seller_application_submissions",
       "breakpoints": true
     },
     {
-      "idx": 11,
+      "idx": 12,
       "version": "7",
       "when": 1795003600000,
       "tag": "0013_guard_seller_application_review",
       "breakpoints": true
     },
     {
-      "idx": 12,
+      "idx": 13,
       "version": "7",
       "when": 1795004200000,
       "tag": "0014_restrict_suspended_store_image_rows",
       "breakpoints": true
     },
     {
-      "idx": 13,
+      "idx": 14,
       "version": "7",
       "when": 1795004800000,
       "tag": "0015_derive_order_status_from_items",
       "breakpoints": true
     },
     {
-      "idx": 14,
+      "idx": 15,
       "version": "7",
       "when": 1795005400000,
       "tag": "0016_atomic_order_item_cancellation",
