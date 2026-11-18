@@ -316,3 +316,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - This closes the race where two simultaneous submissions could both pass the prior existence check. Existing pending-only defaults, admin-note reset, reviewed-at reset, and existing-store check are retained.
 - Added regression tests and registered Drizzle journal entry 10.
 - CI is pending. Migration is source-controlled only and has NOT been applied to Supabase. No applications or live database rows were changed.
+
+
+## 2026-11-18 — seller application review integrity
+
+- Added migration `0013_guard_seller_application_review.sql` to prevent direct admin Data API status changes on seller applications; status transitions must pass through the atomic `review_seller_application` RPC.
+- The trigger makes submitted application identity/details immutable after submission while allowing review metadata. The RPC serializes approval attempts per applicant, checks for an existing store, then creates the store, seller role, and approved status in one transaction.
+- Rejection of demo applications without a user account remains supported.
+- Added regression tests and registered Drizzle journal entry 11.
+- CI is pending. Migration is source-controlled only and has NOT been applied to Supabase. No seller applications, stores, or live rows were changed.
