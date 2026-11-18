@@ -245,3 +245,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Added a regression assertion for the reset behavior. The first test attempt exposed an outdated assertion expecting the previous one-line handler; the assertion was updated to check the new guarded reset.
 - GitHub Actions run `44263104581` passed lint, typecheck, tests, and production build for commit `5b7ae2211ab772981884f7d961b846f8099afbf7`. Vercel Preview is READY at `https://allify-chattogram-c7p9wyf9z-allify.vercel.app`.
 - This is source/build verification only. No authenticated browser QA, live Supabase migration, production deployment, or merge to `main` was performed.
+
+
+## 2026-11-18 — explicit product image bucket configuration
+
+- Added migration `0007_harden_product_image_bucket_config.sql` to make the product image bucket configuration explicit and repeatable: public storefront reads, a 5 MB upload cap, and JPEG/PNG/WebP MIME types. The migration upserts the bucket settings so it also repairs drift if the bucket already exists.
+- Recreates the named public-read policy intentionally; seller write/delete authorization remains governed by migration 0006.
+- Registered migration 0007 in the Drizzle journal and added regression coverage for the bucket settings and public-read policy.
+- GitHub Actions run `44263630732` passed lint, strict typecheck, tests, and production build for commit `8b46ac25a83c76ddffe5814e7fa0866245c0ab18`.
+- Migration 0007 is source-controlled only and has NOT been applied to Supabase. No live database change, authenticated browser QA, production deployment, or merge to `main` was performed.
