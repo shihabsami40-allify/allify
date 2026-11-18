@@ -45,7 +45,7 @@ export function CheckoutView(){
      p_phone:parsed.data.phone,
      p_area:parsed.data.area,
      p_address:parsed.data.address,
-     p_note:parsed.data.note||undefined,
+     ...(parsed.data.note?{p_note:parsed.data.note}:{}),
      p_save_address:false
     });
     if(error)throw error;
