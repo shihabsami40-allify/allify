@@ -172,3 +172,13 @@ describe('store directory discovery',()=>{
   expect(stores).toContain('ফিল্টার মুছুন');
  });
 });
+
+describe('seller order list refresh',()=>{
+ it('lets sellers refresh order data and indicates an active fetch',()=>{
+  const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
+  expect(dashboard).toContain('অর্ডার হালনাগাদ করুন');
+  expect(dashboard).toContain('disabled={q.isFetching}');
+  expect(dashboard).toContain('onClick={()=>q.refetch()}');
+  expect(dashboard).toContain('হালনাগাদ হচ্ছে…');
+ });
+});
