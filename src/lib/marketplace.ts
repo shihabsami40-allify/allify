@@ -39,6 +39,7 @@ export function checkoutErrorMessage(error:unknown) {
 export function cartTotal(lines:CartLine[],products:Product[],fee:number) { return lines.reduce((sum,line)=>sum+(products.find(p=>p.id===line.id)?.price??0)*line.quantity,0)+fee; }
 export function validQuantity(quantity:number,stock:number) { return Number.isInteger(quantity)&&quantity>=1&&quantity<=Math.min(99,stock); }
 export function canTransition(from:Status,to:Status) { return (transitions[from] as readonly string[]).includes(to); }
+export function orderReportTotals(orders:Pick<Row<'orders'>,'is_demo'|'status'|'total'>[]) { const real=orders.filter(order=>!order.is_demo); const revenue=real.filter(order=>order.status!=='cancelled'); return {orderCount:real.length,orderValue:revenue.reduce((sum,order)=>sum+order.total,0),deliveredValue:revenue.filter(order=>order.status==='delivered').reduce((sum,order)=>sum+order.total,0)}; }
 export function realOrderAllowed(products:Product[]) {return products.length>0 && products.every(p=>p.seller_stores?.is_demo===false);}
 export function metadata(title:string,description:string) { return {meta:[{title:`${title} | ALLIFY`},{name:'description',content:description},{property:'og:title',content:`${title} | ALLIFY`},{property:'og:description',content:description},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary_large_image'}]}; }
 export const imagePlaceholder='/images/products/placeholder.svg';
