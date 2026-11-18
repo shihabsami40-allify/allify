@@ -194,3 +194,15 @@ describe('seller order discovery',()=>{
   expect(dashboard).toContain('ফিল্টার মুছুন');
  });
 });
+
+describe('customer order history discovery',()=>{
+ it('supports searching orders, filtering by status, and clearing unmatched filters',()=>{
+  const orders=readFileSync(resolve(process.cwd(),'src/routes/orders.tsx'),'utf8');
+  expect(orders).toContain('অর্ডার নম্বর, পণ্য বা প্রাপক খুঁজুন');
+  expect(orders).toContain("statusFilter==='all'||order.status===statusFilter");
+  expect(orders).toContain('<option value="shipped">পাঠানো হয়েছে</option>');
+  expect(orders).toContain('<option value="cancelled">বাতিল</option>');
+  expect(orders).toContain('কোনো অর্ডার মেলেনি');
+  expect(orders).toContain('ফিল্টার মুছুন');
+ });
+});
