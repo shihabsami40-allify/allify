@@ -119,7 +119,7 @@ describe('browse empty search recovery',()=>{
   const browse=readFileSync(resolve(process.cwd(),'src/routes/browse.tsx'),'utf8');
   expect(browse).toContain('আপনার খোঁজ বা নির্বাচিত ক্যাটাগরিতে কোনো পণ্য মেলেনি।');
   expect(browse).toContain('সব পণ্য দেখুন');
-  expect(browse).toContain("search={{q:'',category:'',sort:'popular'}}");
+  expect(browse).toContain("search:{q:'',category:'',sort:'popular'}");
  });
 });
 
