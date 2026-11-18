@@ -67,3 +67,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Added tests for owned image path extraction and rejection of external, cross-seller, and malformed paths. Corrected filename extension matching after CI caught a regex escaping issue.
 - Latest verification: GitHub Actions run `44249101598` passed lint, typecheck, tests, and production build. Latest Vercel Preview for branch `allify-recovery-2026-11-17` is READY at `https://allify-chattogram-qa997ykwx-allify.vercel.app` (commit `9ffef61c1b71afb3222e1123b83610ae2153d96c`).
 - Still not verified in an authenticated browser. Storage bucket/policies may require the migration to be applied in the intended Supabase project; no live DB changes were made. Preview SSO protection remains enabled. No production deployment or merge to `main` was performed.
+
+
+## 2026-11-18 — seller image upload interaction safeguards
+
+- Disabled seller product save and cancel actions while an image upload is in progress, preventing a save from racing the upload or a cancel from abandoning an in-flight file.
+- Disabled switching to a different product/new-product form during an upload. When switching forms after an upload completes, the previous uncommitted upload is removed best-effort.
+- CI run `44251012796` completed successfully (lint, typecheck, tests, production build).
+- Latest Vercel Preview is READY: `https://allify-chattogram-n13zyypu9-allify.vercel.app`, commit `55fad1036c53801da790f8d4abc80af050e1089c`.
+- Authenticated browser QA and live Supabase storage-policy verification remain outstanding; no live database changes, production deployment, or merge to `main` were performed.
