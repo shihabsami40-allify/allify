@@ -325,3 +325,12 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Rejection of demo applications without a user account remains supported.
 - Added regression tests and registered Drizzle journal entry 11.
 - CI is pending. Migration is source-controlled only and has NOT been applied to Supabase. No seller applications, stores, or live rows were changed.
+
+
+## 2026-11-18 — suspended seller product image row guard
+
+- Review found that the legacy `product_images` table RLS policy still allowed a seller to write image rows for their own products even when the store was suspended or marked demo, bypassing the active-store restrictions added for product rows and Storage objects.
+- Added migration `0014_restrict_suspended_store_image_rows.sql` to require an owned, active, non-demo store for seller image-row writes; admin access is retained.
+- The Storage delete policy remains unchanged so owners can clean up their own old files after suspension.
+- Added regression coverage and registered Drizzle journal entry 12.
+- CI is pending. Migration is source-controlled only and has NOT been applied to Supabase. No product images or live database rows were changed.
