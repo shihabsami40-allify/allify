@@ -1,6 +1,7 @@
 import {createFileRoute,Link} from '@tanstack/react-router';
 import {useEffect,useState} from 'react';
 import {supabase} from '@/integrations/supabase/client';
+import {hasRecoveryHash} from '@/lib/auth';
 import {metadata} from '@/lib/marketplace';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -20,8 +21,7 @@ function ResetPassword(){
   useEffect(()=>{
     // Supabase's implicit recovery links carry type=recovery in the URL hash.
     // PASSWORD_RECOVERY also covers the auth event after a PKCE code is exchanged.
-    const hashRecovery=new URLSearchParams(window.location.hash.slice(1)).get('type')==='recovery';
-    if(hashRecovery)setRecovery(true);
+    if(hasRecoveryHash(window.location.hash))setRecovery(true);
 
     const {data:{subscription}}=supabase.auth.onAuthStateChange(event=>{
       if(event==='PASSWORD_RECOVERY')setRecovery(true);
