@@ -1,5 +1,13 @@
 # ALLIFY recovery status
 
+## 2026-11-18 — product image fallback validation refinement
+
+- Preserved the existing optional-image behavior while keeping known-missing local demo image paths rejected; the shipped placeholder remains accepted.
+- Added a regression assertion for empty optional image values.
+- GitHub Actions run `44290570513` passed lint, strict typecheck, tests, and production build on commit `183533a13a8545e5417762fd3043a2f7cad96283`.
+- The Preview deployment quota still prevents a fresh deployment of this image fix today; the existing Preview URL is an earlier commit and should not be treated as verification of this change.
+
+
 ## 2026-11-18 — missing demo product image fallback
 
 - Preview inspection found that demo records referenced local `/images/products/*.jpg` paths that are not present in the repository's public assets; direct requests to sample paths returned HTTP 404.
