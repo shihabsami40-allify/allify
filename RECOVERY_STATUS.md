@@ -112,3 +112,11 @@ See `.env.example` for variable names only. Never commit real keys or `.env` fil
 - Added regression tests for stock/area messages and for suppressing internal database details. CI runs `44252363948`, `44252378392`, and `44252398488` passed lint, strict typecheck, tests, and production build.
 - Latest Preview READY: `https://allify-chattogram-dgtgp8nc4-allify.vercel.app`, code/test commit `83f1558cf4fc634675031bae7d61212f388b92a3`.
 - Authenticated browser checkout remains untested; this does not validate live RPC/database behavior. No live DB mutation, production deployment, or merge to `main`.
+
+
+## 2026-11-18 — seller application duplicate guard
+
+- The authenticated seller application server function now checks for an existing owned store and a pending application before inserting a new application. This prevents ordinary repeat submissions and gives a clear Bengali reason; the application form now displays that server feedback.
+- CI runs `44252803421` and `44252824422` passed lint, strict typecheck, tests, and production build.
+- Preview for the server-function change: `https://allify-chattogram-55p24grpc-allify.vercel.app` (READY, commit `08837b98b1a891e958e3f3d1d84ad1a7f5a1dc61`). UI feedback commit `fdd88d08d1b23394bac1b69370e1b1c8652b8645` is separately deployed as a Preview build; its final state is checked separately.
+- This is an application-level duplicate guard. A database unique partial index/RPC would be needed to eliminate simultaneous-request races; no live DB migration was attempted. No production deployment or merge to `main`.
