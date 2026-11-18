@@ -58,6 +58,6 @@ describe('order status prompts include item details',()=>{
  });
  it('seller confirmation identifies the order, product and quantity',()=>{
   const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
-  expect(dashboard).toContain('${item.orders?.order_no??'এই'} • ${item.title} × ${item.quantity}');
+  expect(dashboard).toContain("${item.orders?.order_no??'এই'} • ${item.title} × ${item.quantity}");
  });
 });
