@@ -283,3 +283,16 @@ describe('buyer product image gallery',()=>{
   expect(detail).toContain('const activeImage=galleryImages[selectedImage]?.url??productImage(p)');
  });
 });
+
+describe('buyer product detail seller information',()=>{
+ it('loads and displays the seller store area and public address with a description fallback',()=>{
+  const detail=readFileSync(resolve(process.cwd(),'src/routes/product.$slug.tsx'),'utf8');
+  const functions=readFileSync(resolve(process.cwd(),'src/lib/marketplace.functions.ts'),'utf8');
+  const types=readFileSync(resolve(process.cwd(),'src/lib/marketplace.ts'),'utf8');
+  expect(functions).toContain('seller_stores(name,slug,is_demo,area,address,status)');
+  expect(types).toContain("'name'|'slug'|'is_demo'|'area'|'address'");
+  expect(detail).toContain('p.seller_stores?.address');
+  expect(detail).toContain('দোকানের ঠিকানা');
+  expect(detail).toContain('এই পণ্যের বিস্তারিত বিবরণ এখনো যোগ করা হয়নি।');
+ });
+});
