@@ -9,6 +9,7 @@ describe('checkout error messages',()=>{
 });
 describe('marketplace validation',()=>{
  it('accepts credential-free HTTPS images',()=>expect(safeImageUrl('https://images.example.com/product.jpg')).toBe(true));
+ it('allows the shipped placeholder but rejects missing local demo images',()=>{expect(safeImageUrl('/images/products/placeholder.svg')).toBe(true);for(const url of ['/images/products/handbag.jpg','/images/products/panjabi.jpg','/images/products/unknown.svg'])expect(safeImageUrl(url)).toBe(false);});
  it('rejects nonsecure image URLs',()=>expect(safeImageUrl('http://images.example.com/product.jpg')).toBe(false));
  it('rejects image URLs containing credentials',()=>expect(safeImageUrl('https://user:password@example.com/x.jpg')).toBe(false));
  it('rejects local/private image hosts',()=>{for(const url of ['https://127.0.0.1/x','https://localhost/x','https://10.0.0.1/x','https://foo.internal/x'])expect(safeImageUrl(url)).toBe(false);});
