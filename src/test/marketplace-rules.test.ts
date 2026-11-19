@@ -55,6 +55,14 @@ describe('database order status typing',()=>{
  });
 });
 
+describe('store discovery branding presentation',()=>{
+ it('renders validated store banners in the store discovery cards',()=>{
+  const route=readFileSync(resolve(process.cwd(),'src/routes/stores.tsx'),'utf8');
+  expect(route).toContain('s.banner_url&&safeImageUrl(s.banner_url)');
+  expect(route).toContain('s.logo_url&&safeImageUrl(s.logo_url)');
+ });
+});
+
 describe('seller store branding validation',()=>{
  it('validates optional store logo and banner with the shared HTTPS image policy',()=>{
   const functions=readFileSync(resolve(process.cwd(),'src/lib/marketplace.functions.ts'),'utf8');
