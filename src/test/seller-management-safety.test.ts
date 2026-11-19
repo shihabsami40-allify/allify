@@ -60,7 +60,9 @@ describe('seller management authorization and lifecycle contract', () => {
   });
 
   it('aligns seller image upload paths with owner/store-scoped Storage policies', () => {
-    expect(dashboard).toContain('`${user.id}/${store.id}/${crypto.randomUUID()}.`');
+    expect(dashboard).toContain("const ext=file.type==='image/jpeg'?'jpg':file.type==='image/png'?'png':'webp'");
+    expect(dashboard).toContain('const path=`${user.id}/${store.id}/${crypto.randomUUID()}.${ext}`;');
+    expect(dashboard).toContain('upload(path,file,{contentType:file.type,upsert:false})');
     expect(imageStorage).toContain("array_length(storage.foldername(name), 1) = 2");
     expect(imageStorage).toContain("(storage.foldername(name))[1] = (select auth.uid())::text");
     expect(imageStorage).toContain("s.id::text = (storage.foldername(name))[2]");
