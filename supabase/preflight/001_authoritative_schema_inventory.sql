@@ -71,5 +71,11 @@ SELECT id, name, public, file_size_limit, allowed_mime_types
 FROM storage.buckets
 ORDER BY id;
 
--- 11) Supabase migration ledger (may be empty or absent depending on migration tooling)
+-- 11) Storage object policies and their access predicates; no object names or contents
+SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual, with_check
+FROM pg_policies
+WHERE schemaname = 'storage' AND tablename = 'objects'
+ORDER BY policyname;
+
+-- 12) Supabase migration ledger (may be empty or absent depending on migration tooling)
 SELECT to_regclass('supabase_migrations.schema_migrations') AS supabase_migration_ledger;
