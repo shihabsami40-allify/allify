@@ -10,12 +10,28 @@ const mapping = readFileSync(
   resolve(process.cwd(), 'supabase/preflight/002_legacy_data_mapping_report.sql'),
   'utf8',
 ).toLowerCase();
+const contract = readFileSync(
+  resolve(process.cwd(), 'supabase/preflight/003_target_contract_diff.sql'),
+  'utf8',
+).toLowerCase();
 
 describe('Supabase preflight scripts are read-only', () => {
   it('does not contain data or schema mutation statements', () => {
     const forbidden = /\b(insert\s+into|update\s+public\.|delete\s+from|alter\s+table|drop\s+table|create\s+table|truncate\s+table)\b/i;
     expect(inventory).not.toMatch(forbidden);
     expect(mapping).not.toMatch(forbidden);
+    expect(contract).not.toMatch(forbidden);
+  });
+
+  it('compares the current application table contract and required RPC names', () => {
+    for (const name of ['seller_stores', 'seller_applications', 'delivery_areas', 'product_images', 'cart_items', 'checkout_request_id']) {
+      expect(contract).toContain(name);
+    }
+    for (const name of ['has_role', 'place_order', 'cancel_order_item', 'review_seller_application']) {
+      expect(contract).toContain(name);
+    }
+    expect(contract).toContain('information_schema.columns');
+    expect(contract).not.toMatch(/select\\s+(customer_phone|customer_name|delivery_address|phone)\\s+from/i);
   });
 
   it('inspects the authoritative legacy tables and their security configuration', () => {
