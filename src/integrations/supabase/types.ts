@@ -553,6 +553,7 @@ export type Database = {
       order_status:
         | "pending"
         | "confirmed"
+        | "processing"
         | "shipped"
         | "delivered"
         | "cancelled"
