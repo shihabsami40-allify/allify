@@ -42,6 +42,8 @@ describe('Supabase preflight scripts are read-only', () => {
     expect(inventory).toContain('pg_proc');
     expect(inventory).toContain('pg_indexes');
     expect(inventory).toContain('information_schema.triggers');
+    expect(inventory).toContain("where schemaname = 'storage' and tablename = 'objects'");
+    expect(inventory).toContain('with_check');
   });
 
   it('reports legacy mapping risks without returning customer contact data', () => {
