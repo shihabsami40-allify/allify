@@ -48,3 +48,19 @@ Do not run this document as SQL. Do not replay `drizzle/migrations/0000_migratio
 ## Current state
 
 The project is on Supabase Free; a Supabase Development Branch attempt was rejected by the platform as Pro-only. Therefore rehearsal must use a separately provisioned disposable PostgreSQL environment or another explicitly approved isolated project. The live authoritative project has not been modified. The existing `product-images` bucket must be preserved; its configuration is already present and should not be recreated.
+
+
+## Fresh live dependency observations — 2026-11-19
+
+Read-only catalog inspection of the active authoritative project confirmed these additional compatibility requirements:
+
+- The auth-user trigger `handle_new_user()` inserts `profiles(id, full_name, role)` with legacy enum value `buyer`. It must remain compatible until the new profile/role provisioning trigger is installed and tested. The target baseline's `customer` role cannot be substituted into the legacy enum.
+- `sync_seller_role()` is attached to both INSERT and UPDATE on legacy `stores`; it updates `profiles.role` between `seller` and `buyer` based on legacy store approval state. Migrate or deliberately bridge this behavior before switching seller approval to the new application/store workflow.
+- `protect_moderation_fields()` guards status changes on both `stores` and `products`. Its trigger dependencies must be included in the cutover/rollback inventory.
+- The database has an `rls_auto_enable()` event trigger for newly created public tables. New tables therefore begin with RLS enabled, but this does not create policies or grants; migration stages must install and test policies before exposing table access.
+- Legacy RLS policies directly call `is_admin()` and `owns_store(uuid)` across categories, products, stores, orders and order_items. In particular, the order_items read policy joins orders and checks customer ownership; seller update policy uses store ownership. Do not revoke helper EXECUTE or replace helper definitions until all dependent policies have compatible replacements.
+- The existing categories SELECT policy permits public reads of active categories and admin reads; a separate authenticated ALL policy allows admin management. This currently produces the multiple-permissive-policy advisor warning for authenticated SELECT. Consolidate only as part of a tested policy migration.
+- Legacy product/store states use `approval_state` values such as `pending` and `approved`, whereas target app contracts use `product_status` and `store_status`. Map these deliberately (and preserve rejected/suspended semantics where present); do not cast or rename enum types in place.
+- The live project exposes four SECURITY DEFINER functions to anon and authenticated: `is_admin()`, `owns_store(uuid)`, `lookup_order(text,text)`, and `place_marketplace_order(text,text,text,text,jsonb)`. The guest order-creation and order-lookup endpoints are existing legacy behavior. Treat them as externally reachable APIs: review rate limits, validation, response data, and cutover compatibility. Do not revoke or change them as an incidental cleanup.
+
+Fresh Supabase Advisor observations: 4 anon-callable SECURITY DEFINER functions (and the same 4 callable by authenticated), 7 RLS init-plan performance findings, 1 multiple-permissive-policy finding on categories, and 7 unused-index informational findings. Health advisor returned no findings. These are recorded as baseline findings, not authorization to change production.
