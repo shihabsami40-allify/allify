@@ -47,3 +47,8 @@ The live database instead exposes `is_admin()`, `owns_store(uuid)`, `lookup_orde
 - Any production environment change before the schema is ready.
 
 No live schema, data, Storage policy, Vercel environment variable, or Production deployment was changed while preparing this matrix.
+
+
+## Expanded read-only preflight coverage — 2026-11-19
+
+The inventory script now additionally reports effective table privileges for `anon`, `authenticated`, and `service_role`; sequence USAGE privileges; configured default ACLs; and catalog-tracked dependencies on the legacy SECURITY DEFINER helpers (`is_admin`, `owns_store`, `lookup_order`, `place_marketplace_order`, `sync_seller_role`). These checks are read-only and are intended to prevent accidental privilege widening or breaking legacy policy dependencies during the later additive migration.
