@@ -22,10 +22,10 @@ The read-only contract diff in `supabase/preflight/003_target_contract_diff.sql`
 ## Required function inventory
 
 The current server functions call these database functions by exact name:
-- `has_role(uuid, app_role)` (admin checks and role checks)
-- `place_order(jsonb,text,text,text,text,uuid,text,boolean)` (authenticated, idempotent COD checkout)
+- `has_role(app_role, uuid)` (PostgreSQL identity signature `public.has_role(public.app_role, uuid)`; generated TypeScript args are `_role` then `_user_id`)
+- `place_order(jsonb, text, text, text, text, uuid, text, boolean)` (authenticated, idempotent COD checkout; generated TypeScript args map to `p_items`, `p_recipient`, `p_phone`, `p_area`, `p_address`, `p_request_id`, `p_note`, `p_save_address`)
 - `cancel_order_item(uuid)` (atomic stock restoration and cancellation)
-- `review_seller_application(uuid,boolean,text)` (one-time admin review and approval)
+- `review_seller_application(uuid, boolean, text)` (one-time admin review and approval; returns `uuid`)
 
 The live database instead exposes `is_admin()`, `owns_store(uuid)`, `lookup_order(text,text)`, and `place_marketplace_order(text,text,text,text,jsonb)`. These are not interchangeable. Existing RLS policies depend on legacy helper functions; do not revoke or replace them until every dependent policy/trigger has a tested replacement.
 
@@ -61,3 +61,8 @@ The inventory script now additionally reports effective table privileges for `an
 ## Exact RPC signature preflight — 2026-11-19
 
 The target contract diff now resolves the four application RPCs by their full PostgreSQL identity signatures, not just function names. It reports missing exact signatures, return-type mismatches, SECURITY DEFINER mode, function settings (including any fixed search path), and effective anon/authenticated EXECUTE privileges. This is a read-only diagnostic: privilege results require policy-aware review and are not automatically treated as pass/fail because the intended grants differ by RPC. A same-name overload no longer counts as proof that the app's call will resolve safely.
+
+
+## RPC signature reconciliation correction — 2026-11-19
+
+The required RPC identity signatures above were checked against both the generated TypeScript function argument definitions and the SQL function declarations. In particular, `has_role` takes the enum role first and user UUID second; `place_order` takes the JSONB items first, followed by recipient, phone, area, address, request UUID, optional note and save-address flag. These are PostgreSQL identity argument types, not TypeScript parameter names. The exact-signature preflight uses the same ordering. This correction supersedes the earlier reversed `has_role` order and any abbreviated checkout signature in older notes.
