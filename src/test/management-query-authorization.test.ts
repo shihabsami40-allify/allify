@@ -26,6 +26,10 @@ describe('management query authorization boundaries', () => {
     expect(management).toContain("!data.admin&&ids.length===0?Promise.resolve({data:[],error:null})");
   });
 
+  it('excludes demo orders from the seller order-item view', () => {
+    expect(management).toContain("itemsQuery=itemsQuery.in('store_id',ids).eq('orders.is_demo',false)");
+  });
+
   it('does not expose seller applications or global orders through the seller query path', () => {
     expect(management).toContain("data.admin?db.from('seller_applications')");
     expect(management).toContain("data.admin?db.from('orders')");
