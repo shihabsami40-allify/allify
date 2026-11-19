@@ -79,3 +79,65 @@ ORDER BY policyname;
 
 -- 12) Supabase migration ledger (may be empty or absent depending on migration tooling)
 SELECT to_regclass('supabase_migrations.schema_migrations') AS supabase_migration_ledger;
+
+-- 13) Effective table privileges for application roles. This is important when
+-- adding parallel target tables without accidentally widening legacy access.
+SELECT table_name,
+       has_table_privilege('anon', format('public.%I', table_name), 'SELECT') AS anon_select,
+       has_table_privilege('anon', format('public.%I', table_name), 'INSERT') AS anon_insert,
+       has_table_privilege('authenticated', format('public.%I', table_name), 'SELECT') AS authenticated_select,
+       has_table_privilege('authenticated', format('public.%I', table_name), 'INSERT') AS authenticated_insert,
+       has_table_privilege('authenticated', format('public.%I', table_name), 'UPDATE') AS authenticated_update,
+       has_table_privilege('authenticated', format('public.%I', table_name), 'DELETE') AS authenticated_delete,
+       has_table_privilege('service_role', format('public.%I', table_name), 'ALL') AS service_role_all
+FROM information_schema.tables
+WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+ORDER BY table_name;
+
+-- 14) Sequence privileges. Identity/serial defaults can fail even when table
+-- privileges look correct; report sequence access without changing grants.
+SELECT sequence_name,
+       has_sequence_privilege('anon', format('public.%I', sequence_name), 'USAGE') AS anon_usage,
+       has_sequence_privilege('authenticated', format('public.%I', sequence_name), 'USAGE') AS authenticated_usage,
+       has_sequence_privilege('service_role', format('public.%I', sequence_name), 'USAGE') AS service_role_usage
+FROM information_schema.sequences
+WHERE sequence_schema = 'public'
+ORDER BY sequence_name;
+
+-- 15) Existing default privileges. These affect future objects and are not
+-- represented by the current per-table grants above.
+SELECT COALESCE(r.rolname, 'PUBLIC') AS grantor_role,
+       COALESCE(n.nspname, 'all schemas') AS schema_name,
+       d.defaclobjtype AS object_type,
+       d.defaclacl AS default_acl
+FROM pg_default_acl d
+LEFT JOIN pg_roles r ON r.oid = d.defaclrole
+LEFT JOIN pg_namespace n ON n.oid = d.defaclnamespace
+ORDER BY grantor_role, schema_name, object_type;
+
+-- 16) Dependencies on legacy SECURITY DEFINER helpers. Preserve these
+-- dependencies until each dependent policy/trigger is migrated and tested.
+SELECT p.oid::regprocedure AS referenced_function,
+       d.deptype AS dependency_type,
+       CASE
+         WHEN d.classid = 'pg_policy'::regclass THEN
+           (SELECT format('%I.%I policy %I', n.nspname, c.relname, pol.polname)
+            FROM pg_policy pol
+            JOIN pg_class c ON c.oid = pol.polrelid
+            JOIN pg_namespace n ON n.oid = c.relnamespace
+            WHERE pol.oid = d.objid)
+         WHEN d.classid = 'pg_trigger'::regclass THEN
+           (SELECT format('%I.%I trigger %I', n.nspname, c.relname, t.tgname)
+            FROM pg_trigger t
+            JOIN pg_class c ON c.oid = t.tgrelid
+            JOIN pg_namespace n ON n.oid = c.relnamespace
+            WHERE t.oid = d.objid)
+         ELSE pg_describe_object(d.classid, d.objid, d.objsubid)
+       END AS dependent_object
+FROM pg_proc p
+JOIN pg_namespace pn ON pn.oid = p.pronamespace
+JOIN pg_depend d ON d.refclassid = 'pg_proc'::regclass AND d.refobjid = p.oid
+WHERE pn.nspname = 'public'
+  AND p.proname IN ('is_admin', 'owns_store', 'lookup_order',
+                    'place_marketplace_order', 'sync_seller_role')
+ORDER BY referenced_function::text, dependent_object;
