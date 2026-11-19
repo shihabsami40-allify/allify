@@ -21,6 +21,11 @@ describe('admin dashboard safety contract', () => {
     expect(source).toContain('o.is_demo?<p');
   });
 
+  it('excludes demo-store products from the real marketplace product total', () => {
+    expect(source).toContain("data.products.filter(p=>!p.seller_stores?.is_demo).length");
+    expect(source).toContain("['আসল পণ্য'");
+  });
+
   it('labels dashboard totals as real marketplace data, not payment receipts', () => {
     expect(source).toContain('!s.is_demo');
     expect(source).toContain('orderReportTotals(data.orders)');
