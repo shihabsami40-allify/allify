@@ -3,7 +3,7 @@
 Last reconciled: 2026-11-19  
 Repository: `shihabsami40-allify/allify`  
 Branch: `allify-recovery-2026-11-17`  
-Latest implementation commit: `68978bad4e6ba2cf336cc0183e85f8082ec8c81c`  
+Latest implementation commit: `e27ccc086bb53301262723a9258fb357b5dc2f76`  
 Latest Preview: https://allify-chattogram-git-allify-recovery-2026-11-17-allify.vercel.app
 
 This ledger exists to prevent completed work from being repeated. A passing build or static source-contract test is not proof that a live marketplace workflow works.
@@ -108,3 +108,7 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Repository commits: `3f07e4d` (preflight), `68978ba` (tests), `75a53f9` (dependency matrix).
 - This is repository-only work. No live Supabase schema/data, Storage, Vercel environment, or Production deployment was changed.
 - CI status for these commits is pending verification; do not treat the static test additions as proof of a live database match.
+
+
+- Follow-up compatibility check: the enum diff now also lists live-only labels requiring review, rather than only reporting missing target labels. This explicitly surfaces the legacy `app_role.buyer` value alongside the app's generated `customer` role contract; no enum values were changed or removed.
+- Follow-up commits: `25b59d2` (legacy-only enum reporting), `e27ccc0` (test coverage), `7fa2f6f` (documentation).
