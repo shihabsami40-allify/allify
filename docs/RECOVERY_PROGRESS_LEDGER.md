@@ -3,7 +3,7 @@
 Last reconciled: 2026-11-19  
 Repository: `shihabsami40-allify/allify`  
 Branch: `allify-recovery-2026-11-17`  
-Latest implementation commit: `3b4987ae78e97f47cc55926a796004a2aaa12de1`  
+Latest implementation commit: `8f3c5038348d0cd18eafc1104bbc89bbf062cc7e`  
 Latest Preview: https://allify-chattogram-git-allify-recovery-2026-11-17-allify.vercel.app
 
 This ledger exists to prevent completed work from being repeated. A passing build or static source-contract test is not proof that a live marketplace workflow works.
@@ -131,3 +131,12 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Commits: `1436ae9` (preflight SQL), `169cb46` (test assertions).
 - The prior exact-signature commit is superseded for these two RPC signatures; do not rely on its initial signature values.
 - CI for corrected commits is pending. No live database or deployment changes.
+
+
+## Migration planning and RPC signature verification — 2026-11-19
+
+- Verified both CI workflows for commit `169cb46` completed successfully.
+- Cross-checked target RPC identity signatures against the actual SQL declarations and generated Supabase types. Corrected `has_role(public.app_role, uuid)` and `place_order(jsonb, text, text, text, text, uuid, text, boolean)`; the latter follows the declared positional argument order in migration `0009`.
+- Added `docs/LEGACY_TO_TARGET_MIGRATION_PLAN.md`: staged additive-only design, explicit legacy-to-target mappings, validation gates, rollback conditions and production safety boundaries. It is a design document, not executable SQL.
+- Commits: `4b91add` (RPC signature), `f2f2b99` (test), `8f3c503` (migration plan).
+- No production database, Storage, Vercel environment variables, or Production deployment were changed.
