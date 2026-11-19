@@ -10,6 +10,22 @@ const dashboard = readFileSync(
   resolve(process.cwd(), 'src/components/marketplace/seller-dashboard.tsx'),
   'utf8',
 );
+const imageStorage = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0006_secure_product_image_storage.sql'),
+  'utf8',
+).toLowerCase();
+const imageBucket = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0007_harden_product_image_bucket_config.sql'),
+  'utf8',
+).toLowerCase();
+const imageRows = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0014_restrict_suspended_store_image_rows.sql'),
+  'utf8',
+).toLowerCase();
+const applicationSubmission = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0012_serialize_seller_application_submissions.sql'),
+  'utf8',
+).toLowerCase();
 
 describe('seller management authorization and lifecycle contract', () => {
   it('limits product creation and updates to the signed-in owner of an active store', () => {
@@ -36,6 +52,30 @@ describe('seller management authorization and lifecycle contract', () => {
     expect(dashboard).toContain("disabled={store.status!=='active'||busy||imageUploading}");
     expect(dashboard).toContain("accept=\"image/jpeg,image/png,image/webp\"");
     expect(dashboard).toContain('file.size>5*1024*1024');
+  });
+
+  it('aligns seller image upload paths with owner/store-scoped Storage policies', () => {
+    expect(dashboard).toContain('`${user.id}/${store.id}/${crypto.randomUUID()}.`');
+    expect(imageStorage).toContain("array_length(storage.foldername(name), 1) = 2");
+    expect(imageStorage).toContain("(storage.foldername(name))[1] = (select auth.uid())::text");
+    expect(imageStorage).toContain("s.id::text = (storage.foldername(name))[2]");
+    expect(imageStorage).toContain("s.status = 'active'");
+    expect(imageStorage).toContain('s.is_demo = false');
+    expect(imageBucket).toContain('5242880');
+    expect(imageBucket).toContain("array['image/jpeg','image/png','image/webp']");
+  });
+
+  it('prevents suspended or demo stores from changing product image rows', () => {
+    expect(imageRows).toContain("s.status = 'active'");
+    expect(imageRows).toContain('s.is_demo = false');
+    expect(imageRows).toContain("public.has_role(auth.uid(), 'admin')");
+  });
+
+  it('serializes seller applications and rejects concurrent duplicate submissions', () => {
+    expect(applicationSubmission).toContain('pg_advisory_xact_lock(hashtextextended(new.user_id::text, 0))');
+    expect(applicationSubmission).toContain("where user_id = new.user_id and status = 'pending'");
+    expect(applicationSubmission).toContain('a signed-in applicant is required');
+    expect(applicationSubmission).toContain('where owner_id = new.user_id');
   });
 
   it('refreshes seller management, catalog and order data after a successful write', () => {
