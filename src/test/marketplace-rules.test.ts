@@ -270,7 +270,9 @@ describe('buyer catalog filter reset',()=>{
  it('shows a reset control for active search, category, sort, or availability and clears all filters',()=>{
   const browse=readFileSync(resolve(process.cwd(),'src/routes/browse.tsx'),'utf8');
   expect(browse).toContain("const hasActiveFilters=Boolean(search.q||search.category||search.sort!=='popular'||search.availability!=='all')");
-  expect(browse).toContain("search:{q:'',category:'',sort:'popular'}");
+  expect(browse).toContain("search:{q:'',category:'',sort:'popular',availability:'all'}");
+  expect(browse).toContain("search.availability==='all'||p.stock>0");
+  expect(browse).toContain("শুধু স্টকে আছে");
   expect(browse).toContain('ফিল্টার মুছুন');
   expect(browse).toContain('onClick={clearFilters}');
  });
