@@ -1,10 +1,12 @@
 import {Link,useNavigate} from '@tanstack/react-router';
 import {useSuspenseQuery,useQueryClient} from '@tanstack/react-query';
-import {useRef,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
+import {useServerFn} from '@tanstack/react-start';
 import {readStoredJson,writeStoredJson,removeStoredValue} from '@/lib/browser-storage';
 import {CheckCircle2,Truck} from 'lucide-react';
 import {toast} from 'sonner';
 import {catalogOptions} from '@/lib/catalog-query';
+import {getCheckoutProfile} from '@/lib/marketplace.functions';
 import {deliverySchema,money,cartTotal,realOrderAllowed,validQuantity,checkoutErrorMessage} from '@/lib/marketplace';
 import {useMarket} from '@/components/market-provider';
 import {supabase} from '@/integrations/supabase/client';
@@ -15,10 +17,14 @@ import {Textarea} from '@/components/ui/textarea';
 
 export function CheckoutView(){
  const {data}=useSuspenseQuery(catalogOptions);
+ const fetchProfile=useServerFn(getCheckoutProfile);
  const qc=useQueryClient();
  const {cart,clearCart,user,authReady}=useMarket();
  const navigate=useNavigate();
  const [area,setArea]=useState('');
+ const [recipient,setRecipient]=useState('');
+ const profile=useQuery({queryKey:['checkout-profile',user?.id],queryFn:()=>fetchProfile(),enabled:!!user&&authReady,staleTime:60_000});
+ useEffect(()=>{if(profile.data?.full_name&&!recipient.trim())setRecipient(profile.data.full_name);},[profile.data?.full_name,recipient]);
  const [busy,setBusy]=useState(false);
  const checkoutRequest=useRef<{key:string;id:string}|null>(null);
  const selected=data.areas.find(a=>a.name_bn===area);
@@ -76,7 +82,7 @@ export function CheckoutView(){
   }}>
    <section className="space-y-5">
     <h2 className="font-display text-2xl">ডেলিভারির তথ্য</h2>
-    <label className="field-label">গ্রাহকের নাম<Input name="recipient" autoComplete="name" required minLength={2} maxLength={100}/></label>
+    <label className="field-label">গ্রাহকের নাম<Input name="recipient" autoComplete="name" value={recipient} onChange={e=>setRecipient(e.target.value)} required minLength={2} maxLength={100}/>{profile.data?.full_name&&<span className="text-xs text-muted-foreground">আপনার অ্যাকাউন্টের নাম থেকে পূরণ করা হয়েছে—প্রয়োজনে পরিবর্তন করুন।</span>}</label>
     <label className="field-label">মোবাইল নম্বর<Input name="phone" type="tel" inputMode="numeric" autoComplete="tel" placeholder="01XXXXXXXXX" pattern="01[3-9][0-9]{8}" required/></label>
     <label className="field-label">ডেলিভারি এলাকা<select required aria-label="ডেলিভারি এলাকা" value={area} onChange={e=>setArea(e.target.value)}><option value="">এলাকা নির্বাচন করুন</option>{data.areas.map(a=><option key={a.id} value={a.name_bn}>{a.name_bn}</option>)}</select></label>
     <label className="field-label">সম্পূর্ণ ঠিকানা<Input name="address" autoComplete="street-address" required minLength={5} maxLength={300} placeholder="বাসা/রোড, এলাকা, থানা"/></label>
