@@ -15,6 +15,10 @@ This document is based on the current recovery-branch application code and a rea
 | Checkout | `place_order(jsonb,text,text,text,text,uuid,text,boolean)`; `delivery_areas`, `orders`, `order_items`, `products`, `product_images`, `seller_stores`, `carts`, `cart_items`, optional `addresses` | Live only has guest-capable `place_marketplace_order(text,text,text,text,jsonb)`; incompatible args, return type and security contract. |
 | Order management | `order_items.status`; `cancel_order_item(uuid)`; order snapshots `title`, `image_url`; `orders.order_no`, `recipient`, `phone`, `address_line`, `note`, `is_demo` | Legacy uses `product_name`, `order_number`, `customer_name`, `customer_phone`, `delivery_address`; no atomic cancellation RPC. |
 
+## Generated schema contract coverage
+
+The read-only contract diff in `supabase/preflight/003_target_contract_diff.sql` is aligned with `src/integrations/supabase/types.ts` for the currently generated table fields, including storefront branding/rating, seller-application metadata, cart/address timestamps, and product/order timestamps. It separately checks every expected label for the generated `app_role`, `application_status`, `order_status`, `product_status`, and `store_status` enums. A `PRESENT` result is only a structural match; it does not prove constraints, RLS, grants, function semantics, or end-to-end behavior. Review those independently in preflight 001 and the functional acceptance suite.
+
 ## Required function inventory
 
 The current server functions call these database functions by exact name:
