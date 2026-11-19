@@ -55,6 +55,19 @@ describe('database order status typing',()=>{
  });
 });
 
+describe('seller store branding validation',()=>{
+ it('validates optional store logo and banner with the shared HTTPS image policy',()=>{
+  const functions=readFileSync(resolve(process.cwd(),'src/lib/marketplace.functions.ts'),'utf8');
+  expect(functions).toContain("logo_url:z.string().trim().max(1000).refine(safeImageUrl");
+  expect(functions).toContain("banner_url:z.string().trim().max(1000).refine(safeImageUrl");
+ });
+ it('exposes logo and banner fields in the seller store form',()=>{
+  const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
+  expect(dashboard).toContain('name="logo_url"');
+  expect(dashboard).toContain('name="banner_url"');
+ });
+});
+
 describe('seller order status server validation',()=>{
  it('accepts processing so the seller can move confirmed orders into preparation',()=>{
   const functions=readFileSync(resolve(process.cwd(),'src/lib/marketplace.functions.ts'),'utf8');
