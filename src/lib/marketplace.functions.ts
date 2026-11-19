@@ -25,7 +25,7 @@ export const getManagement = createServerFn({method:'POST'}).middleware([require
  let storesQuery=db.from('seller_stores').select('*'); if(!data.admin) storesQuery=storesQuery.eq('owner_id',context.userId);
  const stores=await storesQuery; const ids=(stores.data??[]).map(s=>s.id);
  let productsQuery=db.from('products').select('*,product_images(url),seller_stores(name,slug,is_demo,area,address)'); if(!data.admin) productsQuery=productsQuery.in('store_id',ids);
- let itemsQuery=db.from('order_items').select('*,orders(order_no,recipient,phone,area,address_line,note,created_at,payment_method,is_demo)'); if(!data.admin) itemsQuery=itemsQuery.in('store_id',ids);
+ let itemsQuery=db.from('order_items').select('*,orders(order_no,recipient,phone,area,address_line,note,created_at,payment_method,is_demo)'); if(!data.admin) itemsQuery=itemsQuery.in('store_id',ids).eq('orders.is_demo',false);
  const [products,items,applications,categories,orders]=await Promise.all([!data.admin&&ids.length===0?Promise.resolve({data:[],error:null}):productsQuery.order('created_at',{ascending:false}),!data.admin&&ids.length===0?Promise.resolve({data:[],error:null}):itemsQuery,data.admin?db.from('seller_applications').select('*').order('created_at',{ascending:false}):Promise.resolve({data:[],error:null}),db.from('categories').select('*').order('sort_order'),data.admin?db.from('orders').select('*').order('created_at',{ascending:false}):Promise.resolve({data:[],error:null})]);
  if(stores.error||products.error||items.error||applications.error||categories.error||orders.error) throw Error('তথ্য লোড করা যায়নি');
  return {stores:stores.data??[],products:products.data??[],items:items.data??[],applications:applications.data??[],categories:categories.data??[],orders:orders.data??[]};
