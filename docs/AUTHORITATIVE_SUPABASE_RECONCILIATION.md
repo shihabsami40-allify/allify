@@ -143,3 +143,47 @@ The function definitions were inspected, not invoked or modified.
 - `protect_moderation_fields()` blocks non-admin store status changes and product status changes to values other than pending. Its behavior must be reviewed against the target `seller_stores` and `products` policies/triggers before either old or new trigger is removed.
 
 **Security remediation gate:** do not simply revoke anonymous execution on either order RPC while the current website may depend on guest checkout/tracking. First verify the deployed app's actual checkout flow, implement the intended authenticated-only or rate-limited public flow, then change grants in a separately tested migration.
+
+
+## Repository migration ledger and seed-data collision audit
+
+A read-only review of the Drizzle migration directory and `_journal.json` found an additional migration-history hazard:
+
+- `_journal.json` contains 17 ordered entries (`0000_migration` and `0001_secure_marketplace_controls` through `0016_atomic_order_item_cancellation`).
+- The directory also contains `0001_remove_first_admin_claim.sql`, but that filename is **not** present in `_journal.json`. It is an unjournaled/orphan migration file and must not be manually executed or renamed into the sequence. Its intent (removing first-user admin self-claim) is already represented by the security hardening in `0001_secure_marketplace_controls.sql`.
+- The authoritative Supabase migration-history endpoint returned no entries. The repository's Drizzle journal is not proof that any of these SQL files ran on the live Supabase project.
+- The migration directory uses `drizzle/migrations`, while the repo's Supabase CLI config is `supabase/config.toml`; do not assume the Supabase CLI will discover or track the Drizzle files as Supabase migrations.
+
+### Seed collision and category preservation
+
+The baseline migration seeds eight categories (`clothing`, `shoes`, `watches`, `bags`, `daily`, `electronics`, `beauty`, `home`) using plain INSERT statements. The live database already has six category rows, including five matching baseline slugs (`clothing`, `shoes`, `watches`, `bags`, `beauty`) plus `lifestyle`.
+
+Therefore, even after the `categories` table shape is reconciled, replaying the baseline seed statements unchanged would violate the existing unique slug constraint. The forward plan must:
+1. Alter the existing table additively, retaining all six existing IDs and `active` state.
+2. Backfill `name_bn`/`name_en` on the existing rows using the reviewed slug mapping; preserve `lifestyle` rather than deleting or silently renaming it.
+3. Insert only genuinely missing slugs (`daily`, `electronics`, `home`) with conflict-safe seed logic, using reviewed IDs or generated IDs.
+4. Add any missing `icon` and `sort_order` columns with safe defaults and then explicitly order the retained and new categories.
+
+### Critical business workflow differences in the target migration set
+
+The later target migrations contain safeguards that are not present in the legacy RPC definitions and must be preserved in the final reconciled design:
+- authenticated-only COD order RPC with customer-scoped idempotency (`checkout_request_id`) and a transaction lock;
+- exclusion of demo stores from real orders, and stock decrement plus sold-count increment;
+- delivery-area fee lookup, address saving, and cart clearing in the same transaction;
+- guarded order-item status transitions and derived aggregate order status;
+- atomic cancellation that restores stock exactly once;
+- serialized seller applications and guarded one-time review/approval;
+- suspended-store product/image write restrictions and private execution rights for internal trigger functions.
+
+Do not replace the existing legacy guest RPC with the target RPC until checkout UI, customer sign-in requirements, all function signatures, grants, triggers, and cancellation semantics are aligned. In particular, the live legacy guest order RPC and target authenticated/idempotent RPC have different security and business contracts.
+
+### Current blocker classification
+
+| Workstream | Status | Safe next action |
+|---|---|---|
+| Repository build/lint/tests | Build and test workflows have passed on prior checkpoint; latest docs-only commit revalidation pending | Verify latest CI |
+| Live schema compatibility | Major structural mismatch | Finish additive forward migration specification and backup gate |
+| Category data | Six rows identified | Preserve UUIDs and slugs; conflict-safe additions only |
+| Real checkout | Live guest RPC differs from target authenticated RPC | Align UX and server RPC before enabling |
+| Vercel backend config | URLs still point to old project | Do not switch until target schema and publishable key verified |
+| Production release | Not authorized/performed | Keep SSO and production protections enabled |
