@@ -51,7 +51,9 @@ describe('seller order status confirmation',()=>{
 describe('order lifecycle transitions',()=>{
  it('allows only the forward fulfillment sequence',()=>{
   expect(canTransition('pending','confirmed')).toBe(true);
-  expect(canTransition('confirmed','shipped')).toBe(true);
+  expect(canTransition('confirmed','processing')).toBe(true);
+   expect(canTransition('processing','shipped')).toBe(true);
+   expect(canTransition('confirmed','shipped')).toBe(false);
   expect(canTransition('shipped','delivered')).toBe(true);
   expect(canTransition('pending','shipped')).toBe(false);
   expect(canTransition('confirmed','delivered')).toBe(false);
@@ -115,7 +117,7 @@ describe('cart availability explanations',()=>{
 describe('customer order progress display',()=>{
  it('shows the forward fulfillment steps and a separate cancelled state',()=>{
   const orders=readFileSync(resolve(process.cwd(),'src/routes/orders.tsx'),'utf8');
-  expect(orders).toContain("const fulfillmentSteps:Status[]=['pending','confirmed','shipped','delivered']");
+  expect(orders).toContain("const fulfillmentSteps:Status[]=['pending','confirmed','processing','shipped','delivered']");
   expect(orders).toContain('aria-label="অর্ডারের অগ্রগতি"');
   expect(orders).toContain('অর্ডার হালনাগাদ করুন');
   expect(orders).toContain('disabled={q.isFetching}');
