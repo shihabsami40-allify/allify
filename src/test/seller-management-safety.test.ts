@@ -14,7 +14,7 @@ const dashboard = readFileSync(
 describe('seller management authorization and lifecycle contract', () => {
   it('limits product creation and updates to the signed-in owner of an active store', () => {
     expect(functions).toContain(".eq('owner_id',context.userId).eq('status','active')");
-    expect(functions).toContain(".eq('id',data.store_id).eq('store_id',data.store_id)");
+    expect(functions).toContain(".update(values).eq('id',id).eq('store_id',data.store_id)");
     expect(functions).toContain('productSchema.parse(input)');
   });
 
