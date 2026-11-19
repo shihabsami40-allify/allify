@@ -50,13 +50,15 @@ export function CheckoutView(){
    const requestPayload={items:cart.map(line=>({id:line.id,quantity:line.quantity})).sort((a,b)=>a.id.localeCompare(b.id)),recipient:parsed.data.recipient,phone:parsed.data.phone,area:parsed.data.area,address:parsed.data.address,note:parsed.data.note||''};
    const legacyCartKey=`allify:checkout-request:${user.id}:${JSON.stringify(requestPayload)}`;
    const cartKey=await checkoutRequestStorageKey(user.id,requestPayload);
-   removeStoredValue(legacyCartKey);
+   const isRequestId=(value:unknown):value is string=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
    let request=checkoutRequest.current;
    if(!request||request.key!==cartKey){
-    const stored=readStoredJson<string>(cartKey,'',(value):value is string=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value));
-    request={key:cartKey,id:stored||crypto.randomUUID()};
+    const stored=readStoredJson<string>(cartKey,'',isRequestId);
+    const legacyStored=readStoredJson<string>(legacyCartKey,'',isRequestId);
+    request={key:cartKey,id:stored||legacyStored||crypto.randomUUID()};
     checkoutRequest.current=request;
     writeStoredJson(cartKey,request.id);
+    removeStoredValue(legacyCartKey);
    }
    setBusy(true);
    try{
