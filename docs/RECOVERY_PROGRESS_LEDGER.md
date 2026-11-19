@@ -3,7 +3,7 @@
 Last reconciled: 2026-11-19  
 Repository: `shihabsami40-allify/allify`  
 Branch: `allify-recovery-2026-11-17`  
-Latest implementation commit: `44dc9e1afccb2282108f20f1ee477bf1ca14314a`  
+Latest implementation commit: `68978bad4e6ba2cf336cc0183e85f8082ec8c81c`  
 Latest Preview: https://allify-chattogram-git-allify-recovery-2026-11-17-allify.vercel.app
 
 This ledger exists to prevent completed work from being repeated. A passing build or static source-contract test is not proof that a live marketplace workflow works.
@@ -97,3 +97,14 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - This is repository-only, read-only preparation. No database, Storage, environment-variable, or deployment changes were made. The required verified backup/restore gate remains open.
 
 - CI for preflight update commit `44dc9e1`: ALLIFY checks and ALLIFY build check both passed (lint, typecheck, tests and production build).
+
+
+## Generated schema contract preflight completion — 2026-11-19
+
+- Aligned `003_target_contract_diff.sql` with the generated Supabase table types, adding previously unlisted fields for role row identity, delivery-area ordering, seller-application metadata/timestamps, storefront branding/rating/timestamps, product rating/timestamps, cart/address timestamps, and order timestamps.
+- Added read-only enum-label comparison for all expected labels in `app_role`, `application_status`, `order_status`, `product_status`, and `store_status`. This detects missing enum types/labels before a migration is attempted.
+- Extended `preflight-safety.test.ts` to assert these table and enum contract checks remain present and read-only.
+- Updated the database dependency matrix to explain the scope and limits of the generated-schema diff.
+- Repository commits: `3f07e4d` (preflight), `68978ba` (tests), `75a53f9` (dependency matrix).
+- This is repository-only work. No live Supabase schema/data, Storage, Vercel environment, or Production deployment was changed.
+- CI status for these commits is pending verification; do not treat the static test additions as proof of a live database match.
