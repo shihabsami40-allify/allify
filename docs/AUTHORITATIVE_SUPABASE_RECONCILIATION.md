@@ -87,3 +87,45 @@ The recovery branch's `supabase/config.toml` was corrected to `project_id = "onq
 - Do not drop/recreate tables, overwrite category data, or change enum types without a verified backup and tested forward migration.
 - Do not change production Vercel environment variables or deploy production without explicit authorization.
 - Do not disable Vercel SSO or expose secrets.
+
+
+## Additional read-only audit: policy, trigger, and enum compatibility
+
+A second read-only catalog inspection recorded the current policy and trigger dependencies. This is important because renaming or replacing tables can silently break security behavior even when column names appear compatible.
+
+### Current policy/trigger inventory
+
+- `categories`: public SELECT is limited to `active = true` or admin; admin has ALL access.
+- `stores`: public SELECT is limited to approved stores, owner, or admin; owner INSERT requires pending status; owner/admin UPDATE is allowed.
+- `products`: public SELECT is limited to approved products, owner, or admin; owner INSERT requires pending status; owner/admin UPDATE and owner/admin DELETE policies exist.
+- `profiles`: authenticated users can read self/admin and update self/admin.
+- `orders`: customer/admin SELECT and admin UPDATE.
+- `order_items`: related customer, owning seller, or admin SELECT; owner/admin UPDATE.
+- Existing triggers: `protect_product_status` (products UPDATE), `protect_store_status` (stores UPDATE), and `store_role_sync` (stores INSERT/UPDATE). The trigger functions are SECURITY DEFINER.
+- `order_items` foreign keys point to `orders`, `products`, and `stores`. Any table rename or replacement must preserve and re-check these relationships.
+- Current order payment constraint permits only `cod`.
+
+### Explicit data-mapping decisions required before migration
+
+| Legacy source | Target shape | Safe proposed treatment |
+|---|---|---|
+| `profiles.role` (`buyer/seller/admin`) | `user_roles.role` (`customer/seller/admin`) | Backfill buyer -> customer, seller -> seller, admin -> admin. Keep the legacy column until validation. |
+| `app_role` enum | target role enum also named `app_role` | Existing type cannot be recreated. Add `customer` as a new enum label if required; retain `buyer` for compatibility until no dependency remains. |
+| `categories.name` | `name_bn/name_en` | Preserve UUID and slug; use the six reviewed translations above. Add `icon` and `sort_order` with reviewed defaults. |
+| `stores` | `seller_stores` | Preserve IDs and owner IDs. Map `bio` -> `description`; add stable unique slug and missing storefront fields. Do not assume the legacy status enum is interchangeable. |
+| Store `approval_state` | `store_status` | `pending -> pending`, `approved -> active`; map `rejected` to `suspended` only after product/business rules are approved. |
+| `products.name` | `title_bn/title_en` | Preserve ID/store ID; copy name to title_bn. Add title_en and slug without replacing the original until validated. |
+| `products.category` (text) | `category_id` (UUID) | Match by category slug/name using an explicit mapping table; unmatched values must be reported, not silently assigned. |
+| Product `approval_state` | `product_status` | Proposed: pending -> draft, approved -> active, rejected -> hidden. Confirm moderation semantics before applying. |
+| `products.image_url` | `product_images.url` | Preserve the URL as the first image row only after validating it belongs to the expected bucket/path; do not copy untrusted external URLs into managed storage metadata. |
+| `orders.order_number/customer_name/customer_phone/delivery_address/total_amount` | `order_no/recipient/phone/address_line/total` | Copy values without changing order identity. Derive subtotal as total_amount - delivery_fee only after checking nonnegative values. Preserve order number text exactly. |
+| `order_items.product_name` | `title` | Copy as order-time product title snapshot; image_url can be copied from product only when the source relationship exists and is verified. |
+| `order_state.processing` | target `order_status` | Target enum currently omits processing. Do not coerce to confirmed/shipped. Either add a compatible processing state and update UI transitions/types, or preserve legacy status in a dedicated mapping field before conversion. |
+
+### Important sequencing notes
+
+1. Preserve all legacy enum types and columns while adding target structures. PostgreSQL enum labels cannot simply be removed; avoid in-place casts until every dependent default, policy, trigger, and function has been inventoried.
+2. Keep legacy tables/columns available through a dual-read/validation window. A rename of `stores` or `products` is not the first migration step.
+3. Before adding new RLS policies, inventory existing policy expressions and trigger functions; recreate least-privilege policies for every new table, then test both anon and authenticated access.
+4. Validate foreign keys, unique indexes, defaults, and grants after every stage. Do not remove old policies/functions until the new app path has passed functional tests.
+5. The observed zero row counts reduce current copy volume but do not justify destructive shortcuts; future data may be added before migration.
