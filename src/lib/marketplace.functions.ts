@@ -13,6 +13,7 @@ export const getCatalog = createServerFn({method:'GET'}).handler(async ():Promis
  if(products.error||categories.error||stores.error||areas.error) return {products:[],categories:[],stores:[],areas:[],unavailable:true};
  return {products:(products.data??[]).filter(p=>p.seller_stores?.status==='active'),categories:categories.data??[],stores:stores.data??[],areas:areas.data??[]};
 });
+export const getCheckoutProfile = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).handler(async({context})=>{const {data,error}=await context.supabase.from('profiles').select('full_name').eq('id',context.userId).maybeSingle();if(error)throw Error('প্রোফাইলের নাম লোড করা যায়নি');return {full_name:data?.full_name??''};});
 export const getAccount = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).handler(async({context})=>{
  const db=context.supabase;
  const [roles,profile,stores,orders,applications]=await Promise.all([db.from('user_roles').select('role').eq('user_id',context.userId),db.from('profiles').select('*').eq('id',context.userId).single(),db.from('seller_stores').select('*').eq('owner_id',context.userId),db.from('orders').select('*,order_items(*)').eq('customer_id',context.userId).order('created_at',{ascending:false}),db.from('seller_applications').select('*').eq('user_id',context.userId)]);
