@@ -48,6 +48,13 @@ describe('seller order status confirmation',()=>{
   expect(sellerDashboard).toContain('অর্ডার ${statusName[status]} করবেন?');
  });
 });
+describe('seller order status server validation',()=>{
+ it('accepts processing so the seller can move confirmed orders into preparation',()=>{
+  const functions=readFileSync(resolve(process.cwd(),'src/lib/marketplace.functions.ts'),'utf8');
+  expect(functions).toContain("status:z.enum(['pending','confirmed','processing','shipped','delivered','cancelled'])");
+ });
+});
+
 describe('order lifecycle transitions',()=>{
  it('allows only the forward fulfillment sequence',()=>{
   expect(canTransition('pending','confirmed')).toBe(true);
