@@ -333,7 +333,7 @@ describe('seller order fulfillment details',()=>{
  it('loads and displays the order date, customer contact, delivery address, item total, and payment method',()=>{
   const functions=readFileSync(resolve(process.cwd(),'src/lib/marketplace.functions.ts'),'utf8');
   const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/seller-dashboard.tsx'),'utf8');
-  expect(functions).toContain('orders(order_no,recipient,phone,area,address_line,note,created_at,payment_method,is_demo)');
+  expect(functions).toContain('orders!inner(order_no,recipient,phone,area,address_line,note,created_at,payment_method,is_demo)');
   expect(dashboard).toContain("new Date(item.orders.created_at).toLocaleString('bn-BD')");
   expect(dashboard).toContain('ফোন: {item.orders?.phone}');
   expect(dashboard).toContain('ডেলিভারি ঠিকানা: {item.orders?.address_line}');
