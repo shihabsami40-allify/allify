@@ -32,6 +32,7 @@ describe('Supabase preflight scripts are read-only', () => {
     }
     expect(contract).toContain('information_schema.columns');
     expect(contract).toContain('expected_enum');
+    expect(contract).toContain('review_legacy_label');
     expect(contract).toContain('application_status');
     expect(contract).toContain('store_status');
     expect(contract).toContain('product_status');
