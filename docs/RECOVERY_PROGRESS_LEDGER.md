@@ -20,7 +20,7 @@ This ledger exists to prevent completed work from being repeated. A passing buil
 | Seller image storage | Owner/store path validation, active non-demo store checks, JPEG/PNG/WebP and 5 MiB constraints | migrations `0006`, `0007`, `0014` |
 | Seller applications | DB-level serialization prevents concurrent duplicate pending applications | migration `0012` |
 | Application review | Atomic admin review; prevents duplicate approval/store creation and unauthorized status changes | migration `0013` |
-| Checkout | Authenticated COD form, active delivery-area fee, BD phone validation, request UUID idempotency, cart cleared only after confirmed order | `checkout-flow-safety.test.ts`, migration `0009` |
+| Checkout | Authenticated COD form, active delivery-area fee, BD phone validation, request UUID idempotency, cart cleared only after confirmed order; request UUID is stored under a SHA-256 fingerprint rather than a key containing customer name/phone/address, and existing legacy retry UUIDs are migrated before old PII-bearing keys are removed | `checkout-flow-safety.test.ts`, `checkout-idempotency.test.ts`, `checkout-storage.test.ts`, migration `0009` |
 | Order cancellation | Guarded RPC restores stock once and blocks demo/late-state cancellation | migration `0016`; contract test added in commit `82f3abc6` |
 | Seller management queries | Store ownership scope, order-item inner join, demo-order exclusion, fail-closed query errors | `management-query-authorization.test.ts`; commits `fc192321`, `cdad7fcd` |
 | Admin/seller dashboard discovery | Admin order/product search and status filters; seller product search/status/stock filters and seller order search/status filters now include `processing` | commits `8ca2675`, `ee67f61`, `8cae05a`, `475597b`, `97946db`, `1e885f8`; latest CI checks passed |
@@ -79,3 +79,12 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Supabase returned `PaymentRequiredException`: Development Branches are supported only on Pro plan or above. The authoritative project is on Free plan; no branch was created and no branch compute charge began.
 - The project currently has no Supabase development branches. Do not retry branch creation unless the project plan changes or a separate disposable database is provisioned.
 - Continue with repository-side compatibility analysis and local/disposable PostgreSQL rehearsal only. No production schema, data, Storage, or Vercel environment variables were changed.
+
+
+## Checkout browser-storage privacy hardening — 2026-11-19
+
+- Added `src/lib/checkout-storage.ts` to derive a deterministic SHA-256 key from the authenticated user ID and normalized order payload. Customer name, phone, address and note are no longer embedded in a localStorage key.
+- Existing raw-payload keys are read once and their UUID is copied to the hashed key before the legacy key is removed, preserving retry idempotency for an order that was already in progress during the upgrade.
+- Added tests for deterministic fingerprints, changed-user/payload separation, absence of personal details in the key, and legacy UUID migration.
+- CI for commit `5edaf03`: ALLIFY checks and ALLIFY build check both passed (lint, typecheck, tests and production build).
+- No database or deployment configuration was changed by this work.
