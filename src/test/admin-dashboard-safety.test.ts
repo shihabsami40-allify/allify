@@ -23,7 +23,7 @@ describe('admin dashboard safety contract', () => {
 
   it('labels dashboard totals as real marketplace data, not payment receipts', () => {
     expect(source).toContain('!s.is_demo');
-    expect(source).toContain('!o.is_demo');
+    expect(source).toContain('orderReportTotals(data.orders)');
     expect(source).toContain('এই মূল্য পেমেন্ট প্রাপ্তির প্রমাণ নয়।');
   });
 
