@@ -88,3 +88,10 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Added tests for deterministic fingerprints, changed-user/payload separation, absence of personal details in the key, and legacy UUID migration.
 - CI for commit `5edaf03`: ALLIFY checks and ALLIFY build check both passed (lint, typecheck, tests and production build).
 - No database or deployment configuration was changed by this work.
+
+
+## Expanded read-only database preflight — 2026-11-19
+
+- Extended `supabase/preflight/001_authoritative_schema_inventory.sql` with effective table privileges for anon/authenticated/service_role, sequence USAGE privileges, default ACLs, and catalog-tracked dependencies on legacy SECURITY DEFINER helpers.
+- Documented the additional checks in `docs/APP_DATABASE_DEPENDENCY_MATRIX.md`.
+- This is repository-only, read-only preparation. No database, Storage, environment-variable, or deployment changes were made. The required verified backup/restore gate remains open.
