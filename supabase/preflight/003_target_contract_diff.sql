@@ -126,24 +126,29 @@ LEFT JOIN information_schema.columns c
  AND c.column_name = e.column_name
 ORDER BY e.table_name, e.column_name;
 
--- Current RPC names required by the application. Presence does not prove
--- signature/grants/security are correct; inspect those in preflight 001.
-WITH expected_rpc(function_name, app_usage) AS (
+-- Exact RPC contracts required by the current application. Resolve the
+-- expected identity signature rather than accepting a same-name overload.
+-- Security-definer mode, search_path and effective EXECUTE grants are reported
+-- for review; this query does not change privileges.
+WITH expected_rpc(signature, function_name, app_usage, expected_return_type) AS (
   VALUES
-    ('has_role','authorization checks'),
-    ('place_order','authenticated COD checkout'),
-    ('cancel_order_item','atomic item cancellation'),
-    ('review_seller_application','admin seller application review')
+    ('public.has_role(uuid, public.app_role)', 'has_role', 'authorization checks', 'boolean'),
+    ('public.place_order(jsonb, text, text, text, text, uuid, text, boolean)', 'place_order', 'authenticated idempotent COD checkout', 'text'),
+    ('public.cancel_order_item(uuid)', 'cancel_order_item', 'atomic item cancellation', 'boolean'),
+    ('public.review_seller_application(uuid, boolean, text)', 'review_seller_application', 'admin seller application review', 'uuid')
 )
 SELECT e.function_name,
+       e.signature AS expected_signature,
        e.app_usage,
-       count(p.oid) AS matching_public_overloads,
-       coalesce(string_agg(pg_get_function_identity_arguments(p.oid), '; '), '') AS live_signatures
+       CASE WHEN p.oid IS NULL THEN 'MISSING_EXACT_SIGNATURE' ELSE 'PRESENT' END AS contract_state,
+       coalesce(p.prorettype::regtype::text, '') AS live_return_type,
+       CASE WHEN p.oid IS NULL THEN NULL ELSE p.prorettype::regtype::text = e.expected_return_type END AS return_type_matches,
+       p.prosecdef AS security_definer,
+       p.proconfig AS function_settings,
+       CASE WHEN p.oid IS NULL THEN NULL ELSE has_function_privilege('anon', p.oid, 'EXECUTE') END AS anon_execute,
+       CASE WHEN p.oid IS NULL THEN NULL ELSE has_function_privilege('authenticated', p.oid, 'EXECUTE') END AS authenticated_execute
 FROM expected_rpc e
-LEFT JOIN pg_proc p
-  ON p.pronamespace = 'public'::regnamespace
- AND p.proname = e.function_name
-GROUP BY e.function_name, e.app_usage
+LEFT JOIN pg_proc p ON p.oid = to_regprocedure(e.signature)
 ORDER BY e.function_name;
 
 -- Legacy names that must remain accounted for during a compatibility window.
