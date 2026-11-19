@@ -27,6 +27,11 @@ const applicationSubmission = readFileSync(
   'utf8',
 ).toLowerCase();
 
+const cancellationMigration = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0016_atomic_order_item_cancellation.sql'),
+  'utf8',
+).toLowerCase();
+
 describe('seller management authorization and lifecycle contract', () => {
   it('limits product creation and updates to the signed-in owner of an active store', () => {
     expect(functions).toContain(".eq('owner_id',context.userId).eq('status','active')");
@@ -76,6 +81,18 @@ describe('seller management authorization and lifecycle contract', () => {
     expect(applicationSubmission).toContain("where user_id = new.user_id and status = 'pending'");
     expect(applicationSubmission).toContain('a signed-in applicant is required');
     expect(applicationSubmission).toContain('where owner_id = new.user_id');
+  });
+
+  it('restores stock exactly once through the guarded cancellation RPC', () => {
+    expect(cancellationMigration).toContain('for update of oi');
+    expect(cancellationMigration).toContain('public.owns_store(v_item.store_id)');
+    expect(cancellationMigration).toContain('if v_item.is_demo then');
+    expect(cancellationMigration).toContain("if v_item.status = 'cancelled' then");
+    expect(cancellationMigration).toContain("v_item.status not in ('pending', 'confirmed')");
+    expect(cancellationMigration).toContain('set stock = stock + v_item.quantity');
+    expect(cancellationMigration).toContain('sold_count = greatest(0, sold_count - v_item.quantity)');
+    expect(cancellationMigration).toContain("set_config('app.internal', '1', true)");
+    expect(cancellationMigration).toContain('grant execute on function public.cancel_order_item(uuid) to authenticated');
   });
 
   it('refreshes seller management, catalog and order data after a successful write', () => {
