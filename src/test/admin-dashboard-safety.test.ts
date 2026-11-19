@@ -7,6 +7,11 @@ const source = readFileSync(
   'utf8',
 );
 
+const functions = readFileSync(
+  resolve(process.cwd(), 'src/lib/marketplace.functions.ts'),
+  'utf8',
+);
+
 describe('admin dashboard safety contract', () => {
   it('requires confirmation before approving or rejecting real seller applications', () => {
     expect(source).toContain('window.confirm');
@@ -30,6 +35,11 @@ describe('admin dashboard safety contract', () => {
     expect(source).toContain('!s.is_demo');
     expect(source).toContain('orderReportTotals(data.orders)');
     expect(source).toContain('এই মূল্য পেমেন্ট প্রাপ্তির প্রমাণ নয়।');
+  });
+
+  it('does not report success when a demo or missing store was not updated', () => {
+    expect(functions).toContain(".eq('id',data.id).eq('is_demo',false).select('id').single()");
+    expect(functions).toContain("if(!error&&!result.data)error=new Error('দোকানটি পাওয়া যায়নি বা ডেমো দোকান পরিবর্তন করা যাবে না')");
   });
 
   it('invalidates affected admin, catalog, account and customer order queries after writes', () => {
