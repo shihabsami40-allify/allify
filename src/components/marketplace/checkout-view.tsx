@@ -1,5 +1,5 @@
 import {Link,useNavigate} from '@tanstack/react-router';
-import {useSuspenseQuery,useQueryClient} from '@tanstack/react-query';
+import {useQuery,useSuspenseQuery,useQueryClient} from '@tanstack/react-query';
 import {useEffect,useRef,useState} from 'react';
 import {useServerFn} from '@tanstack/react-start';
 import {readStoredJson,writeStoredJson,removeStoredValue} from '@/lib/browser-storage';
