@@ -3,7 +3,7 @@
 Last reconciled: 2026-11-19  
 Repository: `shihabsami40-allify/allify`  
 Branch: `allify-recovery-2026-11-17`  
-Latest implementation commit: `8e0e0b89b29260e7a4b5d6f86f6d54c824390435`  
+Latest implementation commit: `936dd6e936fd4f4f1c3958bf6ace8b564dafa8d8`  
 Latest Preview: https://allify-chattogram-git-allify-recovery-2026-11-17-allify.vercel.app
 
 This ledger exists to prevent completed work from being repeated. A passing build or static source-contract test is not proof that a live marketplace workflow works.
@@ -158,3 +158,13 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Corrected the application-to-database dependency matrix to match generated Supabase TypeScript and SQL declarations: `has_role(public.app_role, uuid)`; `place_order(jsonb, text, text, text, text, uuid, text, boolean)`; `cancel_order_item(uuid)`; `review_seller_application(uuid, boolean, text)`.
 - The earlier matrix had the `has_role` argument order reversed. It is now explicitly marked superseded and the checkout argument ordering is documented in full.
 - No runtime application code or live database objects changed in this documentation correction.
+
+
+## Catalog search and sorting coverage — 2026-11-19
+
+- Extracted browse-page catalog filtering and sorting into `filterCatalogProducts` in `src/lib/catalog-query.ts`; the route now uses the shared helper rather than embedding the filter pipeline in JSX.
+- Search now trims surrounding whitespace and uses locale-aware case-insensitive matching across Bangla/English product names and seller store names.
+- Added focused tests for search normalization, category slug matching, in-stock filtering, all four sort modes, unknown categories, and source-array immutability.
+- Updated the existing browse contract assertion to follow the extracted helper rather than requiring the old inline implementation.
+- CI for commit `936dd6e`: ALLIFY checks and ALLIFY build check both passed.
+- This is a new catalog behavior/testability improvement; no completed checkout, seller, admin, or auth feature was repeated. No live database or deployment settings changed.
