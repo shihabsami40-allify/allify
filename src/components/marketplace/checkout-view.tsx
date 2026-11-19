@@ -3,6 +3,7 @@ import {useQuery,useSuspenseQuery,useQueryClient} from '@tanstack/react-query';
 import {useEffect,useRef,useState} from 'react';
 import {useServerFn} from '@tanstack/react-start';
 import {readStoredJson,writeStoredJson,removeStoredValue} from '@/lib/browser-storage';
+import {checkoutRequestStorageKey} from '@/lib/checkout-storage';
 import {CheckCircle2,Truck} from 'lucide-react';
 import {toast} from 'sonner';
 import {catalogOptions} from '@/lib/catalog-query';
@@ -47,7 +48,9 @@ export function CheckoutView(){
    const parsed=deliverySchema.safeParse({recipient:fd.get('recipient'),phone:fd.get('phone'),area:selected.name_en,address:fd.get('address'),note:fd.get('note')||''});
    if(!parsed.success){toast.error('নাম, ফোন নম্বর, এলাকা ও ঠিকানা সঠিকভাবে পূরণ করুন');return;}
    const requestPayload={items:cart.map(line=>({id:line.id,quantity:line.quantity})).sort((a,b)=>a.id.localeCompare(b.id)),recipient:parsed.data.recipient,phone:parsed.data.phone,area:parsed.data.area,address:parsed.data.address,note:parsed.data.note||''};
-   const cartKey=`allify:checkout-request:${user.id}:${JSON.stringify(requestPayload)}`;
+   const legacyCartKey=`allify:checkout-request:${user.id}:${JSON.stringify(requestPayload)}`;
+   const cartKey=await checkoutRequestStorageKey(user.id,requestPayload);
+   removeStoredValue(legacyCartKey);
    let request=checkoutRequest.current;
    if(!request||request.key!==cartKey){
     const stored=readStoredJson<string>(cartKey,'',(value):value is string=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value));
