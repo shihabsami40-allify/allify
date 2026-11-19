@@ -17,7 +17,7 @@ This document is based on the current recovery-branch application code and a rea
 
 ## Generated schema contract coverage
 
-The read-only contract diff in `supabase/preflight/003_target_contract_diff.sql` is aligned with `src/integrations/supabase/types.ts` for the currently generated table fields, including storefront branding/rating, seller-application metadata, cart/address timestamps, and product/order timestamps. It separately checks every expected label for the generated `app_role`, `application_status`, `order_status`, `product_status`, and `store_status` enums. A `PRESENT` result is only a structural match; it does not prove constraints, RLS, grants, function semantics, or end-to-end behavior. Review those independently in preflight 001 and the functional acceptance suite.
+The read-only contract diff in `supabase/preflight/003_target_contract_diff.sql` is aligned with `src/integrations/supabase/types.ts` for the currently generated table fields, including storefront branding/rating, seller-application metadata, cart/address timestamps, and product/order timestamps. It separately checks every expected label for the generated `app_role`, `application_status`, `order_status`, `product_status`, and `store_status` enums. The diff also reports live-only enum labels for review (notably the legacy `app_role.buyer` value against the generated `customer` role contract), so legacy labels are not silently treated as safe to remove. A `PRESENT` result is only a structural match; it does not prove constraints, RLS, grants, function semantics, or end-to-end behavior. Review those independently in preflight 001 and the functional acceptance suite.
 
 ## Required function inventory
 
