@@ -3,7 +3,7 @@
 Last reconciled: 2026-11-19  
 Repository: `shihabsami40-allify/allify`  
 Branch: `allify-recovery-2026-11-17`  
-Latest implementation commit: `e27ccc086bb53301262723a9258fb357b5dc2f76`  
+Latest implementation commit: `3b4987ae78e97f47cc55926a796004a2aaa12de1`  
 Latest Preview: https://allify-chattogram-git-allify-recovery-2026-11-17-allify.vercel.app
 
 This ledger exists to prevent completed work from being repeated. A passing build or static source-contract test is not proof that a live marketplace workflow works.
@@ -112,3 +112,13 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 
 - Follow-up compatibility check: the enum diff now also lists live-only labels requiring review, rather than only reporting missing target labels. This explicitly surfaces the legacy `app_role.buyer` value alongside the app's generated `customer` role contract; no enum values were changed or removed.
 - Follow-up commits: `25b59d2` (legacy-only enum reporting), `e27ccc0` (test coverage), `7fa2f6f` (documentation).
+
+
+## Exact application RPC preflight — 2026-11-19
+
+- Extended `supabase/preflight/003_target_contract_diff.sql` to resolve the exact PostgreSQL signatures for `has_role`, `place_order`, `cancel_order_item`, and `review_seller_application`. Same-name overloads no longer count as a match.
+- The report now includes missing exact signatures, return-type match, SECURITY DEFINER mode, function settings/search_path, and effective anon/authenticated EXECUTE privileges for review.
+- Added static safety-test assertions and documented the diagnostic scope in `docs/APP_DATABASE_DEPENDENCY_MATRIX.md`.
+- Commits: `7ac8089` (SQL), `ee20eb6` (tests), `3b4987a` (docs).
+- CI for `ee20eb6`: ALLIFY checks and build check were triggered; results were pending at ledger update time.
+- Repository-only, read-only preflight work. No live database, Storage, Vercel environment, or Production deployment was changed.
