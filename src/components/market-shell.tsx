@@ -18,3 +18,8 @@ export function MarketShell({children}:{children:ReactNode}){
 }
 export function PageTitle({eyebrow,title,children}:{eyebrow?:string;title:string;children?:ReactNode}){return <div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div>{eyebrow&&<p className="mb-2 text-xs font-semibold uppercase text-primary">{eyebrow}</p>}<h1 className="font-display text-3xl font-semibold md:text-4xl">{title}</h1></div>{children}</div>;}
 export function Empty({title,children}:{title:string;children?:ReactNode}){return <div className="py-16 text-center"><Package className="mx-auto mb-4 size-10 text-muted-foreground"/><h2 className="text-xl font-semibold">{title}</h2><div className="mt-4">{children}</div></div>;}
+export function CatalogUnavailable(){
+ const qc=useQueryClient();const [retrying,setRetrying]=useState(false);
+ async function retry(){setRetrying(true);try{await qc.refetchQueries({queryKey:['catalog'],type:'active'});}finally{setRetrying(false);}}
+ return <div role="alert" className="my-5 flex flex-col items-start gap-3 rounded-lg border border-destructive/30 bg-card p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-medium">বাজারের তথ্য এখন পাওয়া যাচ্ছে না।</p><p className="mt-1 text-sm text-muted-foreground">সংযোগ বা সার্ভার সাময়িকভাবে ব্যস্ত থাকতে পারে। কিছুক্ষণ পর আবার চেষ্টা করুন।</p></div><Button type="button" variant="outline" disabled={retrying} onClick={()=>void retry()}>{retrying?'আবার চেষ্টা হচ্ছে…':'আবার চেষ্টা করুন'}</Button></div>;
+}
