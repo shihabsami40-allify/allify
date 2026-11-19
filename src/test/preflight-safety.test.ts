@@ -27,7 +27,7 @@ describe('Supabase preflight scripts are read-only', () => {
     for (const name of ['seller_stores', 'seller_applications', 'delivery_areas', 'product_images', 'cart_items', 'checkout_request_id', 'logo_url', 'banner_url', 'category_hint', 'reviewed_at', 'sort_order', 'updated_at', 'rating']) {
       expect(contract).toContain(name);
     }
-    for (const name of ['has_role', 'place_order', 'cancel_order_item', 'review_seller_application']) {
+    for (const name of ['has_role', 'place_order', 'cancel_order_item', 'review_seller_application', 'to_regprocedure', 'security_definer', 'function_settings', 'anon_execute', 'authenticated_execute', 'missing_exact_signature']) {
       expect(contract).toContain(name);
     }
     expect(contract).toContain('information_schema.columns');
