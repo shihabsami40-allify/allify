@@ -534,6 +534,7 @@ export type Database = {
           p_address: string
           p_area: string
           p_items: Json
+          p_request_id: string
           p_note?: string
           p_phone: string
           p_recipient: string
