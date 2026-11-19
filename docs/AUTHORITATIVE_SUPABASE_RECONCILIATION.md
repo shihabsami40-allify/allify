@@ -10,9 +10,10 @@
 - Supabase project status was verified as ACTIVE_HEALTHY.
 - Inspection was read-only. No SQL writes, schema changes, data changes, storage changes, or environment-variable changes were made.
 - Six public tables exist: `profiles`, `categories`, `stores`, `products`, `orders`, `order_items`.
-- Exact row counts at inspection: `categories=6`; all five other tables have 0 rows.
+- Exact row counts at inspection: `categories=6`; `profiles=0`, `stores=0`, `products=0`, `orders=0`, and `order_items=0`.
+- Read-only aggregate inspection also returned `auth.users=0`, `storage.objects=0`, and one existing Storage bucket. This is an aggregate count only; no user records or object contents were read.
 - Supabase migration history endpoint returned an empty list.
-- Existing categories are the only current application rows found in these six public tables. This does not establish that Auth users or Storage objects are absent; those were not counted or exported.
+- The six category records are the only current application rows found in these public tables. Their IDs and names were read to plan a lossless mapping; preserve the existing UUIDs.
 
 ## Live schema observed
 
@@ -32,7 +33,20 @@ Live enum types:
 
 All six tables have RLS enabled. Existing RLS policies include public reads for approved categories/products/stores, owner-scoped seller operations, and customer/admin order reads.
 
-Storage has a public `product-images` bucket with 5 MiB maximum object size and JPEG/PNG/WebP MIME types.
+Storage has a public `product-images` bucket with 5 MiB maximum object size and JPEG/PNG/WebP MIME types. The bucket currently contains zero objects.
+
+### Existing category records to preserve
+
+| Existing UUID | Slug | Bengali name | Target English name |
+|---|---|---|---|
+| `01b580ce-140d-48c7-83c0-e975a8179054` | watches | ঘড়ি | Watches |
+| `05fc03e6-9adb-435c-bd03-3fc7b9b10f89` | bags | ব্যাগ | Bags |
+| `74cd5fc4-9fea-4ecf-8030-98aea2efb229` | lifestyle | লাইফস্টাইল | Lifestyle |
+| `a7fc4aa8-6dd7-4d7a-9342-e278890b181e` | clothing | পোশাক | Clothing |
+| `a909fd27-f3ae-4cac-9f30-cd3fd81a74e7` | beauty | বিউটি | Beauty |
+| `b28d2bfd-93b7-4048-94ad-64eefb71d498` | shoes | জুতা | Shoes |
+
+The target `categories` table should retain these UUIDs and slugs while adding the bilingual names, icon, and sort order fields. Do not delete and recreate these records.
 
 ## Application schema expected by the recovery branch
 
