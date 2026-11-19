@@ -362,6 +362,14 @@ describe('admin order discovery',()=>{
   expect(dashboard).toContain('কোনো অর্ডার মেলেনি');
   expect(dashboard).toContain('ফিল্টার মুছুন');
  });
+ it('supports searching admin products by product or store and filtering by status',()=>{
+  const dashboard=readFileSync(resolve(process.cwd(),'src/components/marketplace/admin-dashboard.tsx'),'utf8');
+  expect(dashboard).toContain('প্রশাসক পণ্য খুঁজুন');
+  expect(dashboard).toContain('[p.title_bn,p.seller_stores?.name]');
+  expect(dashboard).toContain("productStatus==='all'||p.status===productStatus");
+  expect(dashboard).toContain('<option value="draft">খসড়া</option>');
+  expect(dashboard).toContain('কোনো পণ্য মেলেনি');
+ });
 });
 
 
