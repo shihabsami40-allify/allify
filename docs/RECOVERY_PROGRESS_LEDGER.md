@@ -168,3 +168,12 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Updated the existing browse contract assertion to follow the extracted helper rather than requiring the old inline implementation.
 - CI for commit `936dd6e`: ALLIFY checks and ALLIFY build check both passed.
 - This is a new catalog behavior/testability improvement; no completed checkout, seller, admin, or auth feature was repeated. No live database or deployment settings changed.
+
+
+## Role RPC signature preflight correction — 2026-11-19
+
+- A final cross-check found that the exact-signature preflight listed `has_role(public.app_role, uuid)`, while the baseline SQL actually declares `has_role(_user_id uuid, _role public.app_role)` and all positional SQL call sites pass UUID first. The preflight expected signature is now corrected to `public.has_role(uuid, public.app_role)`; the application RPC continues to send named arguments, so its JSON key names remain `_role` and `_user_id`.
+- Added regression assertions tying the preflight identity signature to the baseline SQL declaration, plus checks for the checkout, cancellation and seller-review RPC signatures.
+- Updated the dependency matrix and migration plan to retain the corrected exact identity signature. This corrects the preflight diagnostic only; no live function was changed.
+- CI for the correction commits: ALLIFY checks and ALLIFY build check both passed (latest recorded commit `3a58d85`).
+- No live Supabase schema/data, Storage, Vercel environment, or deployment was changed.
