@@ -60,3 +60,13 @@ Existing migrations `0000`–`0016` are not safe to apply blindly. The live `app
 - Do not revoke legacy `is_admin()`/`owns_store(uuid)` function execution before every dependent policy is migrated and tested.
 - Do not replace guest RPC behavior until the new authenticated checkout contract is proven end-to-end.
 - Do not claim seller registration, checkout, or order lifecycle is live until verified against the real database.
+
+
+## Latest live smoke checks — 2026-11-19
+
+- Preview alias returned HTTP 200 for `/`, `/browse`, `/sell`, `/stores`, `/auth`, `/cart`, `/checkout`, and `/orders`. This confirms public SSR route responses only; it does not verify browser hydration, sign-in, or mutations.
+- The root page renders the Bangla ALLIFY marketplace shell, category navigation, local-store content, and free seller-registration messaging.
+- Current live database inventory was rechecked through Supabase table metadata: the six legacy tables remain; `profiles.phone`, `user_roles`, `delivery_areas`, `seller_applications`, `seller_stores`, `product_images`, `carts`, `cart_items`, and `addresses` are still absent. Existing category table has six rows; other five legacy tables report zero rows.
+- Security Advisor still reports four externally executable SECURITY DEFINER routines: `is_admin()`, `owns_store(uuid)`, `lookup_order(text,text)`, and guest-capable `place_marketplace_order(...)`. These are not blindly revoked because legacy RLS policies depend on helper functions. Review and migrate grants with their policy replacements.
+- Performance Advisor reports seven RLS init-plan warnings and one multiple-permissive-policy warning on categories. These are deferred until the compatibility migration so policy behavior can be corrected and tested together; no production policy was changed.
+- The commit that added this smoke-check record has its own Preview build; the preceding ledger commit deployment is READY at the branch alias.
