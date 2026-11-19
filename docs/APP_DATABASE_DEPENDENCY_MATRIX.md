@@ -22,7 +22,7 @@ The read-only contract diff in `supabase/preflight/003_target_contract_diff.sql`
 ## Required function inventory
 
 The current server functions call these database functions by exact name:
-- `has_role(app_role, uuid)` (PostgreSQL identity signature `public.has_role(public.app_role, uuid)`; generated TypeScript args are `_role` then `_user_id`)
+- `has_role(uuid, app_role)` (PostgreSQL identity signature `public.has_role(uuid, public.app_role)`; generated TypeScript args are `_role` then `_user_id`)
 - `place_order(jsonb, text, text, text, text, uuid, text, boolean)` (authenticated, idempotent COD checkout; generated TypeScript args map to `p_items`, `p_recipient`, `p_phone`, `p_area`, `p_address`, `p_request_id`, `p_note`, `p_save_address`)
 - `cancel_order_item(uuid)` (atomic stock restoration and cancellation)
 - `review_seller_application(uuid, boolean, text)` (one-time admin review and approval; returns `uuid`)
