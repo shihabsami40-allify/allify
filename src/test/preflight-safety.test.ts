@@ -10,6 +10,10 @@ const mapping = readFileSync(
   resolve(process.cwd(), 'supabase/preflight/002_legacy_data_mapping_report.sql'),
   'utf8',
 ).toLowerCase();
+const baseline = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0000_migration.sql'),
+  'utf8',
+).toLowerCase();
 const contract = readFileSync(
   resolve(process.cwd(), 'supabase/preflight/003_target_contract_diff.sql'),
   'utf8',
@@ -30,6 +34,9 @@ describe('Supabase preflight scripts are read-only', () => {
     for (const name of ['has_role', 'place_order', 'cancel_order_item', 'review_seller_application', 'to_regprocedure', 'security_definer', 'function_settings', 'anon_execute', 'authenticated_execute', 'missing_exact_signature']) {
       expect(contract).toContain(name);
     }
+    expect(contract).toContain('public.has_role(uuid, public.app_role)');
+    expect(baseline).toContain('function public.has_role(_user_id uuid, _role public.app_role)');
+    expect(baseline).not.toContain('function public.has_role(_role public.app_role, _user_id uuid)');
     expect(contract).toContain('information_schema.columns');
     expect(contract).toContain('expected_enum');
     expect(contract).toContain('review_legacy_label');
