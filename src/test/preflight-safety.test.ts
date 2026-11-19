@@ -14,6 +14,10 @@ const baseline = readFileSync(
   resolve(process.cwd(), 'drizzle/migrations/0000_migration.sql'),
   'utf8',
 ).toLowerCase();
+const checkoutMigration = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0009_checkout_request_idempotency.sql'),
+  'utf8',
+).toLowerCase();
 const contract = readFileSync(
   resolve(process.cwd(), 'supabase/preflight/003_target_contract_diff.sql'),
   'utf8',
@@ -37,6 +41,12 @@ describe('Supabase preflight scripts are read-only', () => {
     expect(contract).toContain('public.has_role(uuid, public.app_role)');
     expect(baseline).toContain('function public.has_role(_user_id uuid, _role public.app_role)');
     expect(baseline).not.toContain('function public.has_role(_role public.app_role, _user_id uuid)');
+    expect(checkoutMigration).toContain('p_items jsonb');
+    expect(checkoutMigration).toContain('p_request_id uuid');
+    expect(contract).toContain('public.place_order(jsonb, text, text, text, text, uuid, text, boolean)');
+    expect(contract).toContain('public.cancel_order_item(uuid)');
+    expect(baseline).toContain('function public.review_seller_application(p_app_id uuid, p_approve boolean, p_note text default null)');
+    expect(contract).toContain('public.review_seller_application(uuid, boolean, text)');
     expect(contract).toContain('information_schema.columns');
     expect(contract).toContain('expected_enum');
     expect(contract).toContain('review_legacy_label');
