@@ -3,7 +3,7 @@
 Last reconciled: 2026-11-19  
 Repository: `shihabsami40-allify/allify`  
 Branch: `allify-recovery-2026-11-17`  
-Latest commit: `d74157dd58af6d5292f1ab63b987627a1e7a30e6`  
+Latest commit: `1e885f8d3384b32d4238399ebc726aea60506c53`  
 Latest Preview: https://allify-chattogram-git-allify-recovery-2026-11-17-allify.vercel.app
 
 This ledger exists to prevent completed work from being repeated. A passing build or static source-contract test is not proof that a live marketplace workflow works.
@@ -23,6 +23,7 @@ This ledger exists to prevent completed work from being repeated. A passing buil
 | Checkout | Authenticated COD form, active delivery-area fee, BD phone validation, request UUID idempotency, cart cleared only after confirmed order | `checkout-flow-safety.test.ts`, migration `0009` |
 | Order cancellation | Guarded RPC restores stock once and blocks demo/late-state cancellation | migration `0016`; contract test added in commit `82f3abc6` |
 | Seller management queries | Store ownership scope, order-item inner join, demo-order exclusion, fail-closed query errors | `management-query-authorization.test.ts`; commits `fc192321`, `cdad7fcd` |
+| Admin/seller dashboard discovery | Admin order/product search and status filters; seller product search/status/stock filters and seller order search/status filters now include `processing` | commits `8ca2675`, `ee67f61`, `8cae05a`, `475597b`, `97946db`, `1e885f8`; latest CI checks passed |
 | Admin dashboard | Demo data excluded from real metrics/moderation; admin confirmation; store status write verifies a returned row | `admin-dashboard-safety.test.ts`; commit `c089aded` |
 | TanStack validator API | Replaced deprecated `.inputValidator()` with `.validator()` | commit `5f3e23b3` |
 | Supabase project config | Repository `supabase/config.toml` points to authoritative project ref | commit `3d3db2af` |
