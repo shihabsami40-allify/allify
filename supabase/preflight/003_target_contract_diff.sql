@@ -179,3 +179,28 @@ LEFT JOIN pg_enum a
   ON a.enumtypid = t.oid
  AND a.enumlabel = e.enum_label
 ORDER BY e.enum_name, e.enum_label;
+
+
+-- Extra live enum labels are reported too. These may be legitimate legacy
+-- values (for example app_role.buyer) and must be mapped, not silently dropped.
+WITH expected_enum(enum_name, enum_label) AS (
+  VALUES
+    ('app_role','admin'), ('app_role','seller'), ('app_role','customer'),
+    ('application_status','pending'), ('application_status','approved'), ('application_status','rejected'),
+    ('order_status','pending'), ('order_status','confirmed'), ('order_status','processing'),
+    ('order_status','shipped'), ('order_status','delivered'), ('order_status','cancelled'),
+    ('product_status','active'), ('product_status','draft'), ('product_status','hidden'),
+    ('store_status','pending'), ('store_status','active'), ('store_status','suspended')
+)
+SELECT t.typname AS enum_name,
+       a.enumlabel AS live_only_label,
+       'REVIEW_LEGACY_LABEL' AS contract_state
+FROM pg_type t
+JOIN pg_enum a ON a.enumtypid = t.oid
+WHERE t.typnamespace = 'public'::regnamespace
+  AND EXISTS (SELECT 1 FROM expected_enum e WHERE e.enum_name = t.typname)
+  AND NOT EXISTS (
+    SELECT 1 FROM expected_enum e
+    WHERE e.enum_name = t.typname AND e.enum_label = a.enumlabel
+  )
+ORDER BY t.typname, a.enumsortorder;
