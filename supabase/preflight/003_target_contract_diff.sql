@@ -9,6 +9,7 @@ WITH expected(table_name, column_name, app_usage) AS (
   ('profiles','id','auth profile identity'),
   ('profiles','full_name','account profile'),
   ('profiles','phone','account profile'),
+  ('user_roles','id','authorization row identity'),
   ('user_roles','user_id','authorization'),
   ('user_roles','role','authorization'),
   ('categories','id','public catalog'),
@@ -23,6 +24,7 @@ WITH expected(table_name, column_name, app_usage) AS (
   ('delivery_areas','zone','checkout delivery rules'),
   ('delivery_areas','fee','checkout delivery fee'),
   ('delivery_areas','active','checkout delivery area availability'),
+  ('delivery_areas','sort_order','checkout delivery area ordering'),
   ('seller_applications','id','seller onboarding'),
   ('seller_applications','user_id','seller onboarding ownership'),
   ('seller_applications','store_name','seller onboarding'),
@@ -32,6 +34,10 @@ WITH expected(table_name, column_name, app_usage) AS (
   ('seller_applications','address','seller onboarding'),
   ('seller_applications','status','seller onboarding moderation'),
   ('seller_applications','admin_note','seller onboarding moderation'),
+  ('seller_applications','category_hint','seller onboarding context'),
+  ('seller_applications','description','seller onboarding description'),
+  ('seller_applications','created_at','seller onboarding timestamp'),
+  ('seller_applications','reviewed_at','seller onboarding review timestamp'),
   ('seller_stores','id','seller storefront'),
   ('seller_stores','owner_id','seller storefront ownership'),
   ('seller_stores','slug','seller storefront routing'),
@@ -43,6 +49,10 @@ WITH expected(table_name, column_name, app_usage) AS (
   ('seller_stores','phone','seller storefront'),
   ('seller_stores','status','seller storefront moderation'),
   ('seller_stores','is_demo','demo protection'),
+  ('seller_stores','logo_url','seller storefront branding'),
+  ('seller_stores','banner_url','seller storefront branding'),
+  ('seller_stores','rating','store discovery rating'),
+  ('seller_stores','created_at','store discovery ordering'),
   ('products','id','catalog and inventory'),
   ('products','store_id','catalog and inventory'),
   ('products','category_id','catalog filtering'),
@@ -55,12 +65,16 @@ WITH expected(table_name, column_name, app_usage) AS (
   ('products','stock','inventory'),
   ('products','status','catalog moderation'),
   ('products','sold_count','catalog ranking'),
+  ('products','rating','catalog rating'),
+  ('products','created_at','catalog ordering'),
+  ('products','updated_at','product management timestamp'),
   ('product_images','id','product media'),
   ('product_images','product_id','product media'),
   ('product_images','url','product media'),
   ('product_images','sort_order','product media'),
   ('carts','id','customer cart'),
   ('carts','user_id','customer cart ownership'),
+  ('carts','updated_at','customer cart timestamp'),
   ('cart_items','cart_id','customer cart'),
   ('cart_items','product_id','customer cart'),
   ('cart_items','quantity','customer cart'),
@@ -71,6 +85,7 @@ WITH expected(table_name, column_name, app_usage) AS (
   ('addresses','area','saved checkout address'),
   ('addresses','address_line','saved checkout address'),
   ('addresses','is_default','saved checkout address'),
+  ('addresses','created_at','saved checkout address timestamp'),
   ('orders','id','customer order history'),
   ('orders','order_no','customer order history'),
   ('orders','customer_id','customer order ownership'),
@@ -86,6 +101,7 @@ WITH expected(table_name, column_name, app_usage) AS (
   ('orders','note','COD checkout'),
   ('orders','is_demo','demo order protection'),
   ('orders','checkout_request_id','checkout idempotency'),
+  ('orders','created_at','order history ordering'),
   ('order_items','id','seller order management'),
   ('order_items','order_id','seller order management'),
   ('order_items','product_id','seller order management'),
@@ -137,3 +153,29 @@ FROM pg_proc p
 WHERE p.pronamespace = 'public'::regnamespace
   AND p.proname IN ('is_admin','owns_store','lookup_order','place_marketplace_order','sync_seller_role')
 ORDER BY p.proname, identity_arguments;
+
+
+-- Generated enum contracts. A label mismatch can break inserts, filters, and
+-- status transitions even when every expected column exists.
+WITH expected_enum(enum_name, enum_label) AS (
+  VALUES
+    ('app_role','admin'), ('app_role','seller'), ('app_role','customer'),
+    ('application_status','pending'), ('application_status','approved'), ('application_status','rejected'),
+    ('order_status','pending'), ('order_status','confirmed'), ('order_status','processing'),
+    ('order_status','shipped'), ('order_status','delivered'), ('order_status','cancelled'),
+    ('product_status','active'), ('product_status','draft'), ('product_status','hidden'),
+    ('store_status','pending'), ('store_status','active'), ('store_status','suspended')
+)
+SELECT e.enum_name,
+       e.enum_label,
+       CASE WHEN t.typname IS NULL THEN 'MISSING_ENUM'
+            WHEN a.enumlabel IS NULL THEN 'MISSING_LABEL'
+            ELSE 'PRESENT' END AS contract_state
+FROM expected_enum e
+LEFT JOIN pg_type t
+  ON t.typname = e.enum_name
+ AND t.typnamespace = 'public'::regnamespace
+LEFT JOIN pg_enum a
+  ON a.enumtypid = t.oid
+ AND a.enumlabel = e.enum_label
+ORDER BY e.enum_name, e.enum_label;
