@@ -3,7 +3,7 @@
 Last reconciled: 2026-11-19  
 Repository: `shihabsami40-allify/allify`  
 Branch: `allify-recovery-2026-11-17`  
-Latest implementation commit: `b19cb3510d412e4f52ca35dcaebb827164e07080`  
+Latest implementation commit: `8e0e0b89b29260e7a4b5d6f86f6d54c824390435`  
 Latest Preview: https://allify-chattogram-git-allify-recovery-2026-11-17-allify.vercel.app
 
 This ledger exists to prevent completed work from being repeated. A passing build or static source-contract test is not proof that a live marketplace workflow works.
@@ -151,3 +151,10 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Added the fresh observations and migration sequencing implications to `docs/LEGACY_TO_TARGET_MIGRATION_PLAN.md`.
 - CI for commit `8406013`: both checks and build passed. CI for current commit `b19cb35` is pending verification.
 - All live inspection was read-only. No production schema, data, policies, functions, Storage, Vercel variables, or deployments were changed.
+
+
+## RPC contract documentation reconciliation — 2026-11-19
+
+- Corrected the application-to-database dependency matrix to match generated Supabase TypeScript and SQL declarations: `has_role(public.app_role, uuid)`; `place_order(jsonb, text, text, text, text, uuid, text, boolean)`; `cancel_order_item(uuid)`; `review_seller_application(uuid, boolean, text)`.
+- The earlier matrix had the `has_role` argument order reversed. It is now explicitly marked superseded and the checkout argument ordering is documented in full.
+- No runtime application code or live database objects changed in this documentation correction.
