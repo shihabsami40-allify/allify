@@ -24,13 +24,17 @@ describe('Supabase preflight scripts are read-only', () => {
   });
 
   it('compares the current application table contract and required RPC names', () => {
-    for (const name of ['seller_stores', 'seller_applications', 'delivery_areas', 'product_images', 'cart_items', 'checkout_request_id']) {
+    for (const name of ['seller_stores', 'seller_applications', 'delivery_areas', 'product_images', 'cart_items', 'checkout_request_id', 'logo_url', 'banner_url', 'category_hint', 'reviewed_at', 'sort_order', 'updated_at', 'rating']) {
       expect(contract).toContain(name);
     }
     for (const name of ['has_role', 'place_order', 'cancel_order_item', 'review_seller_application']) {
       expect(contract).toContain(name);
     }
     expect(contract).toContain('information_schema.columns');
+    expect(contract).toContain('expected_enum');
+    expect(contract).toContain('application_status');
+    expect(contract).toContain('store_status');
+    expect(contract).toContain('product_status');
     expect(contract).not.toMatch(/select\\s+(customer_phone|customer_name|delivery_address|phone)\\s+from/i);
   });
 
