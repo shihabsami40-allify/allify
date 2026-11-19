@@ -129,3 +129,17 @@ A second read-only catalog inspection recorded the current policy and trigger de
 3. Before adding new RLS policies, inventory existing policy expressions and trigger functions; recreate least-privilege policies for every new table, then test both anon and authenticated access.
 4. Validate foreign keys, unique indexes, defaults, and grants after every stage. Do not remove old policies/functions until the new app path has passed functional tests.
 5. The observed zero row counts reduce current copy volume but do not justify destructive shortcuts; future data may be added before migration.
+
+
+## SECURITY DEFINER RPC body review (read-only)
+
+The function definitions were inspected, not invoked or modified.
+
+- `place_marketplace_order(text,text,text,text,jsonb)` is executable by both `anon` and `authenticated`. It creates guest-capable orders, locks product rows, checks approved product/store status and stock, writes order items, decrements stock, and rolls back the inserted order on error.
+- The RPC currently checks only a minimum phone length (8 characters), not the Bangladesh mobile format used by the app. It does not implement a database-side request rate limit or idempotency key. These are abuse and data-quality gaps to address before enabling public checkout.
+- `lookup_order(text,text)` is executable by `anon` and `authenticated`; it matches normalized order number plus exact trimmed phone and returns a limited order summary and item list. Add abuse monitoring/rate controls before relying on it as a public tracking endpoint.
+- `is_admin()` checks `profiles.role='admin'`; `owns_store(uuid)` checks `stores.owner_id=auth.uid()`. Existing RLS policies depend on these functions. Do not revoke or rename them until replacement helpers are deployed and every policy is migrated and tested.
+- `sync_seller_role()` updates `profiles.role` when a store is approved/rejected. A new `user_roles` model must preserve equivalent behavior or deliberately replace it with a reviewed transaction-safe flow.
+- `protect_moderation_fields()` blocks non-admin store status changes and product status changes to values other than pending. Its behavior must be reviewed against the target `seller_stores` and `products` policies/triggers before either old or new trigger is removed.
+
+**Security remediation gate:** do not simply revoke anonymous execution on either order RPC while the current website may depend on guest checkout/tracking. First verify the deployed app's actual checkout flow, implement the intended authenticated-only or rate-limited public flow, then change grants in a separately tested migration.
