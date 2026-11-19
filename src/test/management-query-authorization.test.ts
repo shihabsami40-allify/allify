@@ -27,6 +27,7 @@ describe('management query authorization boundaries', () => {
   });
 
   it('excludes demo orders from the seller order-item view', () => {
+    expect(management).toContain("select('*,orders!inner(");
     expect(management).toContain("itemsQuery=itemsQuery.in('store_id',ids).eq('orders.is_demo',false)");
   });
 
