@@ -133,7 +133,7 @@ ORDER BY e.table_name, e.column_name;
 WITH expected_rpc(signature, function_name, app_usage, expected_return_type) AS (
   VALUES
     ('public.has_role(public.app_role, uuid)', 'has_role', 'authorization checks', 'boolean'),
-    ('public.place_order(text, text, jsonb, text, text, text, text, boolean)', 'place_order', 'authenticated idempotent COD checkout', 'text'),
+    ('public.place_order(jsonb, text, text, text, text, uuid, text, boolean)', 'place_order', 'authenticated idempotent COD checkout', 'text'),
     ('public.cancel_order_item(uuid)', 'cancel_order_item', 'atomic item cancellation', 'boolean'),
     ('public.review_seller_application(uuid, boolean, text)', 'review_seller_application', 'admin seller application review', 'uuid')
 )
