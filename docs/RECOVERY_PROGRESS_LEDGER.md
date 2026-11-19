@@ -3,7 +3,7 @@
 Last reconciled: 2026-11-19  
 Repository: `shihabsami40-allify/allify`  
 Branch: `allify-recovery-2026-11-17`  
-Latest implementation commit: `8f3c5038348d0cd18eafc1104bbc89bbf062cc7e`  
+Latest implementation commit: `b19cb3510d412e4f52ca35dcaebb827164e07080`  
 Latest Preview: https://allify-chattogram-git-allify-recovery-2026-11-17-allify.vercel.app
 
 This ledger exists to prevent completed work from being repeated. A passing build or static source-contract test is not proof that a live marketplace workflow works.
@@ -140,3 +140,14 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Added `docs/LEGACY_TO_TARGET_MIGRATION_PLAN.md`: staged additive-only design, explicit legacy-to-target mappings, validation gates, rollback conditions and production safety boundaries. It is a design document, not executable SQL.
 - Commits: `4b91add` (RPC signature), `f2f2b99` (test), `8f3c503` (migration plan).
 - No production database, Storage, Vercel environment variables, or Production deployment were changed.
+
+
+## Live dependency deep-dive — 2026-11-19
+
+- Rechecked authoritative project status: `ACTIVE_HEALTHY`, PostgreSQL 17.11.
+- Read-only inspection confirmed the exact legacy trigger functions and dependencies: `handle_new_user()` inserts legacy role `buyer`; `sync_seller_role()` updates legacy roles on store INSERT/UPDATE; `protect_moderation_fields()` guards store/product moderation; and `rls_auto_enable()` is an event trigger for new public tables.
+- Captured the existing RLS policy predicates on categories, profiles, stores, products, orders and order_items. The legacy policies call `is_admin()` and `owns_store(uuid)`; the order_items customer-read policy checks its parent order. Preserve these dependencies until replacement policies are proven.
+- Re-ran Supabase Advisors: Security reports 4 SECURITY DEFINER routines callable by anon and authenticated; Performance reports 7 RLS init-plan findings, 1 multiple-permissive-policy finding on categories, and 7 unused-index informational findings; Health reports no findings.
+- Added the fresh observations and migration sequencing implications to `docs/LEGACY_TO_TARGET_MIGRATION_PLAN.md`.
+- CI for commit `8406013`: both checks and build passed. CI for current commit `b19cb35` is pending verification.
+- All live inspection was read-only. No production schema, data, policies, functions, Storage, Vercel variables, or deployments were changed.
