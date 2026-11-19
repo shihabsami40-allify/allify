@@ -25,3 +25,10 @@ describe('auth session bootstrap race protection', () => {
     expect(source).toContain('return()=>subscription.unsubscribe()');
   });
 });
+
+
+describe('demo order persistence compatibility', () => {
+  it('keeps saved demo orders with the processing status valid', () => {
+    expect(source).toContain("!['pending','confirmed','processing','shipped','delivered','cancelled'].includes(String(order['status']))");
+  });
+});
