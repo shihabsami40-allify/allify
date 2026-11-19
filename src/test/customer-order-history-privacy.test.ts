@@ -35,3 +35,18 @@ describe('customer order history privacy and resilience', () => {
     expect(source).toContain('aria-label="অর্ডারের অগ্রগতি"');
   });
 });
+
+
+describe('customer order fulfillment progress', () => {
+  it('includes the processing stage between confirmation and shipping', () => {
+    const marketplace = readFileSync(
+      resolve(process.cwd(), 'src/lib/marketplace.ts'),
+      'utf8',
+    );
+    expect(marketplace).toContain("confirmed:['processing','cancelled'],processing:['shipped','cancelled']");
+    expect(marketplace).toContain("processing:'প্রস্তুত করা হচ্ছে'");
+    expect(source).toContain("const fulfillmentSteps:Status[]=['pending','confirmed','processing','shipped','delivered']");
+    expect(source).toContain('<option value="processing">প্রস্তুত করা হচ্ছে</option>');
+    expect(source).toContain('grid grid-cols-5');
+  });
+});
