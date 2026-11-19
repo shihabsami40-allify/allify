@@ -56,3 +56,8 @@ No live schema, data, Storage policy, Vercel environment variable, or Production
 ## Expanded read-only preflight coverage — 2026-11-19
 
 The inventory script now additionally reports effective table privileges for `anon`, `authenticated`, and `service_role`; sequence USAGE privileges; configured default ACLs; and catalog-tracked dependencies on the legacy SECURITY DEFINER helpers (`is_admin`, `owns_store`, `lookup_order`, `place_marketplace_order`, `sync_seller_role`). These checks are read-only and are intended to prevent accidental privilege widening or breaking legacy policy dependencies during the later additive migration.
+
+
+## Exact RPC signature preflight — 2026-11-19
+
+The target contract diff now resolves the four application RPCs by their full PostgreSQL identity signatures, not just function names. It reports missing exact signatures, return-type mismatches, SECURITY DEFINER mode, function settings (including any fixed search path), and effective anon/authenticated EXECUTE privileges. This is a read-only diagnostic: privilege results require policy-aware review and are not automatically treated as pass/fail because the intended grants differ by RPC. A same-name overload no longer counts as proof that the app's call will resolve safely.
