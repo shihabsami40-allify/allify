@@ -3,7 +3,7 @@
 Last reconciled: 2026-11-19  
 Repository: `shihabsami40-allify/allify`  
 Branch: `allify-recovery-2026-11-17`  
-Latest implementation commit: `5edaf03c9b10940a1be081dd01c232e6698a5ddf`  
+Latest implementation commit: `44dc9e1afccb2282108f20f1ee477bf1ca14314a`  
 Latest Preview: https://allify-chattogram-git-allify-recovery-2026-11-17-allify.vercel.app
 
 This ledger exists to prevent completed work from being repeated. A passing build or static source-contract test is not proof that a live marketplace workflow works.
@@ -95,3 +95,5 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Extended `supabase/preflight/001_authoritative_schema_inventory.sql` with effective table privileges for anon/authenticated/service_role, sequence USAGE privileges, default ACLs, and catalog-tracked dependencies on legacy SECURITY DEFINER helpers.
 - Documented the additional checks in `docs/APP_DATABASE_DEPENDENCY_MATRIX.md`.
 - This is repository-only, read-only preparation. No database, Storage, environment-variable, or deployment changes were made. The required verified backup/restore gate remains open.
+
+- CI for preflight update commit `44dc9e1`: ALLIFY checks and ALLIFY build check both passed (lint, typecheck, tests and production build).
