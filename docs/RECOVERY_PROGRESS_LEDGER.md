@@ -3,7 +3,7 @@
 Last reconciled: 2026-11-19  
 Repository: `shihabsami40-allify/allify`  
 Branch: `allify-recovery-2026-11-17`  
-Latest commit: `82f3abc61b312faeb9146a3bff5286ec9aa75b78`  
+Latest commit: `28e8a1ec0ffda36a48879c988d9fbff3afea9e49`  
 Latest Preview: https://allify-chattogram-git-allify-recovery-2026-11-17-allify.vercel.app
 
 This ledger exists to prevent completed work from being repeated. A passing build or static source-contract test is not proof that a live marketplace workflow works.
@@ -30,7 +30,7 @@ This ledger exists to prevent completed work from being repeated. A passing buil
 
 ## Deployment state
 
-- Latest commit `82f3abc6` has Vercel Preview status SUCCESS and deployment state READY.
+- Latest commit `28e8a1ec` has Vercel Preview deployment state READY (verified by deployment ID `dpl_HjhSrZoc31LSyzPJ2WScWPY59A46`).
 - Preview alias: https://allify-chattogram-git-allify-recovery-2026-11-17-allify.vercel.app
 - This is a Preview deployment, not Production.
 - Deployment success proves build/deploy only; it does not prove database-backed workflows.
@@ -39,7 +39,7 @@ This ledger exists to prevent completed work from being repeated. A passing buil
 
 The authoritative Supabase project is `onqadpqdontbdvecnvby` (ap-south-1). Its live schema is still the six-table legacy schema (`profiles`, `categories`, `stores`, `products`, `orders`, `order_items`). The application expects `user_roles`, `delivery_areas`, `seller_applications`, `seller_stores`, `product_images`, cart/address tables, renamed columns and new RPCs.
 
-Existing migrations `0000`–`0016` are not safe to apply blindly. The live `app_role` enum and existing SECURITY DEFINER helpers/policies/triggers require compatibility handling. Existing six category UUIDs/slugs must be preserved.
+Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to apply blindly. The live `app_role` enum and existing SECURITY DEFINER helpers/policies/triggers require compatibility handling. Existing six category UUIDs/slugs must be preserved.
 
 ### Exact next execution sequence
 
@@ -69,4 +69,12 @@ Existing migrations `0000`–`0016` are not safe to apply blindly. The live `app
 - Current live database inventory was rechecked through Supabase table metadata: the six legacy tables remain; `profiles.phone`, `user_roles`, `delivery_areas`, `seller_applications`, `seller_stores`, `product_images`, `carts`, `cart_items`, and `addresses` are still absent. Existing category table has six rows; other five legacy tables report zero rows.
 - Security Advisor still reports four externally executable SECURITY DEFINER routines: `is_admin()`, `owns_store(uuid)`, `lookup_order(text,text)`, and guest-capable `place_marketplace_order(...)`. These are not blindly revoked because legacy RLS policies depend on helper functions. Review and migrate grants with their policy replacements.
 - Performance Advisor reports seven RLS init-plan warnings and one multiple-permissive-policy warning on categories. These are deferred until the compatibility migration so policy behavior can be corrected and tested together; no production policy was changed.
-- The commit that added this smoke-check record has its own Preview build; the preceding ledger commit deployment is READY at the branch alias.
+- The latest commit `28e8a1ec` has a READY Preview deployment at the branch alias. This is not a Production deployment.
+
+
+## Development isolation attempt — 2026-11-19
+
+- The user explicitly approved creating a Supabase Development Branch after the quoted estimate of USD $0.01344/hour.
+- Supabase returned `PaymentRequiredException`: Development Branches are supported only on Pro plan or above. The authoritative project is on Free plan; no branch was created and no branch compute charge began.
+- The project currently has no Supabase development branches. Do not retry branch creation unless the project plan changes or a separate disposable database is provisioned.
+- Continue with repository-side compatibility analysis and local/disposable PostgreSQL rehearsal only. No production schema, data, Storage, or Vercel environment variables were changed.
