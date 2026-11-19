@@ -48,6 +48,13 @@ describe('seller order status confirmation',()=>{
   expect(sellerDashboard).toContain('অর্ডার ${statusName[status]} করবেন?');
  });
 });
+describe('database order status typing',()=>{
+ it('includes processing in the generated Supabase order status enum',()=>{
+  const types=readFileSync(resolve(process.cwd(),'src/integrations/supabase/types.ts'),'utf8');
+  expect(types).toContain('| "processing"');
+ });
+});
+
 describe('seller order status server validation',()=>{
  it('accepts processing so the seller can move confirmed orders into preparation',()=>{
   const functions=readFileSync(resolve(process.cwd(),'src/lib/marketplace.functions.ts'),'utf8');
