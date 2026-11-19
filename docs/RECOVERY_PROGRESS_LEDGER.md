@@ -122,3 +122,12 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Commits: `7ac8089` (SQL), `ee20eb6` (tests), `3b4987a` (docs).
 - CI for `ee20eb6`: ALLIFY checks and build check were triggered; results were pending at ledger update time.
 - Repository-only, read-only preflight work. No live database, Storage, Vercel environment, or Production deployment was changed.
+
+
+## RPC signature correction — 2026-11-19
+
+- Cross-checked the newly added exact RPC signatures against `src/integrations/supabase/types.ts` and corrected argument order/types for `has_role(public.app_role, uuid)` and `place_order(text, text, jsonb, text, text, text, text, boolean)`.
+- `cancel_order_item(uuid)` and `review_seller_application(uuid, boolean, text)` remain aligned with generated function Args.
+- Commits: `1436ae9` (preflight SQL), `169cb46` (test assertions).
+- The prior exact-signature commit is superseded for these two RPC signatures; do not rely on its initial signature values.
+- CI for corrected commits is pending. No live database or deployment changes.
