@@ -126,7 +126,7 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 
 ## RPC signature correction — 2026-11-19
 
-- Cross-checked the newly added exact RPC signatures against `src/integrations/supabase/types.ts` and corrected argument order/types for `has_role(public.app_role, uuid)` and `place_order(text, text, jsonb, text, text, text, text, boolean)`.
+- Cross-checked the newly added exact RPC signatures against `src/integrations/supabase/types.ts` and corrected argument order/types for `has_role(uuid, public.app_role)` and `place_order(text, text, jsonb, text, text, text, text, boolean)`.
 - `cancel_order_item(uuid)` and `review_seller_application(uuid, boolean, text)` remain aligned with generated function Args.
 - Commits: `1436ae9` (preflight SQL), `169cb46` (test assertions).
 - The prior exact-signature commit is superseded for these two RPC signatures; do not rely on its initial signature values.
@@ -136,7 +136,7 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 ## Migration planning and RPC signature verification — 2026-11-19
 
 - Verified both CI workflows for commit `169cb46` completed successfully.
-- Cross-checked target RPC identity signatures against the actual SQL declarations and generated Supabase types. Corrected `has_role(public.app_role, uuid)` and `place_order(jsonb, text, text, text, text, uuid, text, boolean)`; the latter follows the declared positional argument order in migration `0009`.
+- Cross-checked target RPC identity signatures against the actual SQL declarations and generated Supabase types. Corrected `has_role(uuid, public.app_role)` and `place_order(jsonb, text, text, text, text, uuid, text, boolean)`; the latter follows the declared positional argument order in migration `0009`.
 - Added `docs/LEGACY_TO_TARGET_MIGRATION_PLAN.md`: staged additive-only design, explicit legacy-to-target mappings, validation gates, rollback conditions and production safety boundaries. It is a design document, not executable SQL.
 - Commits: `4b91add` (RPC signature), `f2f2b99` (test), `8f3c503` (migration plan).
 - No production database, Storage, Vercel environment variables, or Production deployment were changed.
@@ -155,7 +155,7 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 
 ## RPC contract documentation reconciliation — 2026-11-19
 
-- Corrected the application-to-database dependency matrix to match generated Supabase TypeScript and SQL declarations: `has_role(public.app_role, uuid)`; `place_order(jsonb, text, text, text, text, uuid, text, boolean)`; `cancel_order_item(uuid)`; `review_seller_application(uuid, boolean, text)`.
+- Corrected the application-to-database dependency matrix to match generated Supabase TypeScript and SQL declarations: `has_role(uuid, public.app_role)`; `place_order(jsonb, text, text, text, text, uuid, text, boolean)`; `cancel_order_item(uuid)`; `review_seller_application(uuid, boolean, text)`.
 - The earlier matrix had the `has_role` argument order reversed. It is now explicitly marked superseded and the checkout argument ordering is documented in full.
 - No runtime application code or live database objects changed in this documentation correction.
 
