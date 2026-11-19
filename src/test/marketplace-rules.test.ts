@@ -358,6 +358,7 @@ describe('admin order discovery',()=>{
   expect(dashboard).toContain('o.order_no,o.recipient,o.phone,o.area,o.address_line');
   expect(dashboard).toContain('data.items.filter(i=>i.order_id===o.id).map(i=>i.title)');
   expect(dashboard).toContain("orderStatus==='all'||o.status===orderStatus");
+  expect(dashboard).toContain('<option value="processing">প্রস্তুত করা হচ্ছে</option>');
   expect(dashboard).toContain('কোনো অর্ডার মেলেনি');
   expect(dashboard).toContain('ফিল্টার মুছুন');
  });
