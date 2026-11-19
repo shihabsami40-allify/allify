@@ -235,6 +235,7 @@ describe('seller order discovery',()=>{
   expect(dashboard).toContain('অর্ডার খুঁজুন');
   expect(dashboard).toContain("orderFilter==='all'||item.status===orderFilter");
   expect(dashboard).toContain('<option value="pending">অপেক্ষমাণ</option>');
+  expect(dashboard).toContain('<option value="processing">প্রস্তুত করা হচ্ছে</option>');
   expect(dashboard).toContain('<option value="delivered">ডেলিভারি সম্পন্ন</option>');
   expect(dashboard).toContain('কোনো অর্ডার মেলেনি');
   expect(dashboard).toContain('ফিল্টার মুছুন');
