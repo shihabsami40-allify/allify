@@ -28,6 +28,8 @@ describe('COD checkout request idempotency',()=>{
  });
  it('reuses the same request ID after a retry and clears it only after success',()=>{
   expect(checkout).toContain('checkoutRequestStorageKey(user.id,requestPayload)');
+  expect(checkout).toContain('readStoredJson<string>(legacyCartKey');
+  expect(checkout).toContain('stored||legacyStored||crypto.randomUUID()');
   expect(checkout).toContain('removeStoredValue(legacyCartKey)');
   expect(checkout).toContain('readStoredJson<string>(cartKey');
   expect(checkout).toContain('writeStoredJson(cartKey,request.id)');
