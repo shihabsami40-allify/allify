@@ -386,3 +386,18 @@ describe('password recovery URL detection',()=>{
   expect(hasRecoveryHash('')).toBe(false);
  });
 });
+
+
+describe('store discovery controls',()=>{
+ it('supports rating, newest, and alphabetical sorting',()=>{
+  const stores=readFileSync(resolve(process.cwd(),'src/routes/stores.tsx'),'utf8');
+  expect(stores).toContain("sort==='new'?b.created_at.localeCompare(a.created_at)");
+  expect(stores).toContain("sort==='name'?a.name.localeCompare(b.name,'bn'):b.rating-a.rating");
+  expect(stores).toContain('দোকান সাজান');
+ });
+ it('shows a validated store logo and rating when available',()=>{
+  const stores=readFileSync(resolve(process.cwd(),'src/routes/stores.tsx'),'utf8');
+  expect(stores).toContain('s.logo_url&&safeImageUrl(s.logo_url)');
+  expect(stores).toContain('s.rating).toLocaleString');
+ });
+});
