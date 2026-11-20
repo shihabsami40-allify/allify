@@ -18,6 +18,10 @@ const checkoutMigration = readFileSync(
   resolve(process.cwd(), 'drizzle/migrations/0009_checkout_request_idempotency.sql'),
   'utf8',
 ).toLowerCase();
+const readiness = readFileSync(
+  resolve(process.cwd(), 'supabase/preflight/004_migration_readiness.sql'),
+  'utf8',
+).toLowerCase();
 const contract = readFileSync(
   resolve(process.cwd(), 'supabase/preflight/003_target_contract_diff.sql'),
   'utf8',
@@ -29,6 +33,7 @@ describe('Supabase preflight scripts are read-only', () => {
     expect(inventory).not.toMatch(forbidden);
     expect(mapping).not.toMatch(forbidden);
     expect(contract).not.toMatch(forbidden);
+    expect(readiness).not.toMatch(forbidden);
   });
 
   it('compares the current application table contract and required RPC names', () => {
@@ -78,6 +83,14 @@ describe('Supabase preflight scripts are read-only', () => {
       expect(mapping).toContain(name);
     }
     expect(mapping).not.toMatch(/select\s+(customer_phone|customer_name|delivery_address|phone)\s+from/i);
+  });
+
+  it('reports migration mapping and reconciliation risks using aggregate-only output', () => {
+    for (const name of ['duplicate_owner_groups', 'stores_without_ascii_slug_candidate', 'unmatched — manual mapping', 'non_positive_price_count', 'item_header_subtotal_mismatches', 'unresolved_product_links', 'unresolved_store_links', 'product-images']) {
+      expect(readiness).toContain(name);
+    }
+    expect(readiness).not.toMatch(/select\\s+(customer_phone|customer_name|delivery_address|phone|order_number)\\s+from/i);
+    expect(readiness).not.toMatch(/select\\s+name\\s+from\\s+storage\\.objects/i);
   });
 
   it('never reads Storage object names or contents', () => {
