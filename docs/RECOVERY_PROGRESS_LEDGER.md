@@ -237,3 +237,10 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Initial test-project advisors report remaining hardening work: four anon-callable SECURITY DEFINER helpers, seven authenticated-callable SECURITY DEFINER functions (including intended authenticated RPCs), 23 RLS init-plan warnings, and three unindexed foreign keys. These findings are recorded for review; no blanket revokes or speculative index changes were made.
 - CI/build for the latest commits and a fresh Preview deployment using the branch-scoped variables remain to be verified. Real sign-in, seller application/review, image upload, checkout, order transition/cancellation and customer-history workflows remain untested pending a dedicated test account/admin setup.
 - No changes were made to the authoritative Production database, Production environment variables, Production deployment, or custom domains.
+
+
+## Test workflow verification — 2026-11-20
+
+- Ran transaction-scoped SQL workflow tests on `allify-test`; all test rows were rolled back. Verified public category reads, authenticated seller-application submission, authenticated COD checkout, customer order privacy (owner sees the order; unrelated user sees none), checkout idempotency (same request UUID returns one order), and protected cancellation restores stock exactly once and marks the item cancelled.
+- The replayed migrations and these SQL checks validate the clean target schema only. They do not substitute for a restored legacy-clone rehearsal, browser-based sign-in, or actual Storage upload.
+- CI status for latest recorded branch commit `7d83ea07df37344b0932c141dba4b129780f82db` is successful; Vercel Preview deployment `dpl_5vcCZy1ipYTawbvneke56ZddfjTe` is READY with branch-scoped test-project environment variables. No runtime requests had been observed at the time of inspection.
