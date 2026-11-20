@@ -831,4 +831,147 @@ WITH CHECK (
 -- The first-admin claim path must not exist in a public marketplace.
 DROP FUNCTION IF EXISTS public.claim_first_admin();
 
+-- ===== drizzle/migrations/0018_optimize_rls_and_fk_indexes.sql =====
+-- Optimize RLS auth context evaluation and add missing FK covering indexes.
+-- The policy predicates are unchanged semantically; auth.uid() is evaluated once
+-- per statement through a scalar subquery rather than once per candidate row.
+
+do $$
+declare
+  p record;
+  using_expr text;
+  check_expr text;
+  statement text;
+begin
+  for p in
+    select schemaname, tablename, policyname, qual, with_check
+    from pg_policies
+    where schemaname = 'public'
+      and (
+        coalesce(qual, '') like '%auth.uid()%'
+        or coalesce(with_check, '') like '%auth.uid()%'
+      )
+  loop
+    using_expr := case
+      when p.qual is null then null
+      else replace(p.qual, 'auth.uid()', '(select auth.uid())')
+    end;
+    check_expr := case
+      when p.with_check is null then null
+      else replace(p.with_check, 'auth.uid()', '(select auth.uid())')
+    end;
+
+    statement := format(
+      'alter policy %I on %I.%I',
+      p.policyname, p.schemaname, p.tablename
+    );
+    if using_expr is not null then
+      statement := statement || format(' using (%s)', using_expr);
+    end if;
+    if check_expr is not null then
+      statement := statement || format(' with check (%s)', check_expr);
+    end if;
+    execute statement;
+  end loop;
+end
+$$;
+
+create index if not exists cart_items_product_id_idx
+  on public.cart_items (product_id);
+create index if not exists order_items_product_id_idx
+  on public.order_items (product_id);
+create index if not exists product_images_product_id_idx
+  on public.product_images (product_id);
+
+-- ===== drizzle/migrations/0019_split_overlapping_select_policies.sql =====
+-- Avoid overlapping SELECT policies while preserving existing public-read behavior.
+-- Admins still read through the public SELECT policy; admin write access is
+-- expressed only for INSERT/UPDATE/DELETE. Product image ownership rules remain
+-- identical for writes.
+
+drop policy if exists "categories admin insert" on public.categories;
+drop policy if exists "categories admin update" on public.categories;
+drop policy if exists "categories admin delete" on public.categories;
+drop policy if exists "areas admin insert" on public.delivery_areas;
+drop policy if exists "areas admin update" on public.delivery_areas;
+drop policy if exists "areas admin delete" on public.delivery_areas;
+drop policy if exists "images owner insert" on public.product_images;
+drop policy if exists "images owner update" on public.product_images;
+drop policy if exists "images owner delete" on public.product_images;
+drop policy if exists "categories admin write" on public.categories;
+create policy "categories admin insert" on public.categories
+  for insert to authenticated
+  with check (public.has_role((select auth.uid()), 'admin'::public.app_role));
+create policy "categories admin update" on public.categories
+  for update to authenticated
+  using (public.has_role((select auth.uid()), 'admin'::public.app_role))
+  with check (public.has_role((select auth.uid()), 'admin'::public.app_role));
+create policy "categories admin delete" on public.categories
+  for delete to authenticated
+  using (public.has_role((select auth.uid()), 'admin'::public.app_role));
+
+drop policy if exists "areas admin write" on public.delivery_areas;
+create policy "areas admin insert" on public.delivery_areas
+  for insert to authenticated
+  with check (public.has_role((select auth.uid()), 'admin'::public.app_role));
+create policy "areas admin update" on public.delivery_areas
+  for update to authenticated
+  using (public.has_role((select auth.uid()), 'admin'::public.app_role))
+  with check (public.has_role((select auth.uid()), 'admin'::public.app_role));
+create policy "areas admin delete" on public.delivery_areas
+  for delete to authenticated
+  using (public.has_role((select auth.uid()), 'admin'::public.app_role));
+
+drop policy if exists "images owner write" on public.product_images;
+create policy "images owner insert" on public.product_images
+  for insert to authenticated
+  with check (
+    public.has_role((select auth.uid()), 'admin'::public.app_role)
+    or exists (
+      select 1 from public.products p
+      join public.seller_stores s on s.id = p.store_id
+      where p.id = product_images.product_id
+        and s.owner_id = (select auth.uid())
+        and s.status = 'active'::public.store_status
+        and s.is_demo = false
+    )
+  );
+create policy "images owner update" on public.product_images
+  for update to authenticated
+  using (
+    public.has_role((select auth.uid()), 'admin'::public.app_role)
+    or exists (
+      select 1 from public.products p
+      join public.seller_stores s on s.id = p.store_id
+      where p.id = product_images.product_id
+        and s.owner_id = (select auth.uid())
+        and s.status = 'active'::public.store_status
+        and s.is_demo = false
+    )
+  )
+  with check (
+    public.has_role((select auth.uid()), 'admin'::public.app_role)
+    or exists (
+      select 1 from public.products p
+      join public.seller_stores s on s.id = p.store_id
+      where p.id = product_images.product_id
+        and s.owner_id = (select auth.uid())
+        and s.status = 'active'::public.store_status
+        and s.is_demo = false
+    )
+  );
+create policy "images owner delete" on public.product_images
+  for delete to authenticated
+  using (
+    public.has_role((select auth.uid()), 'admin'::public.app_role)
+    or exists (
+      select 1 from public.products p
+      join public.seller_stores s on s.id = p.store_id
+      where p.id = product_images.product_id
+        and s.owner_id = (select auth.uid())
+        and s.status = 'active'::public.store_status
+        and s.is_demo = false
+    )
+  );
+
 COMMIT;
