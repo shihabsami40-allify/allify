@@ -2,6 +2,8 @@
 -- Split public catalog policies so anonymous reads do not need privileged helpers.
 
 drop policy if exists "products public read" on public.products;
+drop policy if exists "products public read anon" on public.products;
+drop policy if exists "products public read authenticated" on public.products;
 create policy "products public read anon"
   on public.products for select to anon
   using (
@@ -28,6 +30,8 @@ create policy "products public read authenticated"
   );
 
 drop policy if exists "stores public read active" on public.seller_stores;
+drop policy if exists "stores public read anon" on public.seller_stores;
+drop policy if exists "stores public read authenticated" on public.seller_stores;
 create policy "stores public read anon"
   on public.seller_stores for select to anon
   using (status = 'active'::public.store_status);
