@@ -256,3 +256,7 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Remaining test-project advisor findings are performance-only: 23 RLS init-plan warnings, three missing FK indexes, three unused-index notices, and three multiple-permissive-policy notices. No index drops or broad policy rewrites were applied.
 - Lovable project remains blocked by workspace `out_of_credits`; latest saved Lovable version reported as `2474013`. No new Lovable code change, build confirmation, seller/admin browser test, or publish occurred in this turn.
 - Current GitHub recovery branch includes migration 0017 and tests. This remains separate from Lovable's source and from Production. No Production database, environment variables, or deployment were changed.
+
+
+- Additional role checks passed on `allify-test`: anonymous users can still read all 8 categories, 27 delivery areas, 24 public demo products and 6 active demo stores. Anonymous direct RPC calls to all four helpers (`has_role`, `is_my_order`, `order_has_my_store`, `owns_store`) each fail with PostgreSQL `42501 permission denied`.
+- Vercel Preview deployment for commit `6875432a93441fac37cc8581f9236b5fb4f70f0d` reached `READY`: `https://allify-chattogram-aomass943-allify.vercel.app`. This is a Preview deployment only; it is not Production and does not represent the separate Lovable-hosted site.
