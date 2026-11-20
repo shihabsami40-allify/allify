@@ -244,3 +244,15 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Ran transaction-scoped SQL workflow tests on `allify-test`; all test rows were rolled back. Verified public category reads, authenticated seller-application submission, authenticated COD checkout, customer order privacy (owner sees the order; unrelated user sees none), checkout idempotency (same request UUID returns one order), and protected cancellation restores stock exactly once and marks the item cancelled.
 - The replayed migrations and these SQL checks validate the clean target schema only. They do not substitute for a restored legacy-clone rehearsal, browser-based sign-in, or actual Storage upload.
 - CI status for latest recorded branch commit `7d83ea07df37344b0932c141dba4b129780f82db` is successful; Vercel Preview deployment `dpl_5vcCZy1ipYTawbvneke56ZddfjTe` is READY with branch-scoped test-project environment variables. No runtime requests had been observed at the time of inspection.
+
+
+## Anonymous helper hardening on isolated target project — 2026-11-20
+
+- Added journaled migration `0017_restrict_anon_helper_execution.sql` and registered it as index 17.
+- The migration splits product/store public-read policies by role: anonymous users retain active public catalog/store reads without calling privileged ownership helpers; authenticated users retain owner/admin-aware reads.
+- Revoked `PUBLIC` and `anon` EXECUTE on `has_role`, `is_my_order`, `order_has_my_store`, and `owns_store`; explicitly retained `authenticated` EXECUTE for existing RLS policy evaluation.
+- Applied migration 0017 successfully to `allify-test` only. Direct anonymous invocation of `has_role` now returns permission denied; authenticated invocation remains executable. Security Advisor no longer reports anonymous-callable SECURITY DEFINER helpers (previous count: 4). Seven authenticated-callable SECURITY DEFINER RPC/helper warnings remain; these are deliberately retained pending workflow review.
+- Added static regression coverage for the migration and anonymous/public policy split.
+- Remaining test-project advisor findings are performance-only: 23 RLS init-plan warnings, three missing FK indexes, three unused-index notices, and three multiple-permissive-policy notices. No index drops or broad policy rewrites were applied.
+- Lovable project remains blocked by workspace `out_of_credits`; latest saved Lovable version reported as `2474013`. No new Lovable code change, build confirmation, seller/admin browser test, or publish occurred in this turn.
+- Current GitHub recovery branch includes migration 0017 and tests. This remains separate from Lovable's source and from Production. No Production database, environment variables, or deployment were changed.
