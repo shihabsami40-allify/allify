@@ -177,3 +177,11 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Updated the dependency matrix and migration plan to retain the corrected exact identity signature. This corrects the preflight diagnostic only; no live function was changed.
 - CI for the correction commits: ALLIFY checks and ALLIFY build check both passed (latest recorded commit `3a58d85`).
 - No live Supabase schema/data, Storage, Vercel environment, or deployment was changed.
+
+
+## Read-only migration reconciliation preflight — 2026-11-20
+
+- Added `supabase/preflight/004_migration_readiness.sql` as a separate read-only report for the legacy-to-target migration. It checks profile-role mapping counts, duplicate store ownership, candidate slug collisions, product-category mapping ambiguity, invalid inventory values, legacy store/product statuses, order financial consistency, item/header subtotal reconciliation, broken historical relationships, payment/status distributions, and the existing product-images bucket configuration/object count.
+- Output is aggregate-only: no customer names, phone numbers, addresses, order numbers, auth identifiers, or Storage object paths are selected.
+- Added static tests to enforce read-only behavior and assert that the critical mapping/reconciliation checks remain present.
+- This is an additional diagnostic only; it is not a migration and does not modify any database. The report has not yet been run against the authoritative project as part of this change.
