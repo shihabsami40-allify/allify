@@ -185,3 +185,15 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Output is aggregate-only: no customer names, phone numbers, addresses, order numbers, auth identifiers, or Storage object paths are selected.
 - Added static tests to enforce read-only behavior and assert that the critical mapping/reconciliation checks remain present.
 - This is an additional diagnostic only; it is not a migration and does not modify any database. The report has not yet been run against the authoritative project as part of this change.
+
+
+## Migration readiness preflight executed read-only — 2026-11-20
+
+- Confirmed authoritative Supabase project remains `ACTIVE_HEALTHY` on PostgreSQL 17.11.
+- Executed all 11 SELECT-only sections of `supabase/preflight/004_migration_readiness.sql` against the authoritative project. All sections completed without SQL errors.
+- Current legacy data is still effectively empty: no profile role rows, stores, products, orders, or order items. Therefore the role/store/product/order reconciliation queries returned no rows or zero exception counts; no historical customer/order data currently needs conversion.
+- Store-owner duplicate groups: 0. Store slug candidate failures/collisions: 0. Product value exceptions: 0. Order financial/profile exceptions: 0. Order-item relationship/quantity/price exceptions: 0.
+- Existing `product-images` bucket remains public, 5 MiB limit, JPEG/PNG/WebP allowlist, and currently has 0 objects. It was inspected only; not changed.
+- Previously confirmed six category rows and their UUIDs remain the only non-empty legacy application data; preserve those rows and IDs. This report intentionally does not output category UUIDs or customer data.
+- CI for migration readiness SQL commit `eb1e627` and test commit `1b44334`: ALLIFY checks and ALLIFY build check both passed.
+- All live queries were SELECT-only. No live schema, data, Storage, Vercel variables, or deployments were modified.
