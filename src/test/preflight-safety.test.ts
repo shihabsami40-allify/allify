@@ -61,6 +61,10 @@ const roleHelperScopeMigration = readFileSync(
   resolve(process.cwd(), 'drizzle/migrations/0022_scope_role_helper_to_current_user.sql'),
   'utf8',
 ).toLowerCase();
+const duplicateOrderGuardMigration = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0023_remove_duplicate_order_item_guard_trigger.sql'),
+  'utf8',
+).toLowerCase();
 
 describe('Supabase preflight scripts are read-only', () => {
   it('restricts internal SECURITY DEFINER helpers from anonymous callers without removing authenticated policy access', () => {
@@ -103,6 +107,10 @@ describe('Supabase preflight scripts are read-only', () => {
   it('prevents has_role RPC callers from probing roles for arbitrary user IDs', () => {
     expect(roleHelperScopeMigration).toContain('_user_id = auth.uid()');
     expect(roleHelperScopeMigration).toContain('where user_id = auth.uid()');
+  });
+
+  it('removes the duplicate order-item update guard trigger', () => {
+    expect(duplicateOrderGuardMigration).toContain('drop trigger if exists order_items_guard on public.order_items');
   });
 
   it('keeps migration function revokes ordered after function creation', () => {
