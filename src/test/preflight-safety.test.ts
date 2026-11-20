@@ -65,6 +65,10 @@ const duplicateOrderGuardMigration = readFileSync(
   resolve(process.cwd(), 'drizzle/migrations/0023_remove_duplicate_order_item_guard_trigger.sql'),
   'utf8',
 ).toLowerCase();
+const orderTableGrantsMigration = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0024_minimize_order_table_grants.sql'),
+  'utf8',
+).toLowerCase();
 
 describe('Supabase preflight scripts are read-only', () => {
   it('restricts internal SECURITY DEFINER helpers from anonymous callers without removing authenticated policy access', () => {
@@ -111,6 +115,14 @@ describe('Supabase preflight scripts are read-only', () => {
 
   it('removes the duplicate order-item update guard trigger', () => {
     expect(duplicateOrderGuardMigration).toContain('drop trigger if exists order_items_guard on public.order_items');
+  });
+
+  it('removes anonymous order-table access and limits authenticated grants', () => {
+    expect(orderTableGrantsMigration).toContain('revoke all on table public.orders from anon');
+    expect(orderTableGrantsMigration).toContain('revoke all on table public.order_items from anon');
+    expect(orderTableGrantsMigration).toContain('grant select, update on table public.orders to authenticated');
+    expect(orderTableGrantsMigration).toContain('grant select, update on table public.order_items to authenticated');
+    expect(orderTableGrantsMigration).not.toContain('grant insert');
   });
 
   it('keeps migration function revokes ordered after function creation', () => {
