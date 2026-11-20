@@ -57,6 +57,10 @@ const duplicateStorageReadMigration = readFileSync(
   resolve(process.cwd(), 'drizzle/migrations/0021_remove_duplicate_storage_read_policy.sql'),
   'utf8',
 ).toLowerCase();
+const roleHelperScopeMigration = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0022_scope_role_helper_to_current_user.sql'),
+  'utf8',
+).toLowerCase();
 
 describe('Supabase preflight scripts are read-only', () => {
   it('restricts internal SECURITY DEFINER helpers from anonymous callers without removing authenticated policy access', () => {
@@ -94,6 +98,11 @@ describe('Supabase preflight scripts are read-only', () => {
 
   it('removes duplicate public-read Storage policy without disabling canonical public reads', () => {
     expect(duplicateStorageReadMigration).toContain('drop policy if exists "product images public read" on storage.objects');
+  });
+
+  it('prevents has_role RPC callers from probing roles for arbitrary user IDs', () => {
+    expect(roleHelperScopeMigration).toContain('_user_id = auth.uid()');
+    expect(roleHelperScopeMigration).toContain('where user_id = auth.uid()');
   });
 
   it('keeps migration function revokes ordered after function creation', () => {
