@@ -26,8 +26,21 @@ const contract = readFileSync(
   resolve(process.cwd(), 'supabase/preflight/003_target_contract_diff.sql'),
   'utf8',
 ).toLowerCase();
+const functionAccessMigration = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0002_restrict_internal_function_access.sql'),
+  'utf8',
+).toLowerCase();
+const orderLifecycleMigration = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0003_order_status_lifecycle.sql'),
+  'utf8',
+).toLowerCase();
 
 describe('Supabase preflight scripts are read-only', () => {
+  it('keeps migration function revokes ordered after function creation', () => {
+    expect(functionAccessMigration).not.toContain('sync_order_status_from_items()');
+    expect(orderLifecycleMigration).toContain('create or replace function public.sync_order_status_from_items()');
+  });
+
   it('does not contain data or schema mutation statements', () => {
     const forbidden = /\b(insert\s+into|update\s+public\.|delete\s+from|alter\s+table|drop\s+table|create\s+table|truncate\s+table)\b/i;
     expect(inventory).not.toMatch(forbidden);
