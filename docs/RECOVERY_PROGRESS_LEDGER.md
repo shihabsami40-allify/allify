@@ -3,7 +3,7 @@
 Last reconciled: 2026-11-19  
 Repository: `shihabsami40-allify/allify`  
 Branch: `allify-recovery-2026-11-17`  
-Latest implementation commit: `936dd6e936fd4f4f1c3958bf6ace8b564dafa8d8`  
+Latest implementation commit: `aa9a15b6308bb511f2ff13217445332148a4f849`  
 Latest Preview: https://allify-chattogram-git-allify-recovery-2026-11-17-allify.vercel.app
 
 This ledger exists to prevent completed work from being repeated. A passing build or static source-contract test is not proof that a live marketplace workflow works.
@@ -224,3 +224,16 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Vercel environment inventory confirms the Supabase URL/publishable-key variables exist across Production, Preview and Development. Their values were not decrypted or changed in this check. The previously documented Supabase URL mismatch remains a cutover blocker.
 - Supabase organization lookup shows the available organization is `Allify` on the Free plan. A separate test project is not created yet; the project-creation tool requires the user to select the organization explicitly. The previously quoted project cost is $0/month.
 - Supabase changelog reviewed: the October 30, 2026 Data API exposure change means new public tables must have explicit grants/exposure configuration; the November 4 CLI v3 change makes local the default target. Future CLI instructions must specify the target explicitly. No production DDL/DML, environment, or deployment changes were made.
+
+
+## Isolated test project and full migration replay — 2026-11-20
+
+- With the user's approval, created Supabase project `allify-test` in the Allify organization, region `ap-south-1`, project ref `ltwobqpgxmkeylmpkogq`. Supabase quoted and confirmed `$0/month`; project reached `ACTIVE_HEALTHY`.
+- This is a fresh target-schema test project, not a restored clone of the authoritative legacy database. No Production records or secrets were copied.
+- Replayed all 17 journaled Drizzle migrations `0000`–`0016` successfully. The test project now has 13 application tables with RLS enabled, the `product-images` bucket, and seeded demo data (8 categories, 27 delivery areas, 6 demo stores, 24 demo products, 6 demo orders/items).
+- The first replay attempt exposed a forward dependency: migration `0002` attempted to revoke `sync_order_status_from_items()` before migration `0003` creates it. Removed that premature revoke from `0002`; migration `0003` already revokes the trigger function after creating it. Replayed `0002` onward successfully on the test project.
+- Added a regression test to ensure migration `0002` does not reference the function introduced in `0003`.
+- Added branch-scoped Vercel Preview environment variables for `allify-recovery-2026-11-17` only, pointing all four Supabase URL/publishable-key variables to the isolated test project. Existing Production and Development environment variables were not changed.
+- Initial test-project advisors report remaining hardening work: four anon-callable SECURITY DEFINER helpers, seven authenticated-callable SECURITY DEFINER functions (including intended authenticated RPCs), 23 RLS init-plan warnings, and three unindexed foreign keys. These findings are recorded for review; no blanket revokes or speculative index changes were made.
+- CI/build for the latest commits and a fresh Preview deployment using the branch-scoped variables remain to be verified. Real sign-in, seller application/review, image upload, checkout, order transition/cancellation and customer-history workflows remain untested pending a dedicated test account/admin setup.
+- No changes were made to the authoritative Production database, Production environment variables, Production deployment, or custom domains.
