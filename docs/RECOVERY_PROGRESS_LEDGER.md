@@ -197,3 +197,11 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Previously confirmed six category rows and their UUIDs remain the only non-empty legacy application data; preserve those rows and IDs. This report intentionally does not output category UUIDs or customer data.
 - CI for migration readiness SQL commit `eb1e627` and test commit `1b44334`: ALLIFY checks and ALLIFY build check both passed.
 - All live queries were SELECT-only. No live schema, data, Storage, Vercel variables, or deployments were modified.
+
+
+## Field-level legacy mapping specification — 2026-11-20
+
+- Added `docs/LEGACY_COLUMN_MAPPING.md` to document each existing legacy column's target field, explicit status/role mapping candidates, missing target entities, and compatibility risks.
+- The mapping records the critical `products.store_id → stores.id` FK dependency: introducing `seller_stores` alone is insufficient; the migration must rehearse either a preserved-ID bridge or a fully migrated FK/policy strategy.
+- Documented that legacy `app_role.buyer` must remain while adding target `customer`, and that existing moderation/order enums, triggers, RLS policies, and externally callable legacy RPCs must not be retired incidentally.
+- Linked the field-level mapping from the migration plan. Documentation only; no database or deployment changes.
