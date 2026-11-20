@@ -1,9 +1,9 @@
 # ALLIFY recovery progress ledger
 
-Last reconciled: 2026-11-19  
+Last reconciled: 2026-11-20  
 Repository: `shihabsami40-allify/allify`  
 Branch: `allify-recovery-2026-11-17`  
-Latest implementation commit: `aa9a15b6308bb511f2ff13217445332148a4f849`  
+Latest implementation commit: `aae7378415c686a955cd63f0022a55aef8f2b81e`  
 Latest Preview: https://allify-chattogram-git-allify-recovery-2026-11-17-allify.vercel.app
 
 This ledger exists to prevent completed work from being repeated. A passing build or static source-contract test is not proof that a live marketplace workflow works.
@@ -316,3 +316,13 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Inspection found `anon` and `authenticated` had broad direct privileges on `orders` and `order_items`, including INSERT/DELETE, despite checkout and cancellation being implemented through protected SECURITY DEFINER RPCs.
 - Migration `0024_minimize_order_table_grants.sql` applied to `allify-test` only: revokes all direct privileges from anon; resets authenticated privileges and grants only SELECT/UPDATE. Existing RLS policies and status guard continue to constrain row-level access; protected RPCs remain the insert/cancel path.
 - Verified effective privileges: anon has no SELECT/INSERT/UPDATE/DELETE on either table; authenticated has SELECT/UPDATE only. Added static regression coverage and journal entry 24. CI pending. Production unchanged.
+
+
+## Recovery branch reconciliation — 2026-11-20
+
+- Reconciled the ledger against branch head `aae7378415c686a955cd63f0022a55aef8f2b81e` and GitHub Actions run [44678292259](https://github.com/shihabsami40-allify/allify/actions/runs/44678292259).
+- Latest CI job completed successfully: dependency installation, Lint, Typecheck, Tests, and Production build all passed.
+- Confirmed the isolated Supabase project `allify-test` (`ltwobqpgxmkeylmpkogq`) is ACTIVE_HEALTHY and has all 25 journaled migrations `0000`–`0024` recorded as applied.
+- Rechecked isolated-test Supabase advisors: no anonymous-callable SECURITY DEFINER finding is present; seven authenticated-callable SECURITY DEFINER routines remain intentionally available for RLS and protected workflows and require authenticated account/browser acceptance testing. Performance advisor currently reports six unused-index informational notices only; indexes were not removed due to insufficient workload history.
+- This is isolated-test evidence only. The authoritative project `onqadpqdontbdvecnvby` is ACTIVE_HEALTHY but remains on its incompatible legacy schema. No authoritative database DDL/data/Storage changes, Vercel environment changes, main-branch merge, or Production deployment were made.
+- Remaining launch blockers are unchanged: verified restorable backup/restore, additive compatibility migration rehearsal against a restored legacy clone, original catalog/hero asset recovery, authenticated Buyer/Seller/Admin browser acceptance, delivery fulfilment verification, and explicit release approval. The Lovable main project remains separate and out of credits.
