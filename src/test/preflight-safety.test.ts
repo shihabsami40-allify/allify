@@ -35,7 +35,23 @@ const orderLifecycleMigration = readFileSync(
   'utf8',
 ).toLowerCase();
 
+
+const anonHardeningMigration = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0017_restrict_anon_helper_execution.sql'),
+  'utf8',
+).toLowerCase();
+
 describe('Supabase preflight scripts are read-only', () => {
+  it('restricts internal SECURITY DEFINER helpers from anonymous callers without removing authenticated policy access', () => {
+    expect(anonHardeningMigration).toContain('revoke execute on function public.has_role');
+    expect(anonHardeningMigration).toContain('revoke execute on function public.is_my_order');
+    expect(anonHardeningMigration).toContain('revoke execute on function public.order_has_my_store');
+    expect(anonHardeningMigration).toContain('revoke execute on function public.owns_store');
+    expect(anonHardeningMigration).toContain('create policy "products public read anon"');
+    expect(anonHardeningMigration).toContain('create policy "stores public read anon"');
+    expect(anonHardeningMigration).toContain('grant execute on function public.has_role');
+  });
+
   it('keeps migration function revokes ordered after function creation', () => {
     expect(functionAccessMigration).not.toContain('sync_order_status_from_items()');
     expect(orderLifecycleMigration).toContain('create or replace function public.sync_order_status_from_items()');
