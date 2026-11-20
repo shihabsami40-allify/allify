@@ -270,3 +270,15 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Applied migration 0018 successfully to `allify-test` only. Re-ran Supabase Performance Advisor: all 23 `auth_rls_initplan` warnings and all 3 `unindexed_foreign_keys` warnings are cleared. The remaining findings are three existing multiple-permissive-policy warnings (categories, delivery_areas, product_images) and unused-index notices; indexes were not dropped because the test database has little workload history.
 - Security Advisor remains free of anonymous-callable SECURITY DEFINER findings; seven authenticated-callable SECURITY DEFINER functions remain intentionally available pending deeper per-RPC authorization tests. Health Advisor remains clear.
 - Added static regression coverage for the performance migration. No production database or production environment was changed.
+
+
+## RLS policy overlap cleanup — 2026-11-20
+
+- Added and journaled migration `0019_split_overlapping_select_policies.sql` on the recovery branch; applied successfully to `allify-test` only.
+- Split admin `ALL` policies on categories and delivery areas into INSERT/UPDATE/DELETE policies, leaving the existing public SELECT policy as the single read path.
+- Split product-image owner/admin write policy into INSERT/UPDATE/DELETE policies while preserving the original public image SELECT predicate and owner/admin write conditions.
+- Re-inspected `pg_policies`: each of categories, delivery_areas, and product_images now has exactly one SELECT policy; all write predicates remain scoped to admin or the active non-demo store owner as before.
+- Supabase Performance Advisor no longer reports the three multiple-permissive-policy warnings. Six unused-index notices remain informational; no indexes were removed because workload history is not representative.
+- Security Advisor still lists seven authenticated-callable SECURITY DEFINER functions. They include authenticated checkout/cancellation RPCs and authorization helpers used by RLS, plus admin-gated seller review. They were not blanket-revoked; exact caller/role behavior still needs focused authorization tests.
+- Added static regression coverage and journal entry 19. CI run `44676881192` is currently running tests after lint and typecheck passed; its final test/build result is pending. Vercel Preview for commit `94150162d3a363f7ce760618183baf29f5475f52` reached READY at `https://allify-chattogram-git-allify-recovery-2026-11-17-allify.vercel.app`.
+- Production database, Production environment variables, main branch, and Production deployment remain unchanged.
