@@ -1,20 +1,21 @@
--- Prevent demo/sample stores from accepting real COD orders.
--- Apply only after verifying the live place_order signature and taking a restorable backup.
-create or replace function public.place_order(
+-- Repair the authenticated COD order RPC after the secure order-update trigger.
+-- Keep the internal flag enabled through the subtotal/total update, then clear it.
+-- Exclude demo stores at the database boundary, not only in the checkout UI.
+CREATE OR REPLACE FUNCTION public.place_order(
   p_items jsonb,
   p_recipient text,
   p_phone text,
   p_area text,
   p_address text,
-  p_note text default null,
-  p_save_address boolean default false
+  p_note text DEFAULT NULL,
+  p_save_address boolean DEFAULT false
 )
-returns text
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
   v_uid uuid := auth.uid();
   v_fee numeric;
   v_sub numeric := 0;
@@ -24,120 +25,120 @@ declare
   v_p record;
   v_qty int;
   v_img text;
-begin
-  if v_uid is null then
-    raise exception 'Please sign in to place an order';
-  end if;
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'Please sign in to place an order';
+  END IF;
+  IF p_items IS NULL OR jsonb_typeof(p_items) <> 'array'
+     OR jsonb_array_length(p_items) = 0 OR jsonb_array_length(p_items) > 50 THEN
+    RAISE EXCEPTION 'Cart is empty or invalid';
+  END IF;
 
-  if p_items is null or jsonb_typeof(p_items) <> 'array'
-     or jsonb_array_length(p_items) = 0
-     or jsonb_array_length(p_items) > 50 then
-    raise exception 'Cart is empty or invalid';
-  end if;
+  p_recipient := btrim(coalesce(p_recipient, ''));
+  p_address := btrim(coalesce(p_address, ''));
+  IF char_length(p_recipient) NOT BETWEEN 2 AND 100 THEN
+    RAISE EXCEPTION 'Invalid name';
+  END IF;
+  IF p_phone !~ '^01[3-9][0-9]{8}$' THEN
+    RAISE EXCEPTION 'Invalid phone number';
+  END IF;
+  IF char_length(p_address) NOT BETWEEN 5 AND 300 THEN
+    RAISE EXCEPTION 'Invalid address';
+  END IF;
+  IF p_note IS NOT NULL AND char_length(p_note) > 500 THEN
+    RAISE EXCEPTION 'Note too long';
+  END IF;
 
-  -- Fail closed before creating an order if any item belongs to a sample store.
-  if exists (
-    select 1
-    from jsonb_array_elements(p_items) as item(value)
-    join public.products p on p.id = (item.value->>'product_id')::uuid
-    join public.seller_stores s on s.id = p.store_id
-    where s.is_demo = true
-  ) then
-    raise exception 'Sample products are not available for checkout';
-  end if;
+  SELECT fee INTO v_fee
+  FROM public.delivery_areas
+  WHERE name_en = p_area AND active;
+  IF v_fee IS NULL THEN
+    RAISE EXCEPTION 'Delivery not available in this area';
+  END IF;
 
-  p_recipient := btrim(coalesce(p_recipient,''));
-  p_address := btrim(coalesce(p_address,''));
-  if char_length(p_recipient) not between 2 and 100 then
-    raise exception 'Invalid name';
-  end if;
-  if p_phone !~ '^01[3-9][0-9]{8}$' then
-    raise exception 'Invalid phone number';
-  end if;
-  if char_length(p_address) not between 5 and 300 then
-    raise exception 'Invalid address';
-  end if;
-  if p_note is not null and char_length(p_note) > 500 then
-    raise exception 'Note too long';
-  end if;
+  -- This flag is transaction-local and used only inside this SECURITY DEFINER RPC.
+  -- Keep it enabled until all protected order/product writes are complete.
+  PERFORM set_config('app.internal', '1', true);
 
-  select fee into v_fee
-  from public.delivery_areas
-  where name_en = p_area and active;
-  if v_fee is null then
-    raise exception 'Delivery not available in this area';
-  end if;
+  v_no := 'ALF-' || to_char(now() AT TIME ZONE 'Asia/Dhaka', 'YYMMDD')
+          || '-' || nextval('public.order_no_seq');
+  INSERT INTO public.orders (
+    order_no, customer_id, subtotal, delivery_fee, total,
+    recipient, phone, area, address_line, note
+  )
+  VALUES (
+    v_no, v_uid, 0, v_fee, 0,
+    p_recipient, p_phone, p_area, p_address,
+    nullif(btrim(coalesce(p_note, '')), '')
+  )
+  RETURNING id INTO v_order_id;
 
-  perform set_config('app.internal','1', true);
-  v_no := 'ALF-' || to_char(now() at time zone 'Asia/Dhaka','YYMMDD') || '-' || nextval('public.order_no_seq');
-  insert into public.orders
-    (order_no, customer_id, subtotal, delivery_fee, total, recipient, phone, area, address_line, note)
-  values
-    (v_no, v_uid, 0, v_fee, 0, p_recipient, p_phone, p_area, p_address, nullif(btrim(coalesce(p_note,'')),''))
-  returning id into v_order_id;
-
-  for it in select * from jsonb_array_elements(p_items) loop
+  FOR it IN SELECT * FROM jsonb_array_elements(p_items) LOOP
     v_qty := (it->>'quantity')::int;
-    if v_qty is null or v_qty < 1 or v_qty > 99 then
-      raise exception 'Invalid quantity';
-    end if;
+    IF v_qty IS NULL OR v_qty < 1 OR v_qty > 99 THEN
+      RAISE EXCEPTION 'Invalid quantity';
+    END IF;
 
-    select p.*, s.is_demo as store_is_demo
-    into v_p
-    from public.products p
-    join public.seller_stores s on s.id = p.store_id
-    where p.id = (it->>'product_id')::uuid
-      and p.status = 'active'
-      and s.status = 'active'
-    for update of p;
+    SELECT p.* INTO v_p
+    FROM public.products p
+    JOIN public.seller_stores s ON s.id = p.store_id
+    WHERE p.id = (it->>'product_id')::uuid
+      AND p.status = 'active'
+      AND s.status = 'active'
+      AND s.is_demo = false
+    FOR UPDATE OF p;
 
-    if not found then
-      raise exception 'A product is no longer available';
-    end if;
-    if v_p.store_is_demo then
-      raise exception 'Sample products are not available for checkout';
-    end if;
-    if v_p.stock < v_qty then
-      raise exception 'Not enough stock for %', v_p.title_bn;
-    end if;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'A product is no longer available';
+    END IF;
+    IF v_p.stock < v_qty THEN
+      RAISE EXCEPTION 'Not enough stock for %', v_p.title_bn;
+    END IF;
 
-    select url into v_img
-    from public.product_images
-    where product_id = v_p.id
-    order by sort_order
-    limit 1;
+    SELECT url INTO v_img
+    FROM public.product_images
+    WHERE product_id = v_p.id
+    ORDER BY sort_order
+    LIMIT 1;
 
-    update public.products
-    set stock = stock - v_qty, sold_count = sold_count + v_qty
-    where id = v_p.id;
+    UPDATE public.products
+    SET stock = stock - v_qty, sold_count = sold_count + v_qty
+    WHERE id = v_p.id;
 
-    insert into public.order_items
-      (order_id, product_id, store_id, title, image_url, unit_price, quantity)
-    values
-      (v_order_id, v_p.id, v_p.store_id, v_p.title_bn, v_img, v_p.price, v_qty);
+    INSERT INTO public.order_items (
+      order_id, product_id, store_id, title, image_url, unit_price, quantity
+    )
+    VALUES (
+      v_order_id, v_p.id, v_p.store_id, v_p.title_bn, v_img, v_p.price, v_qty
+    );
 
     v_sub := v_sub + v_p.price * v_qty;
-  end loop;
+  END LOOP;
 
-  perform set_config('app.internal','', true);
-  update public.orders
-  set subtotal = v_sub, total = v_sub + v_fee
-  where id = v_order_id;
+  -- guard_order_update rejects non-status edits unless app.internal is enabled.
+  UPDATE public.orders
+  SET subtotal = v_sub, total = v_sub + v_fee
+  WHERE id = v_order_id;
 
-  if p_save_address then
-    insert into public.addresses
-      (user_id, recipient, phone, area, address_line, is_default)
-    values
-      (v_uid, p_recipient, p_phone, p_area, p_address,
-       not exists (select 1 from public.addresses where user_id = v_uid));
-  end if;
+  IF p_save_address THEN
+    INSERT INTO public.addresses (
+      user_id, recipient, phone, area, address_line, is_default
+    )
+    VALUES (
+      v_uid, p_recipient, p_phone, p_area, p_address,
+      NOT EXISTS (SELECT 1 FROM public.addresses WHERE user_id = v_uid)
+    );
+  END IF;
 
-  delete from public.cart_items
-  where cart_id in (select id from public.carts where user_id = v_uid);
+  DELETE FROM public.cart_items
+  WHERE cart_id IN (SELECT id FROM public.carts WHERE user_id = v_uid);
 
-  return v_no;
-end;
+  PERFORM set_config('app.internal', '', true);
+  RETURN v_no;
+END;
 $$;
 
-revoke execute on function public.place_order(jsonb,text,text,text,text,text,boolean) from anon, public;
-grant execute on function public.place_order(jsonb,text,text,text,text,text,boolean) to authenticated;
+REVOKE EXECUTE ON FUNCTION public.place_order(jsonb,text,text,text,text,text,boolean)
+  FROM anon, public;
+GRANT EXECUTE ON FUNCTION public.place_order(jsonb,text,text,text,text,text,boolean)
+  TO authenticated;
