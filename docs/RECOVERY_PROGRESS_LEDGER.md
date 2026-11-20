@@ -301,3 +301,11 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Verified in a transaction with a synthetic JWT subject that querying another user's admin role returns false; the current synthetic user's admin role also returns false as expected. Verified anon EXECUTE remains false and authenticated EXECUTE remains true. No production change.
 - Added a regression test and migration journal entry 22. CI for the latest commit `2a844634865611e45861a488f491b799bfed6d76` was still running at the last poll; earlier migrations 0020 and 0021 have successful CI runs.
 - Remaining SECURITY DEFINER findings are not blanket-revoked because doing so would break required RLS or checkout/seller workflows. They still require end-to-end authenticated-account testing.
+
+
+## Duplicate order-item guard cleanup — 2026-11-20
+
+- Schema inspection found two BEFORE UPDATE triggers on `order_items` invoking the exact same `guard_order_item_update()` function: legacy `order_items_guard` and lifecycle `order_items_guard_update`.
+- Migration `0023_remove_duplicate_order_item_guard_trigger.sql` removes only the redundant legacy trigger; the explicit lifecycle trigger remains. Applied successfully to `allify-test` only.
+- Verified the resulting schema has exactly one BEFORE UPDATE guard trigger on `order_items`, named `order_items_guard_update`.
+- Added a static regression test and migration journal entry 23. CI for this new commit is pending. Production remains untouched.
