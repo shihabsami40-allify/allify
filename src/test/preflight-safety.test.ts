@@ -36,6 +36,11 @@ const orderLifecycleMigration = readFileSync(
 ).toLowerCase();
 
 
+const rlsPerformanceMigration = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0018_optimize_rls_auth_and_fk_indexes.sql'),
+  'utf8',
+).toLowerCase();
+
 const anonHardeningMigration = readFileSync(
   resolve(process.cwd(), 'drizzle/migrations/0017_restrict_anon_helper_execution.sql'),
   'utf8',
@@ -50,6 +55,13 @@ describe('Supabase preflight scripts are read-only', () => {
     expect(anonHardeningMigration).toContain('create policy "products public read anon"');
     expect(anonHardeningMigration).toContain('create policy "stores public read anon"');
     expect(anonHardeningMigration).toContain('grant execute on function public.has_role');
+  });
+
+  it('optimizes auth.uid policy evaluation and indexes uncovered foreign keys', () => {
+    expect(rlsPerformanceMigration).toContain("replace(p.qual, 'auth.uid()', '(select auth.uid())')");
+    expect(rlsPerformanceMigration).toContain('cart_items_product_id_idx');
+    expect(rlsPerformanceMigration).toContain('order_items_product_id_idx');
+    expect(rlsPerformanceMigration).toContain('product_images_product_id_idx');
   });
 
   it('keeps migration function revokes ordered after function creation', () => {
