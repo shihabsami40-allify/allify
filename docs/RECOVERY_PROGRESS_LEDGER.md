@@ -205,3 +205,12 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - The mapping records the critical `products.store_id → stores.id` FK dependency: introducing `seller_stores` alone is insufficient; the migration must rehearse either a preserved-ID bridge or a fully migrated FK/policy strategy.
 - Documented that legacy `app_role.buyer` must remain while adding target `customer`, and that existing moderation/order enums, triggers, RLS policies, and externally callable legacy RPCs must not be retired incidentally.
 - Linked the field-level mapping from the migration plan. Documentation only; no database or deployment changes.
+
+
+## Legacy mapping and target-contract reports rerun — 2026-11-20
+
+- Executed all 10 SELECT-only sections of `supabase/preflight/002_legacy_data_mapping_report.sql`; all completed without SQL errors.
+- Reconfirmed the six active category slugs and stable UUIDs: `bags`, `beauty`, `clothing`, `lifestyle`, `shoes`, `watches`. No profiles, stores, products, orders, order items, or Storage objects are present. No product-category or status distribution exists yet because the product/store/order tables are empty.
+- Executed all 5 SELECT-only sections of `supabase/preflight/003_target_contract_diff.sql`; all completed without SQL errors. As expected, target-only tables/columns and four app RPCs are currently missing. Live enum labels are `app_role(buyer,seller,admin)`, `approval_state(pending,approved,rejected)`, and `order_state(pending,confirmed,processing,shipped,delivered,cancelled)`; the only target enum label mismatch is the required additive `customer` role value, while the target enum types and RPCs still need staged installation.
+- The diff confirms legacy `products.status` and `stores.status` use `approval_state`, and legacy order/order-item status uses `order_state`. These types cannot be blindly renamed or cast while legacy triggers and RLS policies depend on them.
+- All queries were read-only. No production database, Storage, environment variables or deployments were changed.
