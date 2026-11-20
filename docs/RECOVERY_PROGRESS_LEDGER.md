@@ -309,3 +309,10 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Migration `0023_remove_duplicate_order_item_guard_trigger.sql` removes only the redundant legacy trigger; the explicit lifecycle trigger remains. Applied successfully to `allify-test` only.
 - Verified the resulting schema has exactly one BEFORE UPDATE guard trigger on `order_items`, named `order_items_guard_update`.
 - Added a static regression test and migration journal entry 23. CI for this new commit is pending. Production remains untouched.
+
+
+## Least-privilege order table grants — 2026-11-20
+
+- Inspection found `anon` and `authenticated` had broad direct privileges on `orders` and `order_items`, including INSERT/DELETE, despite checkout and cancellation being implemented through protected SECURITY DEFINER RPCs.
+- Migration `0024_minimize_order_table_grants.sql` applied to `allify-test` only: revokes all direct privileges from anon; resets authenticated privileges and grants only SELECT/UPDATE. Existing RLS policies and status guard continue to constrain row-level access; protected RPCs remain the insert/cancel path.
+- Verified effective privileges: anon has no SELECT/INSERT/UPDATE/DELETE on either table; authenticated has SELECT/UPDATE only. Added static regression coverage and journal entry 24. CI pending. Production unchanged.
