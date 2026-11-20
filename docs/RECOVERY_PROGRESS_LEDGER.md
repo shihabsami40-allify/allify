@@ -260,3 +260,13 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 
 - Additional role checks passed on `allify-test`: anonymous users can still read all 8 categories, 27 delivery areas, 24 public demo products and 6 active demo stores. Anonymous direct RPC calls to all four helpers (`has_role`, `is_my_order`, `order_has_my_store`, `owns_store`) each fail with PostgreSQL `42501 permission denied`.
 - Vercel Preview deployment for commit `6875432a93441fac37cc8581f9236b5fb4f70f0d` reached `READY`: `https://allify-chattogram-aomass943-allify.vercel.app`. This is a Preview deployment only; it is not Production and does not represent the separate Lovable-hosted site.
+
+
+## RLS performance optimization on isolated test project — 2026-11-20
+
+- Added journaled migration `0018_optimize_rls_auth_and_fk_indexes.sql`.
+- Updated existing RLS policy expressions containing `auth.uid()` to use scalar subselect evaluation `(select auth.uid())`. This preserves the predicates while avoiding repeated per-row auth context evaluation.
+- Added covering indexes for the three previously unindexed foreign keys: `cart_items.product_id`, `order_items.product_id`, and `product_images.product_id`.
+- Applied migration 0018 successfully to `allify-test` only. Re-ran Supabase Performance Advisor: all 23 `auth_rls_initplan` warnings and all 3 `unindexed_foreign_keys` warnings are cleared. The remaining findings are three existing multiple-permissive-policy warnings (categories, delivery_areas, product_images) and unused-index notices; indexes were not dropped because the test database has little workload history.
+- Security Advisor remains free of anonymous-callable SECURITY DEFINER findings; seven authenticated-callable SECURITY DEFINER functions remain intentionally available pending deeper per-RPC authorization tests. Health Advisor remains clear.
+- Added static regression coverage for the performance migration. No production database or production environment was changed.
