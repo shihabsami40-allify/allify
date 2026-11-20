@@ -347,3 +347,12 @@ Authoritative Supabase project: `onqadpqdontbdvecnvby`.
 - No backup/restore capability is exposed through the connected Supabase tools, and no restorable backup has been verified. No production schema, data, Storage, env var, or deployment was changed during these checks.
 - The existing Preview remains bound only to isolated project `ltwobqpgxmkeylmpkogq`. Do not point Production at this test project or share it between Production and Preview without an explicit cutover decision and test-data cleanup.
 - Current Production release remains blocked until a verified restorable backup (or an explicitly selected clean production database with separate Preview isolation), additive compatibility migration rehearsal, and authenticated buyer/seller/admin acceptance are complete.
+
+## UI asset fallback fix — 2026-11-20
+
+- Recovery Branch had the existing ALLIFY SVG placeholder at `public/images/products/placeholder.svg`, but product cards/details/cart were still falling back to `/images/products/panjabi.jpg`, which is not present on the branch.
+- Updated the three fallback references to the existing placeholder and changed image error handling to retry with the placeholder once before hiding a still-broken image.
+- Commit: `936eef09ba384ad3e0dc27fe370d3ee27d2138c8`.
+- Vercel Preview deployment for this exact commit reached `READY`: `dpl_7BeEVaA159PsakGjsF7ZnfYq365e`.
+- Original product and hero/catalog image assets do exist in the Lovable project, but they are not present in the Recovery Branch. The Lovable file connector exposes binary files as raw text, so those JPG assets have not yet been copied safely; do not claim the original product imagery is restored.
+- This is a UI resilience improvement only. It does not resolve the Production database cutover blockers above.
