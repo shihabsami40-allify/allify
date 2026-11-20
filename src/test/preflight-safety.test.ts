@@ -49,6 +49,10 @@ const policyOptimizationMigration = readFileSync(
   resolve(process.cwd(), 'drizzle/migrations/0019_split_overlapping_select_policies.sql'),
   'utf8',
 ).toLowerCase();
+const storagePolicyMigration = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0020_remove_legacy_storage_policy_overrides.sql'),
+  'utf8',
+).toLowerCase();
 
 describe('Supabase preflight scripts are read-only', () => {
   it('restricts internal SECURITY DEFINER helpers from anonymous callers without removing authenticated policy access', () => {
@@ -77,6 +81,11 @@ describe('Supabase preflight scripts are read-only', () => {
     expect(policyOptimizationMigration).toContain('create policy "images owner delete"');
     expect(policyOptimizationMigration).not.toContain('create policy "categories public read"');
     expect(policyOptimizationMigration).not.toContain('create policy "images public read"');
+  });
+
+  it('removes legacy Storage policies that bypass active seller-store ownership checks', () => {
+    expect(storagePolicyMigration).toContain('drop policy if exists "product images own upload" on storage.objects');
+    expect(storagePolicyMigration).toContain('drop policy if exists "product images own delete" on storage.objects');
   });
 
   it('keeps migration function revokes ordered after function creation', () => {
