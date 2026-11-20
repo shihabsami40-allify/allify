@@ -69,3 +69,8 @@ Fresh Supabase Advisor observations: 4 anon-callable SECURITY DEFINER functions 
 ## Field-level mapping specification
 
 See [`LEGACY_COLUMN_MAPPING.md`](./LEGACY_COLUMN_MAPPING.md) for the detailed legacy-column to target-field mapping, enum compatibility rules, new-table strategy, trigger/RPC dependencies, and cutover validation gates. It is a review specification, not executable SQL.
+
+
+## Legacy RPC security and Data API exposure
+
+See [`LEGACY_RPC_SECURITY_REMEDIATION.md`](./LEGACY_RPC_SECURITY_REMEDIATION.md) for the current advisor findings and dependency-aware remediation order. Do not revoke the four legacy SECURITY DEFINER RPCs in isolation: existing policies and guest workflows depend on them. Every newly created public table also needs explicit Data API grants and RLS; automatic exposure must not be assumed.
