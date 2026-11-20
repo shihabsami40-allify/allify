@@ -169,6 +169,13 @@
       "when": 1795170000000,
       "tag": "0023_remove_duplicate_order_item_guard_trigger",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1795171200000,
+      "tag": "0024_minimize_order_table_grants",
+      "breakpoints": true
     }
   ]
 }
