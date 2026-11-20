@@ -3,6 +3,47 @@
 -- This pack was rehearsed on the isolated allify-test project. It has NOT been applied to Production.
 BEGIN;
 
+DO $release_preflight$
+BEGIN
+  IF to_regclass('public.orders') IS NULL
+     OR to_regclass('public.order_items') IS NULL
+     OR to_regclass('public.products') IS NULL
+     OR to_regclass('public.seller_stores') IS NULL
+     OR to_regclass('public.seller_applications') IS NULL
+     OR to_regclass('public.product_images') IS NULL
+     OR to_regclass('public.user_roles') IS NULL
+     OR to_regclass('public.delivery_areas') IS NULL
+     OR to_regclass('storage.objects') IS NULL
+     OR to_regclass('storage.buckets') IS NULL THEN
+    RAISE EXCEPTION 'Preflight failed: required ALLIFY tables are missing';
+  END IF;
+
+  IF to_regprocedure('public.place_order(jsonb,text,text,text,text,text,boolean)') IS NULL
+     OR to_regprocedure('public.review_seller_application(uuid,boolean,text)') IS NULL
+     OR to_regprocedure('public.has_role(uuid,public.app_role)') IS NULL
+     OR to_regprocedure('public.owns_store(uuid)') IS NULL THEN
+    RAISE EXCEPTION 'Preflight failed: required RPC/helper signatures are missing';
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='orders' AND column_name='is_demo')
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='order_items' AND column_name='image_url')
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='products' AND column_name='sold_count')
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='seller_stores' AND column_name='is_demo')
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='seller_applications' AND column_name='user_id') THEN
+    RAISE EXCEPTION 'Preflight failed: required ALLIFY columns are missing';
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id='product-images') THEN
+    RAISE EXCEPTION 'Preflight failed: product-images bucket is missing';
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace WHERE n.nspname='public' AND t.typname='order_status') THEN
+    RAISE EXCEPTION 'Preflight failed: order_status enum is missing';
+  END IF;
+END;
+$release_preflight$;
+
+
 -- ===== drizzle/migrations/0004_block_demo_store_checkout.sql =====
 -- Repair the authenticated COD order RPC after the secure order-update trigger.
 -- Keep the internal flag enabled through the subtotal/total update, then clear it.
@@ -974,4 +1015,52 @@ create policy "images owner delete" on public.product_images
     )
   );
 
+DO $release_postflight$
+DECLARE
+  v_bucket_limit bigint;
+  v_bucket_public boolean;
+  v_guard_count integer;
+BEGIN
+  IF NOT has_function_privilege('authenticated','public.place_order(jsonb,text,text,text,text,text,boolean)','EXECUTE')
+     OR has_function_privilege('anon','public.place_order(jsonb,text,text,text,text,text,boolean)','EXECUTE') THEN
+    RAISE EXCEPTION 'Postflight failed: place_order grants are incorrect';
+  END IF;
+  IF NOT has_function_privilege('authenticated','public.review_seller_application(uuid,boolean,text)','EXECUTE')
+     OR has_function_privilege('anon','public.review_seller_application(uuid,boolean,text)','EXECUTE') THEN
+    RAISE EXCEPTION 'Postflight failed: seller review grants are incorrect';
+  END IF;
+  IF NOT has_function_privilege('authenticated','public.cancel_order_item(uuid)','EXECUTE')
+     OR has_function_privilege('anon','public.cancel_order_item(uuid)','EXECUTE') THEN
+    RAISE EXCEPTION 'Postflight failed: cancellation RPC grants are incorrect';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname='claim_first_admin') THEN
+    RAISE EXCEPTION 'Postflight failed: obsolete first-admin claim function remains';
+  END IF;
+
+  SELECT count(*) INTO v_guard_count FROM pg_trigger
+  WHERE tgrelid='public.order_items'::regclass
+    AND tgname IN ('order_items_guard','order_items_guard_update')
+    AND NOT tgisinternal;
+  IF v_guard_count<>1
+     OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid='public.orders'::regclass AND tgname='orders_guard' AND NOT tgisinternal)
+     OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid='public.seller_applications'::regclass AND tgname='seller_applications_update_guard' AND NOT tgisinternal) THEN
+    RAISE EXCEPTION 'Postflight failed: required order/application triggers are missing or duplicated';
+  END IF;
+
+  SELECT file_size_limit,public INTO v_bucket_limit,v_bucket_public
+  FROM storage.buckets WHERE id='product-images';
+  IF v_bucket_limit<>5242880 OR v_bucket_public IS DISTINCT FROM true THEN
+    RAISE EXCEPTION 'Postflight failed: product image bucket settings are incorrect';
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='storage' AND tablename='objects' AND policyname='Sellers upload to their own product folder' AND cmd='INSERT')
+     OR NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='storage' AND tablename='objects' AND policyname='Product images are publicly readable' AND cmd='SELECT')
+     OR EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='storage' AND tablename='objects' AND policyname IN ('product images own upload','product images own delete','product images public read')) THEN
+    RAISE EXCEPTION 'Postflight failed: product image Storage policies are incorrect';
+  END IF;
+END;
+$release_postflight$;
+
 COMMIT;
+SELECT jsonb_build_object('status','applied','migration_pack','0004-0019') AS release_result;
