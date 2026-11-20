@@ -64,3 +64,8 @@ Read-only catalog inspection of the active authoritative project confirmed these
 - The live project exposes four SECURITY DEFINER functions to anon and authenticated: `is_admin()`, `owns_store(uuid)`, `lookup_order(text,text)`, and `place_marketplace_order(text,text,text,text,jsonb)`. The guest order-creation and order-lookup endpoints are existing legacy behavior. Treat them as externally reachable APIs: review rate limits, validation, response data, and cutover compatibility. Do not revoke or change them as an incidental cleanup.
 
 Fresh Supabase Advisor observations: 4 anon-callable SECURITY DEFINER functions (and the same 4 callable by authenticated), 7 RLS init-plan performance findings, 1 multiple-permissive-policy finding on categories, and 7 unused-index informational findings. Health advisor returned no findings. These are recorded as baseline findings, not authorization to change production.
+
+
+## Field-level mapping specification
+
+See [`LEGACY_COLUMN_MAPPING.md`](./LEGACY_COLUMN_MAPPING.md) for the detailed legacy-column to target-field mapping, enum compatibility rules, new-table strategy, trigger/RPC dependencies, and cutover validation gates. It is a review specification, not executable SQL.
