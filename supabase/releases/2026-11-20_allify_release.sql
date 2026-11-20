@@ -25,12 +25,32 @@ BEGIN
     RAISE EXCEPTION 'Preflight failed: required RPC/helper signatures are missing';
   END IF;
 
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='orders' AND column_name='is_demo')
-     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='order_items' AND column_name='image_url')
-     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='products' AND column_name='sold_count')
-     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='seller_stores' AND column_name='is_demo')
-     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='seller_applications' AND column_name='user_id') THEN
-    RAISE EXCEPTION 'Preflight failed: required ALLIFY columns are missing';
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('orders','id'),('orders','order_no'),('orders','customer_id'),('orders','status'),('orders','payment_method'),('orders','subtotal'),('orders','delivery_fee'),('orders','total'),('orders','recipient'),('orders','phone'),('orders','area'),('orders','address_line'),('orders','is_demo'),
+      ('order_items','id'),('order_items','order_id'),('order_items','product_id'),('order_items','store_id'),('order_items','title'),('order_items','image_url'),('order_items','unit_price'),('order_items','quantity'),('order_items','status'),
+      ('products','id'),('products','store_id'),('products','category_id'),('products','slug'),('products','title_bn'),('products','price'),('products','stock'),('products','sold_count'),('products','status'),
+      ('seller_stores','id'),('seller_stores','owner_id'),('seller_stores','slug'),('seller_stores','name'),('seller_stores','area'),('seller_stores','address'),('seller_stores','phone'),('seller_stores','status'),('seller_stores','is_demo'),
+      ('seller_applications','id'),('seller_applications','user_id'),('seller_applications','store_name'),('seller_applications','owner_name'),('seller_applications','phone'),('seller_applications','area'),('seller_applications','address'),('seller_applications','description'),('seller_applications','status'),('seller_applications','admin_note'),('seller_applications','reviewed_at'),
+      ('product_images','id'),('product_images','product_id'),('product_images','url'),
+      ('user_roles','user_id'),('user_roles','role'),
+      ('delivery_areas','id'),('delivery_areas','name_en'),('delivery_areas','fee'),('delivery_areas','active')
+    ) AS required(table_name,column_name)
+    WHERE NOT EXISTS (
+      SELECT 1 FROM information_schema.columns c
+      WHERE c.table_schema='public' AND c.table_name=required.table_name AND c.column_name=required.column_name
+    )
+  ) THEN
+    RAISE EXCEPTION 'Preflight failed: one or more required ALLIFY columns are missing';
+  END IF;
+
+  IF to_regtype('public.app_role') IS NULL
+     OR to_regtype('public.store_status') IS NULL
+     OR to_regtype('public.product_status') IS NULL
+     OR to_regtype('public.order_status') IS NULL
+     OR to_regtype('public.application_status') IS NULL THEN
+    RAISE EXCEPTION 'Preflight failed: required ALLIFY enum types are missing';
   END IF;
 
   IF NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id='product-images') THEN
