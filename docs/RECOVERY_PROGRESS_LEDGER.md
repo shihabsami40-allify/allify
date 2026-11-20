@@ -291,3 +291,13 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Added static regression coverage and journal entry 20. CI run `44677114235`: Lint, TypeScript, and Tests passed; Production build was still running at last poll. Vercel Preview for commit `1f3b8e6117ef43014405c7cebacabeb58f2396ef` is READY.
 - Repo asset inventory still contains only favicon and placeholder SVG; no original catalog/hero images were present in this branch, so none were fabricated or substituted.
 - Production DB and deployment remain unchanged.
+
+
+## Role-helper RPC scope hardening — 2026-11-20
+
+- Reviewed the seven authenticated-callable SECURITY DEFINER findings individually. The four role/ownership helpers are required by RLS predicates; revoking authenticated EXECUTE would break policy evaluation. Checkout, cancellation, and seller-review RPCs are intended authenticated workflows with internal authorization checks.
+- Found a specific avoidable exposure: `has_role(_user_id, _role)` accepted any user UUID and returned whether that account had a role, allowing authenticated RPC callers to probe other accounts' roles.
+- Added migration `0022_scope_role_helper_to_current_user.sql` and applied it to `allify-test` only. The helper now returns true only when the requested user ID equals `auth.uid()`, and looks up only the caller's own role. Existing RLS call sites already pass `auth.uid()`, so their behavior is preserved.
+- Verified in a transaction with a synthetic JWT subject that querying another user's admin role returns false; the current synthetic user's admin role also returns false as expected. Verified anon EXECUTE remains false and authenticated EXECUTE remains true. No production change.
+- Added a regression test and migration journal entry 22. CI for the latest commit `2a844634865611e45861a488f491b799bfed6d76` was still running at the last poll; earlier migrations 0020 and 0021 have successful CI runs.
+- Remaining SECURITY DEFINER findings are not blanket-revoked because doing so would break required RLS or checkout/seller workflows. They still require end-to-end authenticated-account testing.
