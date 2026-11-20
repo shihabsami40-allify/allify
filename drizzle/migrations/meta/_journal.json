@@ -148,6 +148,13 @@
       "when": 1795165000000,
       "tag": "0020_remove_legacy_storage_policy_overrides",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1795167000000,
+      "tag": "0021_remove_duplicate_storage_read_policy",
+      "breakpoints": true
     }
   ]
 }
