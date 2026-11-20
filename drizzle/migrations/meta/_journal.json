@@ -155,6 +155,13 @@
       "when": 1795167000000,
       "tag": "0021_remove_duplicate_storage_read_policy",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1795169000000,
+      "tag": "0022_scope_role_helper_to_current_user",
+      "breakpoints": true
     }
   ]
 }
