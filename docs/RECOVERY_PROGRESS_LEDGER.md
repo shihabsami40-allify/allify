@@ -334,3 +334,16 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Security Advisor reports 7 authenticated-callable SECURITY DEFINER functions (`cancel_order_item`, `has_role`, `is_my_order`, `order_has_my_store`, `owns_store`, `place_order`, `review_seller_application`). These are intentional app RPC/helper candidates but still require function-body and authorization review; do not blanket-revoke authenticated execution.
 - Performance Advisor reports 6 unused-index informational notices. No indexes were removed because this isolated test database does not represent production workload.
 - This verification was read-only. No database schema, data, Storage, environment variables, or Production deployment was changed.
+
+## Production cutover re-check — 2026-11-20 (read-only)
+
+Authoritative Supabase project: `onqadpqdontbdvecnvby`.
+
+- Re-ran the target contract diff and migration-readiness checks directly against the authoritative project. Existing `profiles`, `stores`, `products`, `orders`, and `order_items` currently contain zero rows; the existing `categories` table contains six rows. The `product-images` bucket is public, permits JPEG/PNG/WebP up to 5 MiB, and currently contains zero objects.
+- Migration-readiness aggregates: zero duplicate store-owner groups; zero store-slug collision groups; zero invalid product prices/stocks or missing product names/store IDs/categories; zero orders and order items; zero broken order references. Empty tables make these checks clean, but do not prove the migration itself is safe.
+- The authoritative project's Supabase migration ledger is empty. This database was not built by applying the Recovery Branch migration journal.
+- Target contract diff still reports missing target columns/tables and all four required application RPC signatures (`has_role`, `place_order`, `cancel_order_item`, `review_seller_application`). Legacy `app_role` contains `buyer`, `seller`, `admin`; target `customer` is absent. Target application enums are absent.
+- Existing legacy RLS policies on `profiles`, `stores`, `products`, `orders`, and `order_items` call `is_admin()` / `owns_store(uuid)`. Existing triggers include `protect_moderation_fields()` and `sync_seller_role()`. Legacy SECURITY DEFINER RPCs `is_admin()`, `owns_store(uuid)`, `lookup_order(text,text)`, and `place_marketplace_order(...)` remain callable by anon and authenticated. They must be reviewed and migrated dependency-by-dependency; do not blanket revoke or replace.
+- No backup/restore capability is exposed through the connected Supabase tools, and no restorable backup has been verified. No production schema, data, Storage, env var, or deployment was changed during these checks.
+- The existing Preview remains bound only to isolated project `ltwobqpgxmkeylmpkogq`. Do not point Production at this test project or share it between Production and Preview without an explicit cutover decision and test-data cleanup.
+- Current Production release remains blocked until a verified restorable backup (or an explicitly selected clean production database with separate Preview isolation), additive compatibility migration rehearsal, and authenticated buyer/seller/admin acceptance are complete.
