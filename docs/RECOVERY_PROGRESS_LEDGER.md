@@ -282,3 +282,12 @@ Existing Drizzle migrations `drizzle/migrations/0000`–`0016` are not safe to a
 - Security Advisor still lists seven authenticated-callable SECURITY DEFINER functions. They include authenticated checkout/cancellation RPCs and authorization helpers used by RLS, plus admin-gated seller review. They were not blanket-revoked; exact caller/role behavior still needs focused authorization tests.
 - Added static regression coverage and journal entry 19. CI run `44676881192` is currently running tests after lint and typecheck passed; its final test/build result is pending. Vercel Preview for commit `94150162d3a363f7ce760618183baf29f5475f52` reached READY at `https://allify-chattogram-git-allify-recovery-2026-11-17-allify.vercel.app`.
 - Production database, Production environment variables, main branch, and Production deployment remain unchanged.
+
+
+## Storage policy hardening — 2026-11-20
+
+- Found two legacy permissive Storage policies on `storage.objects`: `product images own upload` and `product images own delete`. They overlapped the newer seller-specific policies and allowed any authenticated user to operate on any path beginning with their user ID, without requiring the second path segment to identify an owned active non-demo store.
+- Added migration `0020_remove_legacy_storage_policy_overrides.sql`, applied to `allify-test` only, and confirmed those two legacy policies are absent. The stricter seller upload/update/delete policies and public read policy remain.
+- Added static regression coverage and journal entry 20. CI run `44677114235`: Lint, TypeScript, and Tests passed; Production build was still running at last poll. Vercel Preview for commit `1f3b8e6117ef43014405c7cebacabeb58f2396ef` is READY.
+- Repo asset inventory still contains only favicon and placeholder SVG; no original catalog/hero images were present in this branch, so none were fabricated or substituted.
+- Production DB and deployment remain unchanged.
