@@ -162,6 +162,13 @@
       "when": 1795169000000,
       "tag": "0022_scope_role_helper_to_current_user",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1795170000000,
+      "tag": "0023_remove_duplicate_order_item_guard_trigger",
+      "breakpoints": true
     }
   ]
 }
