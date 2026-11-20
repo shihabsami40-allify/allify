@@ -4,7 +4,7 @@
 - [x] Recovered project source into a protected recovery branch; main remains unchanged.
 - [x] Public routes and demo buyer/seller/admin views are implemented.
 - [x] Authenticated COD checkout and customer order history code are implemented.
-- [x] CI lint, strict TypeScript, tests, and production build pass on the recovery branch.
+- [x] CI lint, strict TypeScript, tests, and production build pass on the recovery branch (latest full run is being rechecked after migration 0018).
 
 ## Not yet launch-ready
 - [x] Added fallback SVG for missing product images and restored the ALLIFY SVG favicon.
@@ -20,10 +20,17 @@
 - [ ] Complete authenticated browser QA of the Preview. Vercel project SSO protection is enabled for non-custom domains, and no runtime requests/logs have yet confirmed an app session. Do not disable protection merely to bypass QA.
 - [ ] Test buyer/seller/admin flows with real authenticated test accounts.
 - [ ] Validate COD checkout, stock decrement, cancellation/restoration, and status transitions using controlled test inventory. The existing database trigger still permits direct cancellation updates and the recovered database functions have no stock-restoration logic; treat this as a launch blocker until a reviewed, atomic, idempotent database migration closes the API bypass and restores inventory safely. Do not test against live inventory.
-- [ ] Review security and permissions in a test environment.
+- [x] Test-environment anonymous helper permissions reviewed and restricted; public catalog access preserved.\n- [x] Test-environment RLS auth evaluation optimized and three uncovered foreign-key indexes added.\n- [ ] Finish authenticated SECURITY DEFINER RPC authorization tests and remaining permissive-policy review.
 - [ ] Verify the preview on desktop and mobile in an authorized session; build success alone does not confirm application runtime behavior.
 - [ ] Only then review/merge recovery changes and release to production.
 - [ ] Configure online payments later; current checkout is COD-only.
 
 ## Initial admin setup
 - [ ] Create the first owner admin role through a safe one-time process after owner account signup; do not grant admin to arbitrary users.
+
+
+## Recovery branch hardening — 2026-11-20
+- Added migration 0017 to restrict anonymous execution of four internal SECURITY DEFINER helpers while retaining authenticated policy access and public catalog reads.
+- Added migration 0018 to optimize auth.uid() evaluation in RLS and add three missing FK indexes. Test-project Performance Advisor no longer reports auth RLS init-plan or unindexed-FK findings.
+- Removed duplicate ALLIFY checks workflow; the consolidated ci.yml workflow covers both main and recovery branch.
+- Production, main, and the authoritative legacy database remain untouched. Browser QA, real buyer/seller/admin accounts, original catalog image recovery, backup/restore rehearsal, and legacy-schema migration compatibility remain outstanding.
