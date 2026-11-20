@@ -45,6 +45,10 @@ const anonHardeningMigration = readFileSync(
   resolve(process.cwd(), 'drizzle/migrations/0017_restrict_anon_helper_execution.sql'),
   'utf8',
 ).toLowerCase();
+const policyOptimizationMigration = readFileSync(
+  resolve(process.cwd(), 'drizzle/migrations/0019_split_overlapping_select_policies.sql'),
+  'utf8',
+).toLowerCase();
 
 describe('Supabase preflight scripts are read-only', () => {
   it('restricts internal SECURITY DEFINER helpers from anonymous callers without removing authenticated policy access', () => {
@@ -62,6 +66,17 @@ describe('Supabase preflight scripts are read-only', () => {
     expect(rlsPerformanceMigration).toContain('cart_items_product_id_idx');
     expect(rlsPerformanceMigration).toContain('order_items_product_id_idx');
     expect(rlsPerformanceMigration).toContain('product_images_product_id_idx');
+  });
+
+  it('splits admin and owner write policies from public SELECT policies', () => {
+    expect(policyOptimizationMigration).toContain('drop policy if exists "categories admin write"');
+    expect(policyOptimizationMigration).toContain('create policy "categories admin insert"');
+    expect(policyOptimizationMigration).toContain('create policy "areas admin update"');
+    expect(policyOptimizationMigration).toContain('create policy "images owner insert"');
+    expect(policyOptimizationMigration).toContain('create policy "images owner update"');
+    expect(policyOptimizationMigration).toContain('create policy "images owner delete"');
+    expect(policyOptimizationMigration).not.toContain('create policy "categories public read"');
+    expect(policyOptimizationMigration).not.toContain('create policy "images public read"');
   });
 
   it('keeps migration function revokes ordered after function creation', () => {
