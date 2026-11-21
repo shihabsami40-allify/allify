@@ -1040,7 +1040,7 @@ RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $$
 DECLARE
   v_item record;
   v_previous_internal text := coalesce(current_setting('app.internal', true), '');
@@ -1110,7 +1110,7 @@ BEGIN
   PERFORM set_config('app.internal', v_previous_internal, true);
   RETURN true;
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.cancel_order_item(uuid) FROM public, anon;
 GRANT EXECUTE ON FUNCTION public.cancel_order_item(uuid) TO authenticated;
@@ -1227,7 +1227,7 @@ RETURNS text
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $$
 DECLARE
   v_uid uuid := auth.uid();
   v_fee numeric;
