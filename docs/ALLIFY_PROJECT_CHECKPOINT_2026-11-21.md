@@ -264,3 +264,11 @@ Resume read-only release-bundle and migration review on PR #3, and retry Lovable
 - Added allowlist and client-side validation to seller product updates in `src/routes/$page.tsx`: only title, price, stock, and status fields are accepted; title length, positive finite price, integer stock bounds, and allowed product statuses are checked before the Data API update.
 - Commit: `2fe545e8628ee48da2efa9198a17c13dfa7f3c22` (`fix: validate seller product edits before database update`).
 - At checkpoint update time: GitHub Actions run `44905195973` was in progress at dependency installation; exact-head Vercel Preview `dpl_AkNrJwiQFv2gYosVV8dPGGBFdgmP` was BUILDING. Recheck both before calling this change verified.
+
+## Follow-up hardening — 2026-11-21 (order transitions and buyer labels)
+- Buyer order history now displays localized Bengali status labels instead of raw internal status keys.
+- Seller and admin order handlers now validate each transition against the item's current state: pending → confirmed/cancelled; confirmed → shipped/cancelled; shipped → delivered. Invalid jumps and terminal-state changes are rejected before issuing a Data API update.
+- Non-cancellation updates include the current status in the update filter to reduce stale-state/race overwrites. Cancellation continues through the atomic cancel_order_item RPC.
+- Commit: dde23b3c3eb0bca2459ab69d0f7a1a268052c4e9 (fix: enforce valid order status transitions in dashboards).
+- Exact-head GitHub Actions run 44905507985 completed SUCCESS (install, build, test all successful); exact-head Vercel Preview dpl_7Wtz4UfscfJCR36GTEY6Xf1hJDZS is READY at https://allify-chattogram-fgxjh6kn3-allify.vercel.app. Deployment target is Preview, not Production.
+- PR #3 remains open. Production database/Storage, merge, environment variables, and Production deployment remain untouched.
