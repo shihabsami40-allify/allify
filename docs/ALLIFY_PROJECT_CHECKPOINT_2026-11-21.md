@@ -302,3 +302,11 @@ Resume read-only release-bundle and migration review on PR #3, and retry Lovable
 - Applied migration 0022 only to isolated `allify-test` project. Re-queried effective grants: exactly those five public catalog tables retain SELECT; no anonymous INSERT/UPDATE/DELETE/TRUNCATE/etc. remain.
 - Added the same SQL and postflight assertions to the consolidated release bundle. Production was not touched.
 - New commits: migration `ebb3f5c`; release bundle `159c73e`. CI and Preview for the latest head must be rechecked.
+
+
+## Authenticated TRUNCATE privilege hardening — 2026-11-21
+- Read-only audit of isolated `allify-test` found authenticated API role retained table-level `TRUNCATE` on all 11 public tables, including `user_roles`, `seller_stores`, orders and products. RLS does not govern TRUNCATE, so row policies alone cannot protect these tables from this table-wide operation.
+- Added `drizzle/migrations/0023_revoke_authenticated_truncate.sql`: revoke TRUNCATE on all public-schema tables from `authenticated` and fail migration if any such grant remains.
+- Applied migration only to isolated project `ltwobqpgxmkeylmpkogq`; post-check returned `remaining_authenticated_truncate_grants = 0`.
+- Added the same revoke and a release postflight assertion to `supabase/releases/2026-11-20_allify_release.sql`; updated release pack label to `0004-0023`.
+- Production remains untouched. Re-run CI and exact-head Preview checks after these commits. This isolated-test result is not evidence that Production has the same grants or that the Production release is ready.
