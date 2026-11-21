@@ -1417,7 +1417,23 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
   REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC, anon, authenticated;
 
+-- ===== drizzle/migrations/0027_revoke_global_default_function_execute.sql =====
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres
+  REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC, anon, authenticated;
+
 DO $release_postflight$
+  IF EXISTS (
+    SELECT 1 FROM pg_default_acl d
+    CROSS JOIN LATERAL aclexplode(d.defaclacl) x
+    WHERE d.defaclrole = 'postgres'::regrole
+      AND (d.defaclnamespace = 0 OR d.defaclnamespace = 'public'::regnamespace)
+      AND d.defaclobjtype = 'f'
+      AND x.grantee IN (0, 'anon'::regrole, 'authenticated'::regrole)
+      AND x.privilege_type = 'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'Postflight failed: global/public default function EXECUTE remains';
+  END IF;
+
   IF EXISTS (
     SELECT 1 FROM pg_default_acl d
     CROSS JOIN LATERAL aclexplode(d.defaclacl) x
@@ -1544,4 +1560,4 @@ END;
 $release_postflight$;
 
 COMMIT;
-SELECT jsonb_build_object('status','applied','migration_pack','0004-0026') AS release_result;
+SELECT jsonb_build_object('status','applied','migration_pack','0004-0027') AS release_result;
