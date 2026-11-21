@@ -1210,9 +1210,10 @@ BEGIN
   IF pg_get_functiondef('public.cancel_order_item(uuid)'::regprocedure) NOT LIKE '%v_item.customer_id = auth.uid()%' THEN
     RAISE EXCEPTION 'Postflight failed: buyer cancellation ownership guard is missing';
   END IF;
-  IF NOT has_function_privilege('authenticated','public.place_order(jsonb,text,text,text,text,text,boolean)','EXECUTE')
-     OR has_function_privilege('anon','public.place_order(jsonb,text,text,text,text,text,boolean)','EXECUTE') THEN
-    RAISE EXCEPTION 'Postflight failed: place_order grants are incorrect';
+  IF has_function_privilege('authenticated','public.place_order(jsonb,text,text,text,text,text,boolean)','EXECUTE')
+     OR has_function_privilege('anon','public.place_order(jsonb,text,text,text,text,text,boolean)','EXECUTE')
+     OR has_function_privilege('public','public.place_order(jsonb,text,text,text,text,text,boolean)','EXECUTE') THEN
+    RAISE EXCEPTION 'Postflight failed: legacy non-idempotent checkout RPC remains executable';
   END IF;
   IF NOT has_function_privilege('authenticated','public.place_order(jsonb,text,text,text,text,uuid,text,boolean)','EXECUTE')
      OR has_function_privilege('anon','public.place_order(jsonb,text,text,text,text,uuid,text,boolean)','EXECUTE') THEN
@@ -1364,6 +1365,10 @@ REVOKE ALL ON FUNCTION public.place_order(jsonb,text,text,text,text,uuid,text,bo
   FROM public, anon;
 GRANT EXECUTE ON FUNCTION public.place_order(jsonb,text,text,text,text,uuid,text,boolean)
   TO authenticated;
+
+-- Retire the legacy overload: current clients must use request-ID idempotency.
+REVOKE ALL ON FUNCTION public.place_order(jsonb,text,text,text,text,text,boolean)
+  FROM public, anon, authenticated;
 
 
 DO $release_postflight$
