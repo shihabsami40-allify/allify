@@ -162,3 +162,5 @@ Resume read-only release-bundle and migration review on PR #3, and retry Lovable
 2. Obtain a complete database backup plus Storage object backup and verify restore before any writes.
 3. Audit the actual configured Production schema, migration history, function grants, RLS and Storage policies; compare with test project migrations `0000`–`0024` and release bundle.
 4. Continue safe code/Preview review independently; do not merge PR #3 or deploy Production until backend identity, backup, schema and release gates are verified.
+
+- Additional Lovable roadmap evidence (project source, latest visible project commit `24740138edea698f794c036b3b126c274fed3d6c`): checkout is still demo-only/browser-local and real-store carts are explicitly unavailable; signed-in buyer/seller/admin end-to-end tests remain unchecked because no real seller store/admin account exists. This is a launch-critical frontend/integration gap, even though backend test migrations have extensive transactional rehearsal.
