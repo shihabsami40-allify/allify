@@ -1395,7 +1395,21 @@ GRANT SELECT ON TABLE
   public.product_images
 TO anon;
 
+-- ===== drizzle/migrations/0023_revoke_authenticated_truncate.sql =====
+-- RLS policies do not apply to TRUNCATE. Never expose table-wide truncation to API users.
+REVOKE TRUNCATE ON ALL TABLES IN SCHEMA public FROM authenticated;
+
 DO $release_postflight$
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.role_table_grants
+    WHERE table_schema = 'public'
+      AND grantee = 'authenticated'
+      AND privilege_type = 'TRUNCATE'
+  ) THEN
+    RAISE EXCEPTION 'Postflight failed: authenticated TRUNCATE privilege remains';
+  END IF;
+
 DECLARE
   v_bucket_limit bigint;
   v_bucket_public boolean;
@@ -1446,4 +1460,4 @@ END;
 $release_postflight$;
 
 COMMIT;
-SELECT jsonb_build_object('status','applied','migration_pack','0004-0020') AS release_result;
+SELECT jsonb_build_object('status','applied','migration_pack','0004-0023') AS release_result;
