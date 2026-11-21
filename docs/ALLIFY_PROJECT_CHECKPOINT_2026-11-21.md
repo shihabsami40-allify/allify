@@ -26,7 +26,7 @@ Updated: 2026-11-21
 - Core marketplace UI and flows have been built in the Lovable/GitHub project: buyer accounts, products, categories, stores, cart/checkout, seller/admin dashboards and bilingual/BDT support.
 - Security and order lifecycle work is assembled in PR #3, branch allify-order-lifecycle-2026-11-20.
 - PR #3 title: fix: make order cancellation atomic and synchronize order status.
-- Latest known PR head: f1d41d594907555c067c8172502c721e268d9194; PR open, not merged at checkpoint.
+- Latest known PR head at checkpoint creation: f1d41d594907555c067c8172502c721e268d9194; subsequent live verification on 2026-11-21 found the PR head advanced to be4425f313eeff079040a2b8a10458b917554a3e.
 - PR changes include atomic cancellation with stock restoration and parent order status synchronization; order/item/demo-order guards; seller-owned active non-demo product image Storage policies and image bucket limits (5 MiB JPEG/PNG/WebP); delivery detail/product metric/demo stock/seller application insert guards; serialized seller applications; protected seller-application review RPC with duplicate-store prevention; suspended seller product/image restrictions; RLS optimization; helper grants tightened; foreign-key indexes; admin sample-data labels/locks; release SQL preflight/postflight assertions.
 - Release bundle: supabase/releases/2026-11-20_allify_release.sql (migrations 0004–0019 in one transaction).
 - Isolated Supabase test project allify-test (project ID ltwobqpgxmkeylmpkogq) passed transactional rehearsal of the release pack; tests covered demo checkout rejection, normal COD checkout stock/sold updates, cancellation stock restoration and idempotency, seller application approval/rejection and duplicate prevention, delivery/product metric/order/demo/storage/suspended seller/RLS/grant/index checks. Test writes were rolled back.
@@ -48,6 +48,16 @@ Updated: 2026-11-21
 - User has not confirmed a recent restorable Lovable production backup. Tooling available here does not expose a backup-list/restore API; backup confirmation must precede production DB writes.
 - Do NOT apply production migrations, change production env/deployment, or expose stale production without a recent restorable backup and production preflight.
 - Storage objects are separate from DB backup; release pack changes Storage policies/settings, not existing file objects.
+
+## Latest live revalidation — 2026-11-21 16:58 Bangladesh time
+- PR #3 is still OPEN, mergeable, not merged; 25 commits, 18 changed files. Latest verified head before this checkpoint refresh: `be4425f313eeff079040a2b8a10458b917554a3e`.
+- Latest head CI: GitHub Actions run `44874380438` completed successfully; combined commit status reports Vercel success.
+- A new Vercel Preview deployment for that exact head is READY: `dpl_9bvXM2xYa7LAgzhN7FJQXf64p9E4`, URL `https://allify-chattogram-fbrkiv49j-allify.vercel.app`, target is Preview (not Production).
+- Current verified Production deployment remains READY on `main` at `6f3ba9e768de476ac9a2d89eda5b523087e8f760`; domain alias `allify-chattogram.vercel.app`.
+- No PR review submissions or inline review threads were returned.
+- Lovable Production database query action was blocked by the workspace Free-plan action limit; the attempted read-only privilege query was NOT executed. Tool reported retry availability in 49 minutes. No DB write was attempted.
+- Lovable project still reports `needs_attention / out_of_credits`. No supported backup-list/restore endpoint is exposed in the available Lovable tools. Keep all Production DB writes and release operations blocked pending a verified restorable backup and fresh preflight.
+- The GitHub release pack exists at `supabase/releases/2026-11-20_allify_release.sql` (40,939 characters); its header explicitly states it has not been applied to Production and requires backup + read-only preflight.
 
 ## Other integration facts
 - Supabase connector project onqadpqdontbdvecnvby is separate and not Vercel/Lovable production.
