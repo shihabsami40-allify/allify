@@ -1399,7 +1399,41 @@ TO anon;
 -- RLS policies do not apply to TRUNCATE. Never expose table-wide truncation to API users.
 REVOKE TRUNCATE ON ALL TABLES IN SCHEMA public FROM authenticated;
 
+-- ===== drizzle/migrations/0024_revoke_unneeded_api_ddl_and_sequence_grants.sql =====
+REVOKE TRIGGER, REFERENCES ON ALL TABLES IN SCHEMA public FROM anon, authenticated;
+REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM anon, authenticated;
+
 DO $release_postflight$
+  IF EXISTS (
+    SELECT 1 FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p')
+      AND (
+        has_table_privilege('anon', c.oid, 'TRIGGER')
+        OR has_table_privilege('anon', c.oid, 'REFERENCES')
+        OR has_table_privilege('authenticated', c.oid, 'TRIGGER')
+        OR has_table_privilege('authenticated', c.oid, 'REFERENCES')
+      )
+  ) THEN
+    RAISE EXCEPTION 'Postflight failed: API roles retain TRIGGER or REFERENCES privileges';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public' AND c.relkind = 'S'
+      AND (
+        has_sequence_privilege('anon', c.oid, 'USAGE')
+        OR has_sequence_privilege('anon', c.oid, 'SELECT')
+        OR has_sequence_privilege('anon', c.oid, 'UPDATE')
+        OR has_sequence_privilege('authenticated', c.oid, 'USAGE')
+        OR has_sequence_privilege('authenticated', c.oid, 'SELECT')
+        OR has_sequence_privilege('authenticated', c.oid, 'UPDATE')
+      )
+  ) THEN
+    RAISE EXCEPTION 'Postflight failed: API roles retain direct sequence privileges';
+  END IF;
+
   IF EXISTS (
     SELECT 1
     FROM information_schema.role_table_grants
@@ -1460,4 +1494,4 @@ END;
 $release_postflight$;
 
 COMMIT;
-SELECT jsonb_build_object('status','applied','migration_pack','0004-0023') AS release_result;
+SELECT jsonb_build_object('status','applied','migration_pack','0004-0024') AS release_result;
