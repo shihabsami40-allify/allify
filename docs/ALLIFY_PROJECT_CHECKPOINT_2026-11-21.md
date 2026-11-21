@@ -319,3 +319,11 @@ Resume read-only release-bundle and migration review on PR #3, and retry Lovable
 - Applied migration only to isolated test project ltwobqpgxmkeylmpkogq. Verification shows no API-role TRIGGER/REFERENCES grants, no sequence grants, and effective checks for authenticated order sequence USAGE, anon order sequence USAGE, authenticated orders TRIGGER and REFERENCES all return false.
 - Authenticated DML permissions remain as expected for RLS-governed application flows; anon retains SELECT only on the five public catalog tables. No Production database was accessed or changed.
 - Added migration and release postflight to consolidated release pack; pack label now 0004-0024. CI and exact-head Preview pending after latest commit.
+
+
+## Future API default privilege hardening — 2026-11-21
+- Audited PostgreSQL default ACLs after tightening current grants. Found postgres-owned future public objects would otherwise regain broad anon table DML, API TRIGGER/REFERENCES, sequence grants, MAINTAIN, and default function EXECUTE.
+- Added migrations 0025 and 0026 to tighten defaults for objects created by role postgres: remove anon's default table privileges, remove API TRUNCATE/REFERENCES/TRIGGER/MAINTAIN and sequence grants, and revoke default function EXECUTE from PUBLIC/anon/authenticated. Intended application RPCs must now receive explicit grants in their migrations.
+- Applied both migrations only to isolated allify-test project ltwobqpgxmkeylmpkogq. Post-check shows no postgres default API sequence grants, no anon default table privileges, no API default MAINTAIN, and no PUBLIC/anon/authenticated default function EXECUTE. Existing app DML grants remain as currently required under RLS.
+- Added both migrations and postflight assertions to consolidated release SQL; bundle label now 0004-0026. These default-ACL changes apply to postgres-created objects only; the Supabase-managed supabase_admin defaults were not changed.
+- Production remains untouched. Latest branch CI and Preview checks are pending.
