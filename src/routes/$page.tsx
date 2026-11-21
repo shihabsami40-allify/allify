@@ -275,11 +275,36 @@ function MarketplacePage() {
   };
 
   const updateSellerProduct = async (id:string, values:Record<string,any>) => {
-    setBusy(true); setError(""); setMessage("");
+    setError(""); setMessage("");
+    if (!myStore?.id || !id) { setError("দোকান বা পণ্যের তথ্য পাওয়া যায়নি।"); return; }
+    const allowed = new Set(["title_bn","price","stock","status"]);
+    const keys = Object.keys(values);
+    if (!keys.length || keys.some(key=>!allowed.has(key))) { setError("এই পণ্যের তথ্য পরিবর্তনের অনুমতি নেই।"); return; }
+    const safeValues:Record<string,any> = {};
+    if ("title_bn" in values) {
+      const title = typeof values.title_bn==="string" ? values.title_bn.trim() : "";
+      if (!title || title.length>160) { setError("পণ্যের নাম ১ থেকে ১৬০ অক্ষরের মধ্যে লিখুন।"); return; }
+      safeValues.title_bn=title;
+    }
+    if ("price" in values) {
+      const price=Number(values.price);
+      if (!Number.isFinite(price) || price<=0 || price>100000000) { setError("পণ্যের সঠিক মূল্য লিখুন।"); return; }
+      safeValues.price=price;
+    }
+    if ("stock" in values) {
+      const stock=Number(values.stock);
+      if (!Number.isInteger(stock) || stock<0 || stock>100000) { setError("স্টক ০ থেকে ১,০০,০০০-এর মধ্যে পূর্ণসংখ্যা হতে হবে।"); return; }
+      safeValues.stock=stock;
+    }
+    if ("status" in values) {
+      if (!["active","hidden","draft"].includes(values.status)) { setError("পণ্যের প্রকাশ-অবস্থা সঠিক নয়।"); return; }
+      safeValues.status=values.status;
+    }
+    setBusy(true);
     try {
-      const {error} = await supabase.from("products").update(values).eq("id",id).eq("store_id",myStore.id);
+      const {error} = await supabase.from("products").update(safeValues).eq("id",id).eq("store_id",myStore.id);
       if (error) throw error;
-      setSellerProducts(rows=>rows.map(p=>p.id===id?{...p,...values}:p));
+      setSellerProducts(rows=>rows.map(p=>p.id===id?{...p,...safeValues}:p));
       setMessage("পণ্যের তথ্য আপডেট হয়েছে।");
     } catch(e:any) { setError(e.message || "পণ্য আপডেট করা যায়নি।"); }
     finally { setBusy(false); }
