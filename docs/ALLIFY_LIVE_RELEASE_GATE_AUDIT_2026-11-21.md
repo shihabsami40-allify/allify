@@ -63,3 +63,11 @@ Implications: authenticated checkout is blocked by the recorded `place_order` gr
 
 ## Status
 IN PROGRESS — latest PR head CI and Vercel Preview are READY. Production checkout/helper grants, verified backup/restore, Production access, source reconciliation, and role-based E2E remain blockers.
+
+
+## Revalidation — 2026-11-21 (later session)
+- Latest reviewed PR branch commit before this audit: `b75476852ac627171753fcd7cb9b2aa9a0c31479`. CI run `44907622278` passed install/build/tests; exact-head Preview `dpl_9kcDP9Wfs8Vw1WQ7NDwdLpkwQVnd` reached READY at https://allify-chattogram-3mf6fb5ef-allify.vercel.app. PR #3 remains OPEN, mergeable, and unmerged.
+- Repaired consolidated release SQL postflight assembly: all assertions now sit inside a valid DO DECLARE/BEGIN block. Fixed the checkout grant assertion to require authenticated EXECUTE only on the new eight-argument idempotent `place_order` overload and to deny anon/authenticated EXECUTE on the legacy seven-argument overload. Transactionally executed the corrected postflight block on isolated `allify-test`, simulating the preceding removal of `claim_first_admin`; all assertions passed and the transaction was rolled back.
+- Audited Lovable snapshot `24740138edea698f794c036b3b126c274fed3d6c` against GitHub branch `b75476852ac627171753fcd7cb9b2aa9a0c31479`: Lovable has dedicated authenticated routes and marketplace components, while GitHub consolidates UI logic in `src/routes/$page.tsx`. Critical behavior difference: Lovable checkout is demo-only; GitHub branch uses idempotent `place_order` RPC for real COD checkout. The codebases are not synchronized; no automatic copy was made.
+- GitHub branch is the source currently used by Vercel's GitHub deployment pipeline. Lovable workspace is `needs_attention / out_of_credits`; its separate published source is not treated as the candidate production release.
+- Latest commit after this audit-note update will require fresh CI/Preview verification. Production remains unchanged and no PR merge was performed.
