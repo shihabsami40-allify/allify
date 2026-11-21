@@ -209,3 +209,15 @@ Resume read-only release-bundle and migration review on PR #3, and retry Lovable
 - Continue read-only source/release review and determine the supported way to regain authorized access to the exact Lovable-configured Supabase ref `htsvvotamlxlkncksssq`.
 - Before a launch decision, reconcile the distinct Lovable published source (demo-only checkout) and GitHub PR branch (RPC-backed checkout), then verify which code is actually deployed to Preview and connected to the intended backend.
 - Keep PR #3 unmerged and Production unchanged until backend identity, restorable backups, live preflight and real signed-in E2E all pass.
+
+
+## Autonomous execution re-verification — 2026-11-21 17:43 +06
+- Re-read the consolidated checkpoint and revalidated PR #3 through GitHub: OPEN, mergeable, not merged; base `main`; head `5b21acb3cefef8baba501edab1294b55857df22e`; 18 changed files. No submitted reviews or inline review threads were returned.
+- GitHub Actions run `44898487307` for the exact head completed with conclusion `success`.
+- Combined commit status reports Vercel `success`.
+- Vercel Preview deployment `dpl_E6ABMfxmqrD2YBGraKU3brWnM7JZ` is `READY`, URL `https://allify-chattogram-g9ocizku3-allify.vercel.app`, exact source commit `5b21acb3cefef8baba501edab1294b55857df22e`. It is a Preview deployment (`target=null`), not Production.
+- Production deployment `dpl_6Lw476BEvQS6yU1uh4AMv1eSMUWh` remains `READY` on `main` at `6f3ba9e768de476ac9a2d89eda5b523087e8f760`, alias `https://allify-chattogram.vercel.app`. No Production promotion or deployment was performed.
+- Read-only source review confirmed the PR branch route calls authenticated `place_order` RPC for COD checkout, reads buyer order history, provides seller application/product/image-upload flows and admin seller-application review. This code-level presence is not proof of live backend connectivity or end-to-end success.
+- Rechecked accessible Supabase project listing: only legacy `onqadpqdontbdvecnvby` and test `ltwobqpgxmkeylmpkogq` are visible. The Lovable-configured ref `htsvvotamlxlkncksssq` remains unavailable to the connected Supabase account. No backup/export/restore capability was exposed.
+- Hard release gates remain unchanged: obtain owner-authorized access to the exact configured backend, a complete restorable database backup plus separate Storage-object backup, fresh live preflight, and signed-in buyer/seller/admin E2E. No DB writes, migrations, PR merge, or Production deployment were performed.
+- No application source changes were made in this verification pass; only this checkpoint update records newly verified evidence.
