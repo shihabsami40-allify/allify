@@ -1207,6 +1207,19 @@ DECLARE
   v_bucket_public boolean;
   v_guard_count integer;
 BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.role_table_grants
+    WHERE table_schema='public' AND grantee='anon' AND privilege_type <> 'SELECT'
+  ) THEN
+    RAISE EXCEPTION 'Postflight failed: anon retains non-read table privileges';
+  END IF;
+  IF NOT has_table_privilege('anon','public.categories','SELECT')
+     OR NOT has_table_privilege('anon','public.delivery_areas','SELECT')
+     OR NOT has_table_privilege('anon','public.products','SELECT')
+     OR NOT has_table_privilege('anon','public.seller_stores','SELECT')
+     OR NOT has_table_privilege('anon','public.product_images','SELECT') THEN
+    RAISE EXCEPTION 'Postflight failed: public catalog read grants are missing';
+  END IF;
   IF pg_get_functiondef('public.cancel_order_item(uuid)'::regprocedure) NOT LIKE '%v_item.customer_id = auth.uid()%' THEN
     RAISE EXCEPTION 'Postflight failed: buyer cancellation ownership guard is missing';
   END IF;
@@ -1370,6 +1383,17 @@ GRANT EXECUTE ON FUNCTION public.place_order(jsonb,text,text,text,text,uuid,text
 REVOKE ALL ON FUNCTION public.place_order(jsonb,text,text,text,text,text,boolean)
   FROM public, anon, authenticated;
 
+
+-- ===== drizzle/migrations/0022_minimize_anon_table_grants.sql =====
+-- Anonymous API clients may read the public catalog, but hold no write privileges.
+REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM anon;
+GRANT SELECT ON TABLE
+  public.categories,
+  public.delivery_areas,
+  public.products,
+  public.seller_stores,
+  public.product_images
+TO anon;
 
 DO $release_postflight$
 DECLARE
