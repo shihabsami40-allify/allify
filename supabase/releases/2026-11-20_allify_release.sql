@@ -63,7 +63,6 @@ BEGIN
 END;
 $release_preflight$;
 
-
 -- ===== drizzle/migrations/0004_block_demo_store_checkout.sql =====
 -- Repair the authenticated COD order RPC after the secure order-update trigger.
 -- Keep the internal flag enabled through the subtotal/total update, then clear it.
@@ -1116,7 +1115,92 @@ $;
 REVOKE ALL ON FUNCTION public.cancel_order_item(uuid) FROM public, anon;
 GRANT EXECUTE ON FUNCTION public.cancel_order_item(uuid) TO authenticated;
 
+-- ===== drizzle/migrations/0020_buyer_order_cancellation.sql =====
+-- Allow a customer to cancel their own pending order item.
+-- Sellers/admins retain the existing pending/confirmed cancellation workflow.
+-- Cancellation remains atomic and restores stock exactly once.
 
+CREATE OR REPLACE FUNCTION public.cancel_order_item(p_item_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_item record;
+  v_previous_internal text := coalesce(current_setting('app.internal', true), '');
+  v_product_id uuid;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Please sign in to cancel an order';
+  END IF;
+
+  SELECT oi.id, oi.status, oi.store_id, oi.product_id, oi.quantity,
+         o.is_demo, o.customer_id
+  INTO v_item
+  FROM public.order_items oi
+  JOIN public.orders o ON o.id = oi.order_id
+  WHERE oi.id = p_item_id
+  FOR UPDATE OF oi;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Order item not found';
+  END IF;
+
+  -- Buyers may only cancel their own pending items (or safely retry an
+  -- already-completed cancellation). Store owners/admins keep their workflow.
+  IF NOT public.has_role(auth.uid(), 'admin')
+     AND NOT public.owns_store(v_item.store_id)
+     AND NOT (
+       v_item.customer_id = auth.uid()
+       AND v_item.status IN ('pending', 'cancelled')
+     ) THEN
+    RAISE EXCEPTION 'You cannot cancel this order item';
+  END IF;
+
+  IF v_item.is_demo THEN
+    RAISE EXCEPTION 'Demo orders cannot be changed';
+  END IF;
+
+  IF v_item.status = 'cancelled' THEN
+    RETURN true;
+  END IF;
+
+  IF v_item.status NOT IN ('pending', 'confirmed') THEN
+    RAISE EXCEPTION 'Only pending or confirmed items can be cancelled';
+  END IF;
+
+  IF v_item.product_id IS NULL THEN
+    RAISE EXCEPTION 'The original product is unavailable; stock cannot be restored safely';
+  END IF;
+
+  PERFORM set_config('app.internal', '1', true);
+  UPDATE public.products
+  SET stock = stock + v_item.quantity,
+      sold_count = greatest(0, sold_count - v_item.quantity)
+  WHERE id = v_item.product_id
+    AND stock <= 100000 - v_item.quantity
+  RETURNING id INTO v_product_id;
+
+  IF v_product_id IS NULL THEN
+    RAISE EXCEPTION 'Stock could not be restored safely';
+  END IF;
+
+  UPDATE public.order_items
+  SET status = 'cancelled'
+  WHERE id = v_item.id AND status = v_item.status;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Order item changed; retry cancellation';
+  END IF;
+
+  PERFORM set_config('app.internal', v_previous_internal, true);
+  RETURN true;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.cancel_order_item(uuid) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.cancel_order_item(uuid) TO authenticated;
 
 -- ===== drizzle/migrations/0021_idempotent_checkout_requests.sql =====
 -- Add idempotent checkout requests so retries cannot create duplicate COD orders.
@@ -1275,114 +1359,6 @@ BEGIN
   END IF;
 END;
 $release_postflight$;
-
-COMMIT;
-SELECT jsonb_build_object('status','applied','migration_pack','0004-0021') AS release_result;
- THEN
-    RAISE EXCEPTION 'Invalid phone number';
-  END IF;
-  IF char_length(p_address) NOT BETWEEN 5 AND 300 THEN
-    RAISE EXCEPTION 'Invalid address';
-  END IF;
-  IF p_note IS NOT NULL AND char_length(p_note) > 500 THEN
-    RAISE EXCEPTION 'Note too long';
-  END IF;
-
-  SELECT fee INTO v_fee
-  FROM public.delivery_areas
-  WHERE name_en = p_area AND active;
-  IF v_fee IS NULL THEN
-    RAISE EXCEPTION 'Delivery not available in this area';
-  END IF;
-
-  PERFORM set_config('app.internal', '1', true);
-
-  v_no := 'ALF-' || to_char(now() AT TIME ZONE 'Asia/Dhaka', 'YYMMDD')
-          || '-' || nextval('public.order_no_seq');
-  INSERT INTO public.orders (
-    order_no, customer_id, subtotal, delivery_fee, total,
-    recipient, phone, area, address_line, note, checkout_request_id
-  )
-  VALUES (
-    v_no, v_uid, 0, v_fee, 0,
-    p_recipient, p_phone, p_area, p_address,
-    nullif(btrim(coalesce(p_note, '')), ''), p_request_id
-  )
-  RETURNING id INTO v_order_id;
-
-  FOR it IN SELECT * FROM jsonb_array_elements(p_items) LOOP
-    v_qty := (it->>'quantity')::int;
-    IF v_qty < 1 OR v_qty > 99 THEN
-      RAISE EXCEPTION 'Invalid quantity';
-    END IF;
-
-    SELECT p.* INTO v_p
-    FROM public.products p
-    JOIN public.seller_stores s ON s.id = p.store_id
-    WHERE p.id = (it->>'product_id')::uuid
-      AND p.status = 'active'
-      AND s.status = 'active'
-      AND s.is_demo = false
-    FOR UPDATE OF p;
-
-    IF NOT FOUND THEN
-      RAISE EXCEPTION 'A product is no longer available';
-    END IF;
-    IF v_p.stock < v_qty THEN
-      RAISE EXCEPTION 'Not enough stock for %', v_p.title_bn;
-    END IF;
-
-    SELECT url INTO v_img
-    FROM public.product_images
-    WHERE product_id = v_p.id
-    ORDER BY sort_order
-    LIMIT 1;
-
-    UPDATE public.products
-    SET stock = stock - v_qty, sold_count = sold_count + v_qty
-    WHERE id = v_p.id;
-
-    INSERT INTO public.order_items (
-      order_id, product_id, store_id, title, image_url, unit_price, quantity
-    )
-    VALUES (
-      v_order_id, v_p.id, v_p.store_id, v_p.title_bn, v_img, v_p.price, v_qty
-    );
-
-    v_sub := v_sub + v_p.price * v_qty;
-  END LOOP;
-
-  UPDATE public.orders
-  SET subtotal = v_sub, total = v_sub + v_fee
-  WHERE id = v_order_id;
-
-  IF p_save_address THEN
-    INSERT INTO public.addresses (
-      user_id, recipient, phone, area, address_line, is_default
-    )
-    VALUES (
-      v_uid, p_recipient, p_phone, p_area, p_address,
-      NOT EXISTS (SELECT 1 FROM public.addresses WHERE user_id = v_uid)
-    );
-  END IF;
-
-  DELETE FROM public.cart_items
-  WHERE cart_id IN (SELECT id FROM public.carts WHERE user_id = v_uid);
-
-  PERFORM set_config('app.internal', v_previous_internal, true);
-  RETURN v_no;
-END;
-$;
-
-REVOKE ALL ON FUNCTION public.place_order(jsonb,text,text,text,text,uuid,text,boolean)
-  FROM public, anon;
-GRANT EXECUTE ON FUNCTION public.place_order(jsonb,text,text,text,text,uuid,text,boolean)
-  TO authenticated;
-
--- Retire the legacy overload: current clients must use request-ID idempotency.
-REVOKE ALL ON FUNCTION public.place_order(jsonb,text,text,text,text,text,boolean)
-  FROM public, anon, authenticated;
-
 
 -- ===== drizzle/migrations/0022_minimize_anon_table_grants.sql =====
 -- Anonymous API clients may read the public catalog, but hold no write privileges.
@@ -1561,5 +1537,9 @@ BEGIN
 END;
 $release_postflight$;
 
+
+
 COMMIT;
+
 SELECT jsonb_build_object('status','applied','migration_pack','0004-0027') AS release_result;
+
