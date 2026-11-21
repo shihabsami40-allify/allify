@@ -272,3 +272,9 @@ Resume read-only release-bundle and migration review on PR #3, and retry Lovable
 - Commit: dde23b3c3eb0bca2459ab69d0f7a1a268052c4e9 (fix: enforce valid order status transitions in dashboards).
 - Exact-head GitHub Actions run 44905507985 completed SUCCESS (install, build, test all successful); exact-head Vercel Preview dpl_7Wtz4UfscfJCR36GTEY6Xf1hJDZS is READY at https://allify-chattogram-fgxjh6kn3-allify.vercel.app. Deployment target is Preview, not Production.
 - PR #3 remains open. Production database/Storage, merge, environment variables, and Production deployment remain untouched.
+## Checkout validation hardening — 2026-11-21
+- Checkout now validates cart size (1–50), unique product IDs, integer quantities (1–99), demo-product exclusion, recipient length (2–100), Bangladesh mobile format, active delivery-area selection, address length (5–300), and note length (max 500) before calling the order RPC.
+- Checkout submit now prevents duplicate submissions while a request is already in progress; submitted text values are trimmed and normalized.
+- Checkout form controls now mirror the server-side field limits and use numeric input mode for the mobile number.
+- Exact code commit: 5c9061ebea4760859b5bccc5d95f8521c6d5a7ca (ui: align checkout field limits with order validation). GitHub Actions run 44905629384 completed SUCCESS (build and tests); exact-head Vercel Preview dpl_HQxFqwBXQNtutAM6JoxcZHMDY4yR is READY at https://allify-chattogram-dyry0jcth-allify.vercel.app.
+- This is client-side validation for clearer feedback; the database RPC remains authoritative for stock, product availability, delivery-area validity, and order creation. No Production changes were made.
