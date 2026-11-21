@@ -164,3 +164,48 @@ Resume read-only release-bundle and migration review on PR #3, and retry Lovable
 4. Continue safe code/Preview review independently; do not merge PR #3 or deploy Production until backend identity, backup, schema and release gates are verified.
 
 - Additional Lovable roadmap evidence (project source, latest visible project commit `24740138edea698f794c036b3b126c274fed3d6c`): checkout is still demo-only/browser-local and real-store carts are explicitly unavailable; signed-in buyer/seller/admin end-to-end tests remain unchecked because no real seller store/admin account exists. This is a launch-critical frontend/integration gap, even though backend test migrations have extensive transactional rehearsal.
+
+
+## Latest step-by-step execution — live verification (2026-11-21)
+### STEP 1 — Production backend identity: still BLOCKED
+- Live Lovable project read at commit `24740138edea698f794c036b3b126c274fed3d6c`; its `.env` contains Supabase project ref `htsvvotamlxlkncksssq` (only ref recorded; no secrets copied).
+- Live Supabase `list_projects` still returns only `onqadpqdontbdvecnvby` (Allify legacy) and `ltwobqpgxmkeylmpkogq` (allify-test). Configured ref `htsvvotamlxlkncksssq` is absent; direct `get_project` for that ref returned permission denied previously.
+- Lovable workspace is FREE; project is published but `needs_attention / out_of_credits`. No DB export/backup tool is exposed by available Lovable actions.
+- Do not use either connected Supabase project as a substitute for the app's configured backend.
+
+### STEP 2 — Backup & recovery: NOT STARTED / BLOCKED
+- No full Production DB backup or Storage object export has been created or verified.
+- No restore test performed. No Production writes performed.
+
+### STEP 3 — Security audit: PARTIAL / NOT RELEASE-APPROVED
+- The accessible legacy Supabase project audit findings remain relevant only to that separate project; do not apply fixes there as if it were the configured Production backend.
+- Actual configured Production RLS, function grants, triggers and Storage policies cannot be freshly queried until correct project access is available.
+
+### STEP 4 — Release preparation
+- PR #3 release bundle exists and its preflight expects marketplace schema including `seller_stores`, `seller_applications`, `delivery_areas`, `place_order(jsonb,text,text,text,text,text,boolean)` and related types.
+- Test project `allify-test` has migrations `0000`–`0024`; this is test evidence only, not proof of Production compatibility.
+- No Production migration applied.
+
+### STEP 5 — Feature review: critical frontend/source discrepancy found
+- Live Lovable source at commit `24740138edea698f794c036b3b126c274fed3d6c` has roadmap stating checkout is demo-only/browser-local and real-store carts unavailable; signed-in buyer/seller/admin E2E remain unchecked.
+- Lovable `src/components/marketplace/checkout-view.tsx` explicitly blocks real orders and only saves demo orders in browser local storage.
+- GitHub PR branch source `src/routes/$page.tsx` contains a different implementation with authenticated `supabase.rpc("place_order", ...)` COD checkout, buyer order history, seller onboarding/product image upload and admin seller-application review.
+- These two source snapshots are materially different; do not assume the Lovable published app and PR branch Preview are the same build/source state. The configured backend ref mismatch also remains unresolved.
+- No source files were changed in this session; no Lovable edits attempted because workspace has no credits.
+
+### STEP 6 — QA
+- GitHub Actions run `44898286317` for latest branch head `1e51627bd109d56e20a04053c04601fd605fcfaa` completed SUCCESS.
+- This is CI evidence only; no browser E2E or signed-in real checkout test was run in this session.
+- Production runtime error query for deployment `dpl_6Lw476BEvQS6yU1uh4AMv1eSMUWh` over the latest 50 minutes returned no matching error/fatal logs. This does not prove end-to-end health.
+
+### STEP 7 — Preview / Production
+- PR #3 remains OPEN, mergeable, not merged; 30 commits, 18 files; latest head `1e51627bd109d56e20a04053c04601fd605fcfaa`.
+- Combined commit status: Vercel SUCCESS.
+- Existing Preview `dpl_9zVm1vhDCm3Q7G8w3YZSayGRUZAM` is READY at `https://allify-chattogram-gyp2417d4-allify.vercel.app`, but source commit is `5a7a6eb02379fa45494454845c9089866aadeb40`, not the latest head.
+- Existing Production `dpl_6Lw476BEvQS6yU1uh4AMv1eSMUWh` is READY on `main`, commit `6f3ba9e768de476ac9a2d89eda5b523087e8f760`; alias `https://allify-chattogram.vercel.app`.
+- No PR merge, Production deployment, environment change, database write, or Storage mutation performed.
+
+### Current next exact action
+- Continue read-only source/release review and determine the supported way to regain authorized access to the exact Lovable-configured Supabase ref `htsvvotamlxlkncksssq`.
+- Before a launch decision, reconcile the distinct Lovable published source (demo-only checkout) and GitHub PR branch (RPC-backed checkout), then verify which code is actually deployed to Preview and connected to the intended backend.
+- Keep PR #3 unmerged and Production unchanged until backend identity, restorable backups, live preflight and real signed-in E2E all pass.
