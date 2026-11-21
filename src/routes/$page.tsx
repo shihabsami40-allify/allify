@@ -398,17 +398,37 @@ function MarketplacePage() {
   };
 
   const checkout = async (e: FormEvent) => {
-    e.preventDefault(); if (!user) { navigate({to: "/login" as any}); return; }
+    e.preventDefault();
+    if (busy) return;
+    if (!user) { navigate({to: "/login" as any}); return; }
+    const recipient=String(form.recipient||"").trim();
+    const phone=String(form.phone||"").trim();
+    const area=String(form.area||"");
+    const address=String(form.address||"").trim();
+    const note=String(form.note||"").trim();
+    if (cart.length===0 || cart.length>50 || cart.some(x=>!x.product.id || !Number.isInteger(x.quantity) || x.quantity<1 || x.quantity>99)) {
+      setError("কার্টের পণ্যের তালিকা বা পরিমাণ সঠিক নয়। কার্ট ঠিক করে আবার চেষ্টা করুন.");
+      return;
+    }
+    if (new Set(cart.map(x=>x.product.id)).size!==cart.length) {
+      setError("কার্টে একই পণ্য একাধিকবার রয়েছে। কার্ট আপডেট করে আবার চেষ্টা করুন।");
+      return;
+    }
     if (cart.some(x => x.product.seller_stores?.is_demo)) {
       setError("কার্টে নমুনা পণ্য রয়েছে। নমুনা পণ্যের অর্ডার নেওয়া হচ্ছে না।");
       return;
     }
+    if (recipient.length<2 || recipient.length>100) { setError("গ্রাহকের নাম ২ থেকে ১০০ অক্ষরের মধ্যে লিখুন।"); return; }
+    if (!/^01[3-9][0-9]{8}$/.test(phone)) { setError("সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর লিখুন।"); return; }
+    if (!areas.some(a=>a.name_en===area)) { setError("ডেলিভারির এলাকা নির্বাচন করুন।"); return; }
+    if (address.length<5 || address.length>300) { setError("সম্পূর্ণ ঠিকানা ৫ থেকে ৩০০ অক্ষরের মধ্যে লিখুন।"); return; }
+    if (note.length>500) { setError("অতিরিক্ত নির্দেশনা সর্বোচ্চ ৫০০ অক্ষরের হতে পারবে।"); return; }
     setBusy(true); setError(""); setMessage("");
     try {
       const {data,error} = await supabase.rpc("place_order", {
         p_items:cart.map(x=>({product_id:x.product.id,quantity:x.quantity})),
-        p_recipient:form.recipient||"", p_phone:form.phone||"", p_area:form.area||"",
-        p_address:form.address||"", p_note:form.note||null, p_save_address:form.save_address==="yes"
+        p_recipient:recipient, p_phone:phone, p_area:area,
+        p_address:address, p_note:note||null, p_save_address:form.save_address==="yes"
       });
       if (error) throw error;
       saveCart([]);
