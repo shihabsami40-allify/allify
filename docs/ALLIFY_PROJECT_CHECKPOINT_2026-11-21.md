@@ -327,3 +327,10 @@ Resume read-only release-bundle and migration review on PR #3, and retry Lovable
 - Applied both migrations only to isolated allify-test project ltwobqpgxmkeylmpkogq. Post-check shows no postgres default API sequence grants, no anon default table privileges, no API default MAINTAIN, and no PUBLIC/anon/authenticated default function EXECUTE. Existing app DML grants remain as currently required under RLS.
 - Added both migrations and postflight assertions to consolidated release SQL; bundle label now 0004-0026. These default-ACL changes apply to postgres-created objects only; the Supabase-managed supabase_admin defaults were not changed.
 - Production remains untouched. Latest branch CI and Preview checks are pending.
+
+
+## Global default RPC EXECUTE hardening — 2026-11-21
+- Transactional probe of a newly created public function exposed PostgreSQL's global default EXECUTE grant to PUBLIC; the schema-scoped revoke in migration 0026 alone did not cancel this global grant. Corrected by adding migration 0027, which revokes EXECUTE globally for functions created by postgres and asserts both global and public-schema default ACLs.
+- Applied only to isolated allify-test project. Created a temporary function inside a transaction, verified anon EXECUTE=false and authenticated EXECUTE=false, then rolled the transaction back; no probe function remains.
+- Bundled migration 0027 and its postflight assertion into the release SQL; pack label now 0004-0027. This means new intended RPCs must be granted explicitly by their migrations.
+- Note: schema-specific default ACLs owned by Supabase-managed supabase_admin were not modified. Production remains untouched.
