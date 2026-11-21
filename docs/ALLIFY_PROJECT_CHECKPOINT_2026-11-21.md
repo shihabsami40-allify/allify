@@ -259,3 +259,8 @@ Resume read-only release-bundle and migration review on PR #3, and retry Lovable
 - Latest PR #3 head after code/release commits: `9efdb61c16c0a06c48fd1aa3006d28331cd4f22a`. GitHub Actions run `44904086214` completed SUCCESS; Vercel status SUCCESS. Exact-head Preview `dpl_8mPezuAiwkRrpgGSkkSoaF8Rm6BL` is READY at https://allify-chattogram-g67c6u00o-allify.vercel.app; target remains Preview, not Production.
 - Audit documentation was refreshed in commit `d496c0b7c6e73e642cbb23db08bc5c2139b37d43`; its docs-only Preview/CI must be rechecked separately.
 - Production database, Storage, PR merge, Production deployment, and environment variables remain untouched. Production backup/access, live grant preflight, source reconciliation, and signed-in Buyer/Seller/Admin browser E2E remain release blockers.
+
+## Follow-up hardening — 2026-11-21
+- Added allowlist and client-side validation to seller product updates in `src/routes/$page.tsx`: only title, price, stock, and status fields are accepted; title length, positive finite price, integer stock bounds, and allowed product statuses are checked before the Data API update.
+- Commit: `2fe545e8628ee48da2efa9198a17c13dfa7f3c22` (`fix: validate seller product edits before database update`).
+- At checkpoint update time: GitHub Actions run `44905195973` was in progress at dependency installation; exact-head Vercel Preview `dpl_AkNrJwiQFv2gYosVV8dPGGBFdgmP` was BUILDING. Recheck both before calling this change verified.
