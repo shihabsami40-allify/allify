@@ -334,3 +334,11 @@ Resume read-only release-bundle and migration review on PR #3, and retry Lovable
 - Applied only to isolated allify-test project. Created a temporary function inside a transaction, verified anon EXECUTE=false and authenticated EXECUTE=false, then rolled the transaction back; no probe function remains.
 - Bundled migration 0027 and its postflight assertion into the release SQL; pack label now 0004-0027. This means new intended RPCs must be granted explicitly by their migrations.
 - Note: schema-specific default ACLs owned by Supabase-managed supabase_admin were not modified. Production remains untouched.
+
+
+## Release SQL postflight correction and validation — 2026-11-21
+- Re-reviewed the complete consolidated release SQL after adding migrations 0023–0027 and found two issues in the assembled postflight block: the new assertions had been inserted before DECLARE/BEGIN, and the checkout assertion still expected the retired seven-argument place_order RPC to be executable.
+- Corrected the DO block structure so declarations precede BEGIN and all assertions execute inside the block. Corrected checkout grant assertion to require authenticated EXECUTE only on the new eight-argument idempotent RPC and no EXECUTE for anon or either role on the legacy seven-argument overload.
+- Executed the corrected postflight block against isolated allify-test in a transaction, temporarily dropping the obsolete first-admin claim function to simulate migration 0017, then rolled the transaction back. All postflight assertions passed; no test schema/data change persisted.
+- Latest exact-head Preview commit before this correction was READY and GitHub CI passed (run 44907283795). New commits from these release SQL fixes are awaiting CI/Preview.
+- Production remains untouched; full release pack has not been applied to Production.
