@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/$page")({ component: MarketplacePage });
@@ -14,6 +14,15 @@ type Area = { name_bn: string; name_en: string; fee: number; zone: string };
 type CartLine = { product: Product; quantity: number };
 
 const money = (n: number) => "৳" + Number(n || 0).toLocaleString("bn-BD");
+const deriveOrderStatus = (items:any[]) => {
+  if (!items.length) return "pending";
+  if (items.every(item=>item.status==="cancelled")) return "cancelled";
+  if (items.some(item=>item.status==="pending")) return "pending";
+  if (items.some(item=>item.status==="confirmed")) return "confirmed";
+  if (items.some(item=>item.status==="shipped")) return "shipped";
+  if (items.some(item=>item.status==="delivered")) return "delivered";
+  return "pending";
+};
 const queryValue = (key: string, searchStr: string) => new URLSearchParams(searchStr).get(key) || "";
 const panel = "rounded-2xl border bg-card p-4 shadow-sm";
 const field = "w-full rounded-lg border bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary";
@@ -47,6 +56,7 @@ function MarketplacePage() {
   const [applications, setApplications] = useState<any[]>([]);
   const [myStore, setMyStore] = useState<any>(null);
   const [productImage, setProductImage] = useState<File | null>(null);
+  const checkoutRequestRef = useRef<{fingerprint:string;id:string}|null>(null);
 
   const set = (key: string, value: string) => setForm(v => ({...v, [key]: value}));
   const refreshCart = () => {
@@ -131,7 +141,7 @@ function MarketplacePage() {
           ]);
           if (roles.includes("admin")) {
             const [productRows, allOrderRows] = await Promise.all([
-              supabase.from("products").select("id,title_bn,price,stock,status,seller_stores(name)").order("created_at",{ascending:false}).limit(100),
+              supabase.from("products").select("id,title_bn,price,stock,status,seller_stores(name,is_demo)").order("created_at",{ascending:false}).limit(100),
               supabase.from("orders").select("id,order_no,is_demo,status,total,recipient,phone,area,created_at,order_items(id,title,unit_price,quantity,status)").order("created_at",{ascending:false}).limit(100)
             ]);
             setAdminProducts(productRows.data ?? []);
@@ -266,17 +276,46 @@ function MarketplacePage() {
   };
 
   const updateSellerProduct = async (id:string, values:Record<string,any>) => {
-    setBusy(true); setError(""); setMessage("");
+    setError(""); setMessage("");
+    if (!myStore?.id || !id) { setError("দোকান বা পণ্যের তথ্য পাওয়া যায়নি।"); return; }
+    const allowed = new Set(["title_bn","price","stock","status"]);
+    const keys = Object.keys(values);
+    if (!keys.length || keys.some(key=>!allowed.has(key))) { setError("এই পণ্যের তথ্য পরিবর্তনের অনুমতি নেই।"); return; }
+    const safeValues:Record<string,any> = {};
+    if ("title_bn" in values) {
+      const title = typeof values.title_bn==="string" ? values.title_bn.trim() : "";
+      if (!title || title.length>160) { setError("পণ্যের নাম ১ থেকে ১৬০ অক্ষরের মধ্যে লিখুন।"); return; }
+      safeValues.title_bn=title;
+    }
+    if ("price" in values) {
+      const price=Number(values.price);
+      if (!Number.isFinite(price) || price<=0 || price>100000000) { setError("পণ্যের সঠিক মূল্য লিখুন।"); return; }
+      safeValues.price=price;
+    }
+    if ("stock" in values) {
+      const stock=Number(values.stock);
+      if (!Number.isInteger(stock) || stock<0 || stock>100000) { setError("স্টক ০ থেকে ১,০০,০০০-এর মধ্যে পূর্ণসংখ্যা হতে হবে।"); return; }
+      safeValues.stock=stock;
+    }
+    if ("status" in values) {
+      if (!["active","hidden","draft"].includes(values.status)) { setError("পণ্যের প্রকাশ-অবস্থা সঠিক নয়।"); return; }
+      safeValues.status=values.status;
+    }
+    setBusy(true);
     try {
-      const {error} = await supabase.from("products").update(values).eq("id",id).eq("store_id",myStore.id);
+      const {error} = await supabase.from("products").update(safeValues).eq("id",id).eq("store_id",myStore.id);
       if (error) throw error;
-      setSellerProducts(rows=>rows.map(p=>p.id===id?{...p,...values}:p));
+      setSellerProducts(rows=>rows.map(p=>p.id===id?{...p,...safeValues}:p));
       setMessage("পণ্যের তথ্য আপডেট হয়েছে।");
     } catch(e:any) { setError(e.message || "পণ্য আপডেট করা যায়নি।"); }
     finally { setBusy(false); }
   };
 
   const updateAdminProduct = async (id:string, status:string) => {
+    if (adminProducts.find(product => product.id === id)?.seller_stores?.is_demo) {
+      setError("নমুনা পণ্যের প্রকাশ-অবস্থা পরিবর্তন করা যাবে না।");
+      return;
+    }
     setBusy(true); setError(""); setMessage("");
     try {
       const {error} = await supabase.from("products").update({status}).eq("id",id);
@@ -288,15 +327,23 @@ function MarketplacePage() {
   };
 
   const updateAdminOrderItemStatus = async (itemId:string, orderId:string, status:string) => {
-    if (adminOrders.find(order => order.id === orderId)?.is_demo) {
-      setError("নমুনা অর্ডারের অবস্থা পরিবর্তন করা যাবে না।");
+    const order = adminOrders.find(order => order.id === orderId);
+    const item = order?.order_items?.find((row:any)=>row.id===itemId);
+    if (order?.is_demo) { setError("নমুনা অর্ডারের অবস্থা পরিবর্তন করা যাবে না।"); return; }
+    const transitions:Record<string,string[]> = {pending:["confirmed","cancelled"],confirmed:["shipped","cancelled"],shipped:["delivered"]};
+    if (!item || !transitions[item.status]?.includes(status)) {
+      setError("এই অর্ডারের বর্তমান অবস্থা থেকে নির্বাচিত পরিবর্তনটি অনুমোদিত নয়।");
       return;
     }
     setBusy(true); setError(""); setMessage("");
     try {
-      const {error} = await supabase.from("order_items").update({status}).eq("id",itemId);
+      const {error} = status === "cancelled" ? (await supabase.rpc("cancel_order_item",{p_item_id:itemId})).error : (await supabase.from("order_items").update({status}).eq("id",itemId).eq("status",item.status)).error;
       if (error) throw error;
-      setAdminOrders(rows=>rows.map(order=>order.id===orderId?{...order,order_items:(order.order_items||[]).map((item:any)=>item.id===itemId?{...item,status}:item)}:order));
+      setAdminOrders(rows=>rows.map(order=>{
+        if(order.id!==orderId) return order;
+        const order_items=(order.order_items||[]).map((item:any)=>item.id===itemId?{...item,status}:item);
+        return {...order,order_items,status:deriveOrderStatus(order_items)};
+      }));
       setMessage("অর্ডারের অবস্থা আপডেট হয়েছে।");
     } catch(e:any) { setError(e.message || "অর্ডার আপডেট করা যায়নি।"); }
     finally { setBusy(false); }
@@ -318,10 +365,32 @@ function MarketplacePage() {
     finally { setBusy(false); }
   };
 
-  const updateSellerOrderStatus = async (itemId:string, status:string) => {
+  const cancelBuyerOrderItem = async (itemId:string, orderId:string) => {
+    if (!window.confirm("এই পণ্যের অর্ডারটি বাতিল করতে চাও?")) return;
     setBusy(true); setError(""); setMessage("");
     try {
-      const {error} = await supabase.from("order_items").update({status}).eq("id",itemId);
+      const {error} = await supabase.rpc("cancel_order_item",{p_item_id:itemId});
+      if (error) throw error;
+      setOrders(rows=>rows.map(order=>{
+        if(order.id!==orderId) return order;
+        const order_items=(order.order_items||[]).map((item:any)=>item.id===itemId?{...item,status:"cancelled"}:item);
+        return {...order,order_items,status:deriveOrderStatus(order_items)};
+      }));
+      setMessage("অর্ডার বাতিল হয়েছে; পণ্যের স্টক পুনরায় যুক্ত হয়েছে।");
+    } catch(e:any) { setError(e.message || "অর্ডার বাতিল করা যায়নি।"); }
+    finally { setBusy(false); }
+  };
+
+  const updateSellerOrderStatus = async (itemId:string, status:string) => {
+    const item = sellerOrders.find(row=>row.id===itemId);
+    const transitions:Record<string,string[]> = {pending:["confirmed","cancelled"],confirmed:["shipped","cancelled"],shipped:["delivered"]};
+    if (!item || !transitions[item.status]?.includes(status)) {
+      setError("এই অর্ডারের বর্তমান অবস্থা থেকে নির্বাচিত পরিবর্তনটি অনুমোদিত নয়।");
+      return;
+    }
+    setBusy(true); setError(""); setMessage("");
+    try {
+      const {error} = status === "cancelled" ? (await supabase.rpc("cancel_order_item",{p_item_id:itemId})).error : (await supabase.from("order_items").update({status}).eq("id",itemId).eq("status",item.status)).error;
       if (error) throw error;
       setSellerOrders(rows=>rows.map(row=>row.id===itemId?{...row,status}:row));
       setMessage("অর্ডারের অবস্থা আপডেট হয়েছে।");
@@ -330,19 +399,45 @@ function MarketplacePage() {
   };
 
   const checkout = async (e: FormEvent) => {
-    e.preventDefault(); if (!user) { navigate({to: "/login" as any}); return; }
+    e.preventDefault();
+    if (busy) return;
+    if (!user) { navigate({to: "/login" as any}); return; }
+    const recipient=String(form.recipient||"").trim();
+    const phone=String(form.phone||"").trim();
+    const area=String(form.area||"");
+    const address=String(form.address||"").trim();
+    const note=String(form.note||"").trim();
+    if (cart.length===0 || cart.length>50 || cart.some(x=>!x.product.id || !Number.isInteger(x.quantity) || x.quantity<1 || x.quantity>99)) {
+      setError("কার্টের পণ্যের তালিকা বা পরিমাণ সঠিক নয়। কার্ট ঠিক করে আবার চেষ্টা করুন.");
+      return;
+    }
+    if (new Set(cart.map(x=>x.product.id)).size!==cart.length) {
+      setError("কার্টে একই পণ্য একাধিকবার রয়েছে। কার্ট আপডেট করে আবার চেষ্টা করুন।");
+      return;
+    }
     if (cart.some(x => x.product.seller_stores?.is_demo)) {
       setError("কার্টে নমুনা পণ্য রয়েছে। নমুনা পণ্যের অর্ডার নেওয়া হচ্ছে না।");
       return;
+    }
+    if (recipient.length<2 || recipient.length>100) { setError("গ্রাহকের নাম ২ থেকে ১০০ অক্ষরের মধ্যে লিখুন।"); return; }
+    if (!/^01[3-9][0-9]{8}$/.test(phone)) { setError("সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর লিখুন।"); return; }
+    if (!areas.some(a=>a.name_en===area)) { setError("ডেলিভারির এলাকা নির্বাচন করুন।"); return; }
+    if (address.length<5 || address.length>300) { setError("সম্পূর্ণ ঠিকানা ৫ থেকে ৩০০ অক্ষরের মধ্যে লিখুন।"); return; }
+    if (note.length>500) { setError("অতিরিক্ত নির্দেশনা সর্বোচ্চ ৫০০ অক্ষরের হতে পারবে।"); return; }
+    const requestFingerprint=JSON.stringify({user:user.id,items:cart.map(x=>({product_id:x.product.id,quantity:x.quantity})),recipient,phone,area,address,note,save:form.save_address==="yes"});
+    if (!checkoutRequestRef.current || checkoutRequestRef.current.fingerprint!==requestFingerprint) {
+      checkoutRequestRef.current={fingerprint:requestFingerprint,id:crypto.randomUUID()};
     }
     setBusy(true); setError(""); setMessage("");
     try {
       const {data,error} = await supabase.rpc("place_order", {
         p_items:cart.map(x=>({product_id:x.product.id,quantity:x.quantity})),
-        p_recipient:form.recipient||"", p_phone:form.phone||"", p_area:form.area||"",
-        p_address:form.address||"", p_note:form.note||null, p_save_address:form.save_address==="yes"
+        p_recipient:recipient, p_phone:phone, p_area:area,
+        p_address:address, p_request_id:checkoutRequestRef.current.id,
+        p_note:note||null, p_save_address:form.save_address==="yes"
       });
       if (error) throw error;
+      checkoutRequestRef.current=null;
       saveCart([]);
       setMessage("অর্ডার সফলভাবে জমা হয়েছে। অর্ডার নম্বর: "+data);
       navigate({to: "/account" as any});
@@ -378,18 +473,18 @@ function MarketplacePage() {
   } else if (page === "cart") {
     body = shell("আমার কার্ট",cart.length?<><div className="space-y-3">{cart.map(x=><div key={x.product.id} className={panel+" flex flex-wrap items-center gap-3"}><img src={x.product.product_images?.[0]?.url||"/images/products/placeholder.svg"} onError={(e) => { const img = e.currentTarget; if (img.dataset.fallback !== "1") { img.dataset.fallback = "1"; img.src = "/images/products/placeholder.svg"; } else { img.style.display = "none"; } }} className="h-20 w-20 rounded-lg bg-muted object-cover" alt=""/><div className="min-w-0 flex-1"><p className="font-semibold">{x.product.title_bn}</p><p className="text-sm text-primary">{money(x.product.price)}</p></div><input aria-label="পরিমাণ" type="number" min="1" max="99" value={x.quantity} onChange={e=>changeQty(x.product.id,Number(e.target.value))} className="w-20 rounded border bg-background p-2"/><button className={secondary} onClick={()=>removeLine(x.product.id)}>বাদ দিন</button></div>)}</div><div className={panel+" mt-5"}><p className="flex justify-between font-bold"><span>পণ্যের মোট</span><span>{money(subtotal)}</span></p><p className="mt-2 text-xs text-muted-foreground">ডেলিভারি চার্জ ঠিকানা অনুযায়ী চেকআউটে যোগ হবে।</p>{cart.some(x => x.product.seller_stores?.is_demo) ? <p className="mt-4 text-sm text-amber-700">নমুনা পণ্য কার্ট থেকে বাদ দিয়ে বাস্তব পণ্য যোগ করুন।</p> : <Link to={"/checkout" as any} className={primary+" mt-4 inline-block"}>অর্ডার সম্পন্ন করুন</Link>}</div></>:<div className={panel}>তোমার কার্ট খালি। <Link to={"/market" as any} className={linkClass}>পণ্য দেখুন</Link></div>);
   } else if (page === "checkout") {
-    body = shell("চেকআউট",<>{!cart.length?<p className={panel}>কার্ট খালি। <Link to={"/market" as any} className={linkClass}>পণ্য দেখুন</Link></p>:<form onSubmit={checkout} className={panel+" max-w-2xl space-y-3"}><p className="font-semibold">ডেলিভারির তথ্য</p><input required className={field} placeholder="গ্রাহকের নাম" value={form.recipient||""} onChange={e=>set("recipient",e.target.value)}/><input required pattern="01[3-9][0-9]{8}" className={field} placeholder="মোবাইল নম্বর (01XXXXXXXXX)" value={form.phone||""} onChange={e=>set("phone",e.target.value)}/><select required className={field} value={form.area||""} onChange={e=>set("area",e.target.value)}><option value="">এলাকা নির্বাচন করুন</option>{areas.map(a=><option key={a.name_en} value={a.name_en}>{a.name_bn} — {money(a.fee)}</option>)}</select><textarea required minLength={5} className={field} placeholder="সম্পূর্ণ ঠিকানা" value={form.address||""} onChange={e=>set("address",e.target.value)}/><textarea className={field} placeholder="অতিরিক্ত নির্দেশনা (ঐচ্ছিক)" value={form.note||""} onChange={e=>set("note",e.target.value)}/><label className="flex gap-2 text-sm"><input type="checkbox" checked={form.save_address==="yes"} onChange={e=>set("save_address",e.target.checked?"yes":"no")}/> ঠিকানাটি সংরক্ষণ করুন</label><div className="border-t pt-3 text-sm"><p>পণ্যের মোট: {money(subtotal)}</p><p className="mt-1">ডেলিভারি চার্জ: {form.area?money(areas.find(a=>a.name_en===form.area)?.fee||0):"এলাকা বাছাই করুন"}</p><p className="mt-2 text-lg font-bold">মোট: {money(subtotal+(areas.find(a=>a.name_en===form.area)?.fee||0))}</p></div><p className="text-xs text-muted-foreground">পেমেন্ট পদ্ধতি: ক্যাশ অন ডেলিভারি (COD)।</p><button disabled={busy || cart.some(x => x.product.seller_stores?.is_demo)} className={primary+" w-full"}>{cart.some(x => x.product.seller_stores?.is_demo)?"নমুনা পণ্য সরান":busy?"অপেক্ষা করুন…":"অর্ডার নিশ্চিত করুন"}</button></form>}</>);
+    body = shell("চেকআউট",<>{!cart.length?<p className={panel}>কার্ট খালি। <Link to={"/market" as any} className={linkClass}>পণ্য দেখুন</Link></p>:<form onSubmit={checkout} className={panel+" max-w-2xl space-y-3"}><p className="font-semibold">ডেলিভারির তথ্য</p><input required minLength={2} maxLength={100} className={field} placeholder="গ্রাহকের নাম" value={form.recipient||""} onChange={e=>set("recipient",e.target.value)}/><input required pattern="01[3-9][0-9]{8}" maxLength={11} inputMode="numeric" className={field} placeholder="মোবাইল নম্বর (01XXXXXXXXX)" value={form.phone||""} onChange={e=>set("phone",e.target.value)}/><select required className={field} value={form.area||""} onChange={e=>set("area",e.target.value)}><option value="">এলাকা নির্বাচন করুন</option>{areas.map(a=><option key={a.name_en} value={a.name_en}>{a.name_bn} — {money(a.fee)}</option>)}</select><textarea required minLength={5} maxLength={300} className={field} placeholder="সম্পূর্ণ ঠিকানা" value={form.address||""} onChange={e=>set("address",e.target.value)}/><textarea maxLength={500} className={field} placeholder="অতিরিক্ত নির্দেশনা (ঐচ্ছিক)" value={form.note||""} onChange={e=>set("note",e.target.value)}/><label className="flex gap-2 text-sm"><input type="checkbox" checked={form.save_address==="yes"} onChange={e=>set("save_address",e.target.checked?"yes":"no")}/> ঠিকানাটি সংরক্ষণ করুন</label><div className="border-t pt-3 text-sm"><p>পণ্যের মোট: {money(subtotal)}</p><p className="mt-1">ডেলিভারি চার্জ: {form.area?money(areas.find(a=>a.name_en===form.area)?.fee||0):"এলাকা বাছাই করুন"}</p><p className="mt-2 text-lg font-bold">মোট: {money(subtotal+(areas.find(a=>a.name_en===form.area)?.fee||0))}</p></div><p className="text-xs text-muted-foreground">পেমেন্ট পদ্ধতি: ক্যাশ অন ডেলিভারি (COD)।</p><button disabled={busy || cart.some(x => x.product.seller_stores?.is_demo)} className={primary+" w-full"}>{cart.some(x => x.product.seller_stores?.is_demo)?"নমুনা পণ্য সরান":busy?"অপেক্ষা করুন…":"অর্ডার নিশ্চিত করুন"}</button></form>}</>);
   } else if (page === "login" || page === "register") {
     const reg = page==="register";
     body = shell(reg?"নতুন অ্যাকাউন্ট":"লগইন",<form onSubmit={e=>submitAuth(e,reg?"register":"login")} className={panel+" max-w-md space-y-3"}>{reg&&<input required className={field} placeholder="তোমার নাম" value={form.name||""} onChange={e=>set("name",e.target.value)}/>}<input required type="email" className={field} placeholder="ইমেইল" value={form.email||""} onChange={e=>set("email",e.target.value)}/><input required minLength={6} type="password" className={field} placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)" value={form.password||""} onChange={e=>set("password",e.target.value)}/><button disabled={busy} className={primary+" w-full"}>{busy?"অপেক্ষা করুন…":reg?"অ্যাকাউন্ট তৈরি করুন":"লগইন"}</button><p className="text-sm text-muted-foreground">{reg?"আগে অ্যাকাউন্ট আছে? ":"অ্যাকাউন্ট নেই? "}<Link className={linkClass} to={(reg?"/login":"/register") as any}>{reg?"লগইন করুন":"রেজিস্ট্রেশন করুন"}</Link></p></form>);
   } else if (page === "seller") {
     body = shell("বিক্রেতা হোন",myStore?<div className={panel}>তোমার দোকান চালু আছে: <b>{myStore.name}</b> <Link to={"/seller-dashboard" as any} className={linkClass}>ড্যাশবোর্ড খুলুন</Link></div>:<form onSubmit={submitSeller} className={panel+" max-w-2xl space-y-3"}><p className="text-sm text-muted-foreground">চট্টগ্রামের দোকানদাররা বিনামূল্যে আবেদন করতে পারবেন। অনুমোদনের পর দোকান ও পণ্য যোগ করা যাবে।</p><input required className={field} placeholder="দোকানের নাম" value={form.store_name||""} onChange={e=>set("store_name",e.target.value)}/><input required className={field} placeholder="মালিকের নাম" value={form.owner_name||""} onChange={e=>set("owner_name",e.target.value)}/><input required pattern="01[3-9][0-9]{8}" className={field} placeholder="মোবাইল নম্বর" value={form.phone||""} onChange={e=>set("phone",e.target.value)}/><select required className={field} value={form.area||""} onChange={e=>set("area",e.target.value)}><option value="">দোকানের এলাকা</option>{areas.map(a=><option key={a.name_en} value={a.name_en}>{a.name_bn}</option>)}</select><input required minLength={5} className={field} placeholder="দোকানের ঠিকানা" value={form.address||""} onChange={e=>set("address",e.target.value)}/><input className={field} placeholder="পণ্যের ধরন" value={form.category_hint||""} onChange={e=>set("category_hint",e.target.value)}/><textarea className={field} placeholder="দোকান সম্পর্কে" value={form.description||""} onChange={e=>set("description",e.target.value)}/><button disabled={busy} className={primary}>{busy?"জমা হচ্ছে…":"বিনামূল্যে আবেদন জমা দিন"}</button>{!user&&<p className="text-xs text-muted-foreground">আবেদন করতে আগে <Link to={"/login" as any} className={linkClass}>লগইন</Link> করতে হবে।</p>}</form>);
   } else if (page === "seller-dashboard") {
-    body = shell("বিক্রেতা ড্যাশবোর্ড",myStore?<><div className={panel}><h2 className="font-bold">{myStore.name}</h2><p className="text-sm text-muted-foreground">{myStore.area} · {myStore.status}</p></div><div className={panel+" mt-4"}><h3 className="font-bold">দোকানের অর্ডার</h3>{sellerOrders.length?sellerOrders.map(item=>{const o=item.orders||{};return <div key={item.id} className="mt-3 rounded-xl border p-3"><div className="flex flex-wrap justify-between gap-2"><b>{o.order_no||"অর্ডার"}</b><b>{money(Number(item.unit_price)*Number(item.quantity))}</b></div><p className="mt-1 text-sm">{item.title} × {Number(item.quantity).toLocaleString("bn-BD")}</p><p className="mt-1 text-xs text-muted-foreground">{o.recipient} · {o.phone} · {o.area}</p><p className="mt-1 text-xs text-muted-foreground">{o.address_line}</p><div className="mt-3 flex gap-2"><select aria-label="অর্ডারের অবস্থা" className={field+" max-w-48"} value={item.status} disabled={busy||["delivered","cancelled"].includes(item.status)} onChange={e=>updateSellerOrderStatus(item.id,e.target.value)}>{(item.status==="pending"?["pending","confirmed","cancelled"]:item.status==="confirmed"?["confirmed","shipped","cancelled"]:item.status==="shipped"?["shipped","delivered"]:[item.status]).map((status:string)=><option key={status} value={status}>{({pending:"নতুন অর্ডার",confirmed:"নিশ্চিত",shipped:"পাঠানো হয়েছে",delivered:"ডেলিভারি সম্পন্ন",cancelled:"বাতিল"} as Record<string,string>)[status]}</option>)}</select></div></div>}) : <p className="mt-3 text-sm text-muted-foreground">এখনো কোনো অর্ডার আসেনি।</p>}</div><div className={panel+" mt-4"}><h3 className="font-bold">আমার পণ্য ও স্টক</h3>{sellerProducts.length?sellerProducts.map(p=><div key={p.id} className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3"><div className="min-w-0 flex-1"><b className="text-sm">{p.title_bn}</b><p className="text-xs text-muted-foreground">{money(Number(p.price))} · {p.status==="active"?"প্রকাশিত":p.status==="hidden"?"লুকানো":"খসড়া"}</p></div><label className="text-xs">স্টক<input aria-label={p.title_bn+" স্টক"} type="number" min="0" max="100000" defaultValue={p.stock} className="ml-2 w-20 rounded border bg-background p-2" onBlur={e=>{const n=Number(e.target.value);if(Number.isInteger(n)&&n>=0&&n<=100000&&n!==p.stock)updateSellerProduct(p.id,{stock:n});}}/></label><button disabled={busy} className={secondary+" text-xs"} onClick={()=>updateSellerProduct(p.id,{status:p.status==="active"?"hidden":"active"})}>{p.status==="active"?"লুকান":"প্রকাশ করুন"}</button></div>):<p className="mt-2 text-sm text-muted-foreground">এখনো কোনো পণ্য যোগ করা হয়নি।</p>}</div><form onSubmit={submitProduct} className={panel+" mt-4 max-w-2xl space-y-3"}><h3 className="font-bold">নতুন পণ্য যোগ করুন</h3><input required className={field} placeholder="পণ্যের বাংলা নাম" value={form.title_bn||""} onChange={e=>set("title_bn",e.target.value)}/><input className={field} placeholder="English title (optional)" value={form.title_en||""} onChange={e=>set("title_en",e.target.value)}/><input className={field} placeholder="পণ্যের URL slug (ঐচ্ছিক; না দিলে স্বয়ংক্রিয় হবে)" value={form.product_slug||""} onChange={e=>set("product_slug",e.target.value)}/><select className={field} value={form.category_id||""} onChange={e=>set("category_id",e.target.value)}><option value="">ক্যাটাগরি</option>{categories.map(c=><option key={c.id} value={c.id}>{c.name_bn}</option>)}</select><textarea className={field} placeholder="পণ্যের বিবরণ" value={form.description||""} onChange={e=>set("description",e.target.value)}/><input required type="number" min="1" className={field} placeholder="বিক্রয় মূল্য" value={form.price||""} onChange={e=>set("price",e.target.value)}/><input type="number" min="0" className={field} placeholder="আগের মূল্য (ঐচ্ছিক)" value={form.compare_price||""} onChange={e=>set("compare_price",e.target.value)}/><input required type="number" min="0" className={field} placeholder="স্টক" value={form.stock||""} onChange={e=>set("stock",e.target.value)}/><label className="block text-sm font-medium">পণ্যের ছবি (JPG, PNG বা WebP; সর্বোচ্চ ৫ MB)<input type="file" accept="image/jpeg,image/png,image/webp" className={field+" mt-1"} onChange={e=>setProductImage(e.target.files?.[0]||null)}/></label><input type="url" className={field} placeholder="অথবা ছবির URL (ঐচ্ছিক)" value={form.image_url||""} onChange={e=>set("image_url",e.target.value)}/><button disabled={busy} className={primary}>পণ্য প্রকাশ করুন</button></form></>:<div className={panel}>বিক্রেতা ড্যাশবোর্ড ব্যবহারের জন্য অনুমোদিত বিক্রেতা অ্যাকাউন্ট প্রয়োজন। <Link to={"/seller" as any} className={linkClass}>বিক্রেতা আবেদন করুন</Link></div>);
+    body = shell("বিক্রেতা ড্যাশবোর্ড",myStore?<><div className={panel}><h2 className="font-bold">{myStore.name}</h2><p className="text-sm text-muted-foreground">{myStore.area} · {myStore.status}</p></div><div className={panel+" mt-4"}><h3 className="font-bold">দোকানের অর্ডার</h3>{sellerOrders.length?sellerOrders.map(item=>{const o=item.orders||{};return <div key={item.id} className="mt-3 rounded-xl border p-3"><div className="flex flex-wrap justify-between gap-2"><b>{o.order_no||"অর্ডার"}</b><b>{money(Number(item.unit_price)*Number(item.quantity))}</b></div><p className="mt-1 text-sm">{item.title} × {Number(item.quantity).toLocaleString("bn-BD")}</p><p className="mt-1 text-xs text-muted-foreground">{o.recipient} · {o.phone} · {o.area}</p><p className="mt-1 text-xs text-muted-foreground">{o.address_line}</p><div className="mt-3 flex gap-2"><select aria-label="অর্ডারের অবস্থা" className={field+" max-w-48"} value={item.status} disabled={busy||["delivered","cancelled"].includes(item.status)} onChange={e=>updateSellerOrderStatus(item.id,e.target.value)}>{(item.status==="pending"?["pending","confirmed","cancelled"]:item.status==="confirmed"?["confirmed","shipped","cancelled"]:item.status==="shipped"?["shipped","delivered"]:[item.status]).map((status:string)=><option key={status} value={status}>{({pending:"নতুন অর্ডার",confirmed:"নিশ্চিত",shipped:"পাঠানো হয়েছে",delivered:"ডেলিভারি সম্পন্ন",cancelled:"বাতিল"} as Record<string,string>)[status]}</option>)}</select></div></div>}) : <p className="mt-3 text-sm text-muted-foreground">এখনো কোনো অর্ডার আসেনি।</p>}</div><div className={panel+" mt-4"}><h3 className="font-bold">আমার পণ্য ও স্টক</h3>{sellerProducts.length?sellerProducts.map(p=><div key={p.id} className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3"><div className="min-w-0 flex-1 space-y-2"><input aria-label={p.title_bn+" নাম"} type="text" maxLength={160} defaultValue={p.title_bn} className="w-full max-w-xs rounded border bg-background p-2 text-sm font-semibold" onBlur={e=>{const title=e.target.value.trim();if(title&&title!==p.title_bn)updateSellerProduct(p.id,{title_bn:title});else if(!title)e.target.value=p.title_bn;}}/><div className="flex flex-wrap items-center gap-2"><label className="text-xs text-muted-foreground">মূল্য <input aria-label={p.title_bn+" মূল্য"} type="number" min="1" step="0.01" defaultValue={p.price} className="ml-1 w-28 rounded border bg-background p-2 text-sm text-foreground" onBlur={e=>{const n=Number(e.target.value);if(Number.isFinite(n)&&n>0&&n!==Number(p.price))updateSellerProduct(p.id,{price:n});else if(!Number.isFinite(n)||n<=0)e.target.value=String(p.price);}}/></label><span className="text-xs text-muted-foreground">{p.status==="active"?"প্রকাশিত":p.status==="hidden"?"লুকানো":"খসড়া"}</span></div></div><label className="text-xs">স্টক<input aria-label={p.title_bn+" স্টক"} type="number" min="0" max="100000" defaultValue={p.stock} className="ml-2 w-20 rounded border bg-background p-2" onBlur={e=>{const n=Number(e.target.value);if(Number.isInteger(n)&&n>=0&&n<=100000&&n!==p.stock)updateSellerProduct(p.id,{stock:n});}}/></label><button disabled={busy} className={secondary+" text-xs"} onClick={()=>updateSellerProduct(p.id,{status:p.status==="active"?"hidden":"active"})}>{p.status==="active"?"লুকান":"প্রকাশ করুন"}</button></div>):<p className="mt-2 text-sm text-muted-foreground">এখনো কোনো পণ্য যোগ করা হয়নি।</p>}</div><form onSubmit={submitProduct} className={panel+" mt-4 max-w-2xl space-y-3"}><h3 className="font-bold">নতুন পণ্য যোগ করুন</h3><input required className={field} placeholder="পণ্যের বাংলা নাম" value={form.title_bn||""} onChange={e=>set("title_bn",e.target.value)}/><input className={field} placeholder="English title (optional)" value={form.title_en||""} onChange={e=>set("title_en",e.target.value)}/><input className={field} placeholder="পণ্যের URL slug (ঐচ্ছিক; না দিলে স্বয়ংক্রিয় হবে)" value={form.product_slug||""} onChange={e=>set("product_slug",e.target.value)}/><select className={field} value={form.category_id||""} onChange={e=>set("category_id",e.target.value)}><option value="">ক্যাটাগরি</option>{categories.map(c=><option key={c.id} value={c.id}>{c.name_bn}</option>)}</select><textarea className={field} placeholder="পণ্যের বিবরণ" value={form.description||""} onChange={e=>set("description",e.target.value)}/><input required type="number" min="1" className={field} placeholder="বিক্রয় মূল্য" value={form.price||""} onChange={e=>set("price",e.target.value)}/><input type="number" min="0" className={field} placeholder="আগের মূল্য (ঐচ্ছিক)" value={form.compare_price||""} onChange={e=>set("compare_price",e.target.value)}/><input required type="number" min="0" className={field} placeholder="স্টক" value={form.stock||""} onChange={e=>set("stock",e.target.value)}/><label className="block text-sm font-medium">পণ্যের ছবি (JPG, PNG বা WebP; সর্বোচ্চ ৫ MB)<input type="file" accept="image/jpeg,image/png,image/webp" className={field+" mt-1"} onChange={e=>setProductImage(e.target.files?.[0]||null)}/></label><input type="url" className={field} placeholder="অথবা ছবির URL (ঐচ্ছিক)" value={form.image_url||""} onChange={e=>set("image_url",e.target.value)}/><button disabled={busy} className={primary}>পণ্য প্রকাশ করুন</button></form></>:<div className={panel}>বিক্রেতা ড্যাশবোর্ড ব্যবহারের জন্য অনুমোদিত বিক্রেতা অ্যাকাউন্ট প্রয়োজন। <Link to={"/seller" as any} className={linkClass}>বিক্রেতা আবেদন করুন</Link></div>);
   } else if (page === "account") {
-    body = shell("আমার অ্যাকাউন্ট",user?<><div className={panel}><p>{user.email}</p><p className="mt-1 text-sm text-muted-foreground">অ্যাকাউন্টের ধরন: {role==="admin"?"অ্যাডমিন":role==="seller"?"বিক্রেতা":"ক্রেতা"}</p><div className="mt-3 flex flex-wrap gap-2"><button className={secondary} onClick={signOut}>লগআউট</button>{role==="seller"&&<Link to={"/seller-dashboard" as any} className={primary}>বিক্রেতা ড্যাশবোর্ড</Link>}{role==="admin"&&<Link to={"/admin" as any} className={primary}>অ্যাডমিন প্যানেল</Link>}</div></div><h2 className="mb-3 mt-6 font-bold">আমার অর্ডার</h2>{orders.length?orders.map(o=><div key={o.id} className={panel+" mb-3"}><div className="flex justify-between gap-2"><b>{o.order_no}</b><span className="text-sm">{o.status}</span></div><p className="mt-1 text-sm">মোট: {money(o.total)} · {o.area}</p><p className="mt-1 text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("bn-BD")}</p>{(o.order_items||[]).map((item:any)=><div key={item.id} className="mt-2 flex justify-between gap-3 border-t pt-2 text-xs"><span>{item.title} × {Number(item.quantity).toLocaleString("bn-BD")}</span><span>{item.status}</span></div>)}</div>):<p className={panel}>এখনো কোনো অর্ডার নেই।</p>}</>:<div className={panel}>অ্যাকাউন্ট দেখতে <Link to={"/login" as any} className={linkClass}>লগইন</Link> করুন।</div>);
+    body = shell("আমার অ্যাকাউন্ট",user?<><div className={panel}><p>{user.email}</p><p className="mt-1 text-sm text-muted-foreground">অ্যাকাউন্টের ধরন: {role==="admin"?"অ্যাডমিন":role==="seller"?"বিক্রেতা":"ক্রেতা"}</p><div className="mt-3 flex flex-wrap gap-2"><button className={secondary} onClick={signOut}>লগআউট</button>{role==="seller"&&<Link to={"/seller-dashboard" as any} className={primary}>বিক্রেতা ড্যাশবোর্ড</Link>}{role==="admin"&&<Link to={"/admin" as any} className={primary}>অ্যাডমিন প্যানেল</Link>}</div></div><h2 className="mb-3 mt-6 font-bold">আমার অর্ডার</h2>{orders.length?orders.map(o=><div key={o.id} className={panel+" mb-3"}><div className="flex justify-between gap-2"><b>{o.order_no}</b><span className="text-sm">{({pending:"নতুন অর্ডার",confirmed:"নিশ্চিত",shipped:"পাঠানো হয়েছে",delivered:"ডেলিভারি সম্পন্ন",cancelled:"বাতিল"} as Record<string,string>)[o.status]||"অবস্থা অজানা"}</span></div><p className="mt-1 text-sm">মোট: {money(o.total)} · {o.area}</p><p className="mt-1 text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("bn-BD")}</p>{(o.order_items||[]).map((item:any)=><div key={item.id} className="mt-2 flex flex-wrap items-center justify-between gap-3 border-t pt-2 text-xs"><span>{item.title} × {Number(item.quantity).toLocaleString("bn-BD")}</span><span className="flex items-center gap-2">{item.status==="pending"?"নতুন অর্ডার":item.status==="confirmed"?"নিশ্চিত":item.status==="shipped"?"পাঠানো হয়েছে":item.status==="delivered"?"ডেলিভারি সম্পন্ন":"বাতিল"}{item.status==="pending"&&!o.is_demo&&<button type="button" disabled={busy} className={secondary+" px-2 py-1 text-xs"} onClick={()=>cancelBuyerOrderItem(item.id,o.id)}>অর্ডার বাতিল</button>}</span></div>)}</div>):<p className={panel}>এখনো কোনো অর্ডার নেই।</p>}</>:<div className={panel}>অ্যাকাউন্ট দেখতে <Link to={"/login" as any} className={linkClass}>লগইন</Link> করুন।</div>);
   } else if (page === "admin") {
-    body = shell("অ্যাডমিন প্যানেল",role==="admin"?<><div className={panel}><p>বিক্রেতা আবেদন: {applications.length.toLocaleString("bn-BD")}</p><p className="text-xs text-muted-foreground">এই অ্যাকাউন্টে অ্যাডমিন ভূমিকা থাকলে ডাটাবেস নীতিমালা অনুযায়ী তথ্য দেখা যাবে।</p></div><div className="mt-4 space-y-3">{applications.map(a=><div className={panel} key={a.id}><b>{a.store_name}</b>{!a.user_id&&<span className="ml-2 text-xs text-amber-700">নমুনা আবেদন</span>}<p className="text-sm">{a.owner_name} · {a.phone} · {a.area}</p><p className="text-xs text-muted-foreground">স্ট্যাটাস: {a.status}</p>{a.status==="pending"&&<div className="mt-3 flex gap-2">{a.user_id&&<button disabled={busy} className={primary} onClick={()=>reviewApplication(a.id,true)}>অনুমোদন</button>}<button disabled={busy} className={secondary} onClick={()=>reviewApplication(a.id,false)}>বাতিল</button></div>}</div>)}</div><div className={panel+" mt-5"}><h2 className="font-bold">পণ্য নিয়ন্ত্রণ</h2>{adminProducts.length?adminProducts.map(p=><div key={p.id} className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3"><div className="min-w-0 flex-1"><b className="text-sm">{p.title_bn}</b><p className="text-xs text-muted-foreground">{p.seller_stores?.name||"দোকান"} · {money(Number(p.price))} · স্টক {Number(p.stock).toLocaleString("bn-BD")}</p></div><span className="text-xs">{p.status}</span><button disabled={busy} className={secondary+" text-xs"} onClick={()=>updateAdminProduct(p.id,p.status==="active"?"hidden":"active")}>{p.status==="active"?"লুকান":"প্রকাশ করুন"}</button></div>):<p className="mt-2 text-sm text-muted-foreground">কোনো পণ্য পাওয়া যায়নি।</p>}</div><div className={panel+" mt-5"}><h2 className="font-bold">সাম্প্রতিক অর্ডার</h2>{adminOrders.length?adminOrders.map(o=><div key={o.id} className="mt-3 flex flex-wrap justify-between gap-2 border-t pt-3 text-sm"><div><b>{o.order_no}{o.is_demo&&<span className="ml-2 text-xs text-amber-700">নমুনা অর্ডার</span>}</b><p className="text-xs text-muted-foreground">{o.recipient} · {o.phone} · {o.area}</p></div><div className="text-right"><b>{money(Number(o.total))}</b><p className="text-xs text-muted-foreground">{o.status}</p></div>{(o.order_items||[]).map((item:any)=><div key={item.id} className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t pt-2 text-xs"><span>{item.title} × {Number(item.quantity).toLocaleString("bn-BD")} · {money(Number(item.unit_price)*Number(item.quantity))}</span><select aria-label="অর্ডারের অবস্থা" className="rounded border bg-background p-2" value={item.status} disabled={busy||o.is_demo||["delivered","cancelled"].includes(item.status)} onChange={e=>updateAdminOrderItemStatus(item.id,o.id,e.target.value)}>{(item.status==="pending"?["pending","confirmed","cancelled"]:item.status==="confirmed"?["confirmed","shipped","cancelled"]:item.status==="shipped"?["shipped","delivered"]:[item.status]).map((status:string)=><option key={status} value={status}>{({pending:"নতুন",confirmed:"নিশ্চিত",shipped:"পাঠানো",delivered:"সম্পন্ন",cancelled:"বাতিল"} as Record<string,string>)[status]}</option>)}</select></div>)}</div>):<p className="mt-2 text-sm text-muted-foreground">কোনো অর্ডার পাওয়া যায়নি।</p>}</div></>:<div className={panel}>এই পৃষ্ঠাটি শুধু অনুমোদিত অ্যাডমিনদের জন্য।</div>);
+    body = shell("অ্যাডমিন প্যানেল",role==="admin"?<><div className={panel}><p>বিক্রেতা আবেদন: {applications.length.toLocaleString("bn-BD")}</p><p className="text-xs text-muted-foreground">এই অ্যাকাউন্টে অ্যাডমিন ভূমিকা থাকলে ডাটাবেস নীতিমালা অনুযায়ী তথ্য দেখা যাবে।</p></div><div className="mt-4 space-y-3">{applications.map(a=><div className={panel} key={a.id}><b>{a.store_name}</b>{!a.user_id&&<span className="ml-2 text-xs text-amber-700">নমুনা আবেদন</span>}<p className="text-sm">{a.owner_name} · {a.phone} · {a.area}</p><p className="text-xs text-muted-foreground">স্ট্যাটাস: {a.status}</p>{a.status==="pending"&&<div className="mt-3 flex gap-2">{a.user_id&&<button disabled={busy} className={primary} onClick={()=>reviewApplication(a.id,true)}>অনুমোদন</button>}<button disabled={busy} className={secondary} onClick={()=>reviewApplication(a.id,false)}>বাতিল</button></div>}</div>)}</div><div className={panel+" mt-5"}><h2 className="font-bold">পণ্য নিয়ন্ত্রণ</h2>{adminProducts.length?adminProducts.map(p=><div key={p.id} className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3"><div className="min-w-0 flex-1"><b className="text-sm">{p.title_bn}</b>{p.seller_stores?.is_demo&&<span className="ml-2 text-xs text-amber-700">নমুনা পণ্য</span>}<p className="text-xs text-muted-foreground">{p.seller_stores?.name||"দোকান"} · {money(Number(p.price))} · স্টক {Number(p.stock).toLocaleString("bn-BD")}</p></div><span className="text-xs">{p.status}</span><button disabled={busy||p.seller_stores?.is_demo} className={secondary+" text-xs"} onClick={()=>updateAdminProduct(p.id,p.status==="active"?"hidden":"active")}>{p.status==="active"?"লুকান":"প্রকাশ করুন"}</button></div>):<p className="mt-2 text-sm text-muted-foreground">কোনো পণ্য পাওয়া যায়নি।</p>}</div><div className={panel+" mt-5"}><h2 className="font-bold">সাম্প্রতিক অর্ডার</h2>{adminOrders.length?adminOrders.map(o=><div key={o.id} className="mt-3 flex flex-wrap justify-between gap-2 border-t pt-3 text-sm"><div><b>{o.order_no}{o.is_demo&&<span className="ml-2 text-xs text-amber-700">নমুনা অর্ডার</span>}</b><p className="text-xs text-muted-foreground">{o.recipient} · {o.phone} · {o.area}</p></div><div className="text-right"><b>{money(Number(o.total))}</b><p className="text-xs text-muted-foreground">{o.status}</p></div>{(o.order_items||[]).map((item:any)=><div key={item.id} className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t pt-2 text-xs"><span>{item.title} × {Number(item.quantity).toLocaleString("bn-BD")} · {money(Number(item.unit_price)*Number(item.quantity))}</span><select aria-label="অর্ডারের অবস্থা" className="rounded border bg-background p-2" value={item.status} disabled={busy||o.is_demo||["delivered","cancelled"].includes(item.status)} onChange={e=>updateAdminOrderItemStatus(item.id,o.id,e.target.value)}>{(item.status==="pending"?["pending","confirmed","cancelled"]:item.status==="confirmed"?["confirmed","shipped","cancelled"]:item.status==="shipped"?["shipped","delivered"]:[item.status]).map((status:string)=><option key={status} value={status}>{({pending:"নতুন",confirmed:"নিশ্চিত",shipped:"পাঠানো",delivered:"সম্পন্ন",cancelled:"বাতিল"} as Record<string,string>)[status]}</option>)}</select></div>)}</div>):<p className="mt-2 text-sm text-muted-foreground">কোনো অর্ডার পাওয়া যায়নি।</p>}</div></>:<div className={panel}>এই পৃষ্ঠাটি শুধু অনুমোদিত অ্যাডমিনদের জন্য।</div>);
   } else {
     body = shell("পৃষ্ঠাটি পাওয়া যায়নি",<div className={panel}>এই পৃষ্ঠাটি এখনো তৈরি হয়নি। <Link to={"/market" as any} className={linkClass}>বাজারে ফিরে যান</Link></div>);
   }
