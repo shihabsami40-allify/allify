@@ -326,13 +326,17 @@ function MarketplacePage() {
   };
 
   const updateAdminOrderItemStatus = async (itemId:string, orderId:string, status:string) => {
-    if (adminOrders.find(order => order.id === orderId)?.is_demo) {
-      setError("নমুনা অর্ডারের অবস্থা পরিবর্তন করা যাবে না।");
+    const order = adminOrders.find(order => order.id === orderId);
+    const item = order?.order_items?.find((row:any)=>row.id===itemId);
+    if (order?.is_demo) { setError("নমুনা অর্ডারের অবস্থা পরিবর্তন করা যাবে না।"); return; }
+    const transitions:Record<string,string[]> = {pending:["confirmed","cancelled"],confirmed:["shipped","cancelled"],shipped:["delivered"]};
+    if (!item || !transitions[item.status]?.includes(status)) {
+      setError("এই অর্ডারের বর্তমান অবস্থা থেকে নির্বাচিত পরিবর্তনটি অনুমোদিত নয়।");
       return;
     }
     setBusy(true); setError(""); setMessage("");
     try {
-      const {error} = status === "cancelled" ? (await supabase.rpc("cancel_order_item",{p_item_id:itemId})).error : (await supabase.from("order_items").update({status}).eq("id",itemId)).error;
+      const {error} = status === "cancelled" ? (await supabase.rpc("cancel_order_item",{p_item_id:itemId})).error : (await supabase.from("order_items").update({status}).eq("id",itemId).eq("status",item.status)).error;
       if (error) throw error;
       setAdminOrders(rows=>rows.map(order=>{
         if(order.id!==orderId) return order;
@@ -377,9 +381,15 @@ function MarketplacePage() {
   };
 
   const updateSellerOrderStatus = async (itemId:string, status:string) => {
+    const item = sellerOrders.find(row=>row.id===itemId);
+    const transitions:Record<string,string[]> = {pending:["confirmed","cancelled"],confirmed:["shipped","cancelled"],shipped:["delivered"]};
+    if (!item || !transitions[item.status]?.includes(status)) {
+      setError("এই অর্ডারের বর্তমান অবস্থা থেকে নির্বাচিত পরিবর্তনটি অনুমোদিত নয়।");
+      return;
+    }
     setBusy(true); setError(""); setMessage("");
     try {
-      const {error} = status === "cancelled" ? (await supabase.rpc("cancel_order_item",{p_item_id:itemId})).error : (await supabase.from("order_items").update({status}).eq("id",itemId)).error;
+      const {error} = status === "cancelled" ? (await supabase.rpc("cancel_order_item",{p_item_id:itemId})).error : (await supabase.from("order_items").update({status}).eq("id",itemId).eq("status",item.status)).error;
       if (error) throw error;
       setSellerOrders(rows=>rows.map(row=>row.id===itemId?{...row,status}:row));
       setMessage("অর্ডারের অবস্থা আপডেট হয়েছে।");
