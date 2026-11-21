@@ -1403,7 +1403,57 @@ REVOKE TRUNCATE ON ALL TABLES IN SCHEMA public FROM authenticated;
 REVOKE TRIGGER, REFERENCES ON ALL TABLES IN SCHEMA public FROM anon, authenticated;
 REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM anon, authenticated;
 
+-- ===== drizzle/migrations/0025_harden_future_api_default_privileges.sql =====
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  REVOKE TRUNCATE, REFERENCES, TRIGGER ON TABLES FROM anon, authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  REVOKE ALL PRIVILEGES ON SEQUENCES FROM anon, authenticated;
+
+-- ===== drizzle/migrations/0026_harden_future_public_api_defaults.sql =====
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  REVOKE ALL PRIVILEGES ON TABLES FROM anon;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  REVOKE MAINTAIN ON TABLES FROM anon, authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC, anon, authenticated;
+
 DO $release_postflight$
+  IF EXISTS (
+    SELECT 1 FROM pg_default_acl d
+    CROSS JOIN LATERAL aclexplode(d.defaclacl) x
+    WHERE d.defaclrole = 'postgres'::regrole
+      AND d.defaclnamespace = 'public'::regnamespace
+      AND d.defaclobjtype = 'r'
+      AND (x.grantee = 'anon'::regrole
+        OR (x.grantee IN ('anon'::regrole, 'authenticated'::regrole)
+            AND x.privilege_type IN ('TRUNCATE','REFERENCES','TRIGGER','MAINTAIN')))
+  ) THEN
+    RAISE EXCEPTION 'Postflight failed: unsafe postgres default table grants remain';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_default_acl d
+    CROSS JOIN LATERAL aclexplode(d.defaclacl) x
+    WHERE d.defaclrole = 'postgres'::regrole
+      AND d.defaclnamespace = 'public'::regnamespace
+      AND d.defaclobjtype = 'S'
+      AND x.grantee IN ('anon'::regrole, 'authenticated'::regrole)
+  ) THEN
+    RAISE EXCEPTION 'Postflight failed: postgres default sequence grants remain';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_default_acl d
+    CROSS JOIN LATERAL aclexplode(d.defaclacl) x
+    WHERE d.defaclrole = 'postgres'::regrole
+      AND d.defaclnamespace = 'public'::regnamespace
+      AND d.defaclobjtype = 'f'
+      AND (x.grantee = 0 OR x.grantee IN ('anon'::regrole, 'authenticated'::regrole))
+      AND x.privilege_type = 'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'Postflight failed: public/API default function EXECUTE remains';
+  END IF;
+
   IF EXISTS (
     SELECT 1 FROM pg_class c
     JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -1494,4 +1544,4 @@ END;
 $release_postflight$;
 
 COMMIT;
-SELECT jsonb_build_object('status','applied','migration_pack','0004-0024') AS release_result;
+SELECT jsonb_build_object('status','applied','migration_pack','0004-0026') AS release_result;
