@@ -49,8 +49,8 @@ Updated: 2026-11-21
 - Do NOT apply production migrations, change production env/deployment, or expose stale production without a recent restorable backup and production preflight.
 - Storage objects are separate from DB backup; release pack changes Storage policies/settings, not existing file objects.
 
-## Latest live revalidation — 2026-11-21 16:58 Bangladesh time
-- PR #3 is still OPEN, mergeable, not merged; 25 commits, 18 changed files. Latest verified head before this checkpoint refresh: `be4425f313eeff079040a2b8a10458b917554a3e`.
+## Earlier live revalidation — 2026-11-21
+- PR #3 is still OPEN, mergeable, not merged; 25 commits, 18 changed files. Latest verified head at that earlier check: `be4425f313eeff079040a2b8a10458b917554a3e`.
 - Latest head CI: GitHub Actions run `44874380438` completed successfully; combined commit status reports Vercel success.
 - A new Vercel Preview deployment for that exact head is READY: `dpl_9bvXM2xYa7LAgzhN7FJQXf64p9E4`, URL `https://allify-chattogram-fbrkiv49j-allify.vercel.app`, target is Preview (not Production).
 - Current verified Production deployment remains READY on `main` at `6f3ba9e768de476ac9a2d89eda5b523087e8f760`; domain alias `allify-chattogram.vercel.app`.
@@ -80,3 +80,44 @@ Updated: 2026-11-21
 - Do not promise background work or a future unsolicited message; work only during active tool execution.
 - Do not ask for passwords, API secrets or private keys.
 - Do not risk production customer data to meet an arbitrary deadline.
+
+
+## Latest session update — 2026-11-21
+- PR #3 rechecked: OPEN, mergeable, not merged; 26 commits, 18 changed files. Latest branch head after checkpoint refresh commit: `5a7a6eb02379fa45494454845c9089866aadeb40`.
+- Saved this refreshed checkpoint on the same branch. Checkpoint commit: `5a7a6eb02379fa45494454845c9089866aadeb40`.
+- The previous PR head `be4425f313eeff079040a2b8a10458b917554a3e` had successful GitHub Actions run `44874380438` and a READY Vercel Preview.
+- A new Preview build was automatically triggered by this checkpoint commit: deployment `dpl_9zVm1vhDCm3Q7G8w3YZSayGRUZAM`, URL `https://allify-chattogram-gyp2417d4-allify.vercel.app`; it was still BUILDING when last checked. Do not mark it READY until rechecked.
+- Production remains on main commit `6f3ba9e768de476ac9a2d89eda5b523087e8f760`; no Production deployment or DB mutation made.
+- A further read-only Production privileges query was attempted through Lovable but blocked by workspace Free-plan action limit; it did not execute. No database write was attempted.
+- No production backup/restore capability was exposed in connected tools. No credentials were sought or exposed.
+
+## Remaining work inventory — ordered by launch priority
+### P0 — Release blockers
+1. Obtain and verify a complete, restorable backup of the Lovable Production database; separately export and verify Storage objects. Do not treat SQL snippets or selected-table exports as full backups.
+2. Recheck Lovable Production DB privileges, RLS, schema drift, RPC grants, trigger/function definitions and bucket policies using read-only access when the action limit permits.
+3. Reconcile release SQL migrations 0004–0019 against the actual Production schema and Lovable migration history. Confirm preflight/postflight assertions and exact execution order; do not apply until backup is verified.
+4. Resolve the production checkout blocker: authenticated EXECUTE permission for `place_order` was previously false. Confirm release grants are correct and safely applied only after backup.
+5. Recheck helper-function exposure: anon previously had EXECUTE on `has_role` and `owns_store`; verify revocations in the live DB after release.
+6. Verify all intended seller/admin RPC permissions and RLS policy behavior; do not use broad grants or bypass controls.
+7. Confirm Lovable plan/credits and supported way to access/export production data; if platform action limit/plan prevents this, document the exact manual blocker rather than attempting unsafe alternatives.
+
+### P1 — Code, CI and Preview readiness
+8. Recheck latest PR #3 checks and the latest Vercel Preview build; diagnose any build failure and fix on the existing branch.
+9. Review all 18 changed files and release bundle for correctness, idempotency, migration ordering, least privilege and compatibility with live schema.
+10. Add/fix automated tests for buyer/seller/admin authorization, COD checkout, stock updates, cancellation/refund semantics, order status lifecycle, seller approval and Storage access.
+11. Test public product/store browsing, search/category, login/signup, seller application/store creation, product CRUD, cart, checkout, order history and admin review on Preview using safe test accounts/data.
+12. Verify product image upload, MIME/size restrictions, ownership, deletion and public rendering; current Production Storage bucket previously had zero objects.
+13. Verify responsive mobile layout, Bangla/English switching, BDT display, form validation and error/loading/empty states.
+14. Check deployment access protection and custom-domain public accessibility without indiscriminately disabling SSO.
+15. Verify Vercel Git integration and environment-variable mapping; do not expose or copy secrets into GitHub.
+
+### P2 — Production launch and post-launch
+16. After verified backup, approved migration plan, passing tests and a clear rollback plan, merge PR #3 to main.
+17. Deploy through the existing Vercel project; verify the actual Production target and custom domain, not just a Preview URL.
+18. Run live smoke tests for public browsing, authentication, seller onboarding, product listing/images, COD order placement, order lifecycle, customer order history and admin seller approval.
+19. Verify production logs, function errors, database errors, Storage policies and basic monitoring after launch.
+20. Confirm recovery procedure and document backup timestamp, restore test, migration commit, deployment ID and rollback steps.
+21. Defer non-launch-critical enhancements, paid integrations, online payment gateways, advanced analytics, loyalty/referrals and district expansion until the core marketplace is stable.
+
+## Next exact action
+Recheck deployment `dpl_9zVm1vhDCm3Q7G8w3YZSayGRUZAM` until terminal state, then resume safe PR/release review. Do not merge or mutate Production until P0 items 1–6 are cleared.
