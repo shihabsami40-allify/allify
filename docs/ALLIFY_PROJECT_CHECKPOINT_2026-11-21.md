@@ -287,3 +287,11 @@ Resume read-only release-bundle and migration review on PR #3, and retry Lovable
 - Security advisor reports expected authenticated SECURITY DEFINER RPC warnings, including place_order and cancel_order_item; anon execution is false for the new idempotent signature. These warnings are documented, not silently ignored.
 - Code/release migration commits: 53831f9e44ef3fc9b828ca914df75a6bd40b96eb (migration 0021), 75fdadad81570ed16acc59163c762e10c372d2fa (frontend idempotency key), 8c6f76a707b98c4fa261fbfdfe392dd61838f2d2 (release pack). Build/Preview checks for the combined latest head pending at checkpoint update.
 - Production was not accessed or modified; the test project's schema is not proof of Production schema compatibility. Production backup/preflight gates remain.
+
+## Additional security hardening — 2026-11-21
+- Read-only inspection of the isolated `allify-test` database found that the legacy seven-argument `place_order(jsonb,text,text,text,text,text,boolean)` overload remained executable by authenticated users alongside the new request-ID overload.
+- The current checkout UI calls only the eight-argument request-ID overload. Leaving the legacy overload enabled would permit authenticated callers to bypass retry idempotency.
+- Updated `drizzle/migrations/0021_idempotent_checkout_requests.sql` and the consolidated release SQL to revoke the legacy overload from PUBLIC, anon, and authenticated; retained authenticated-only execution for the request-ID overload.
+- Updated release postflight assertion to fail if the legacy overload remains executable.
+- Applied only the REVOKE statement to isolated test project `ltwobqpgxmkeylmpkogq`; verified legacy overload effective EXECUTE is false for authenticated/anon/PUBLIC, while request-ID overload remains authenticated=true, anon=false, PUBLIC=false.
+- No Production database was accessed or changed. Latest branch CI/Preview must be rechecked after these commits.
