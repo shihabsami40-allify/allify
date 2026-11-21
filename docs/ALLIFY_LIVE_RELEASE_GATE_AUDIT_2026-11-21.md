@@ -80,3 +80,9 @@ IN PROGRESS — latest PR head CI and Vercel Preview are READY. Production check
 - Security Advisor on the isolated test DB reports seven authenticated-callable SECURITY DEFINER RPC warnings (including intended checkout, cancellation, seller-review, and RLS helper RPCs). No anon exposure was indicated by these findings; keep authenticated execution only where explicitly required.
 - Latest release-pack rebuild commit: `b4867143d594bb02521b7d2d008ddc94b3710b0a`. Latest workflow run at check time: `44911142783`, still in progress; Vercel commit status was success. Recheck exact-head CI and Preview before treating this revision as verified.
 - Production DB, Storage, PR merge and Production deployment remain untouched. Full restorable Production DB/Storage backup, access to configured Production ref `htsvvotamlxlkncksssq`, and signed-in role E2E are still mandatory release gates.
+
+
+## Exact-head verification after release-pack rebuild — 2026-11-21
+- After the rebuilt SQL pack and audit notes were committed, PR head `35637bfcc0973492ac1d3600fec8117b5187a61f` passed GitHub Actions run `44911142783`; dependency installation, application build and tests all completed successfully.
+- Exact-head Vercel Preview deployment `dpl_HS68pxfoMpYzJRFemA8AuT3fSVx2` is READY at https://allify-chattogram-nbpobciqm-allify.vercel.app (Preview only, not Production).
+- PR #3 remains OPEN, mergeable, and unmerged. Production remains unchanged.
