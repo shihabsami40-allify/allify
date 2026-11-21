@@ -295,3 +295,10 @@ Resume read-only release-bundle and migration review on PR #3, and retry Lovable
 - Updated release postflight assertion to fail if the legacy overload remains executable.
 - Applied only the REVOKE statement to isolated test project `ltwobqpgxmkeylmpkogq`; verified legacy overload effective EXECUTE is false for authenticated/anon/PUBLIC, while request-ID overload remains authenticated=true, anon=false, PUBLIC=false.
 - No Production database was accessed or changed. Latest branch CI/Preview must be rechecked after these commits.
+
+## Anonymous Data API least-privilege hardening — 2026-11-21
+- Audited all public-schema RLS tables and found the isolated test database still granted the `anon` role broad table-level operations (including INSERT/UPDATE/DELETE) even though RLS policies restricted row access.
+- Added migration `0022_minimize_anon_table_grants.sql`: revoke all anonymous table privileges across the public schema, then grant SELECT only on the public catalog tables (`categories`, `delivery_areas`, `products`, `seller_stores`, `product_images`). Existing RLS policies continue to filter visible rows.
+- Applied migration 0022 only to isolated `allify-test` project. Re-queried effective grants: exactly those five public catalog tables retain SELECT; no anonymous INSERT/UPDATE/DELETE/TRUNCATE/etc. remain.
+- Added the same SQL and postflight assertions to the consolidated release bundle. Production was not touched.
+- New commits: migration `ebb3f5c`; release bundle `159c73e`. CI and Preview for the latest head must be rechecked.
