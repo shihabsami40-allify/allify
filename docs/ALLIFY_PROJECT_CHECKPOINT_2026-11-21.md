@@ -310,3 +310,12 @@ Resume read-only release-bundle and migration review on PR #3, and retry Lovable
 - Applied migration only to isolated project `ltwobqpgxmkeylmpkogq`; post-check returned `remaining_authenticated_truncate_grants = 0`.
 - Added the same revoke and a release postflight assertion to `supabase/releases/2026-11-20_allify_release.sql`; updated release pack label to `0004-0023`.
 - Production remains untouched. Re-run CI and exact-head Preview checks after these commits. This isolated-test result is not evidence that Production has the same grants or that the Production release is ready.
+
+
+## API role DDL/sequence least-privilege hardening — 2026-11-21
+- Continued the isolated allify-test grant audit after removing anonymous writes and authenticated TRUNCATE. Found API roles still held table-level TRIGGER/REFERENCES grants across public tables, and both anon/authenticated had USAGE on public.order_no_seq.
+- Confirmed the app's checkout flow obtains order numbers only through the SECURITY DEFINER place_order RPC; clients do not need direct sequence privileges. The function owner retains sequence access.
+- Added migration 0024_revoke_unneeded_api_ddl_and_sequence_grants.sql: revoke TRIGGER and REFERENCES from anon/authenticated across public tables, and all direct public sequence privileges from both API roles. Added catalog-based postflight assertions.
+- Applied migration only to isolated test project ltwobqpgxmkeylmpkogq. Verification shows no API-role TRIGGER/REFERENCES grants, no sequence grants, and effective checks for authenticated order sequence USAGE, anon order sequence USAGE, authenticated orders TRIGGER and REFERENCES all return false.
+- Authenticated DML permissions remain as expected for RLS-governed application flows; anon retains SELECT only on the five public catalog tables. No Production database was accessed or changed.
+- Added migration and release postflight to consolidated release pack; pack label now 0004-0024. CI and exact-head Preview pending after latest commit.
