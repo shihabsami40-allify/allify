@@ -130,3 +130,35 @@ Updated: 2026-11-21
 
 ## Next exact action
 Resume read-only release-bundle and migration review on PR #3, and retry Lovable Production read-only access/backup path only when supported. Do not merge or mutate Production until P0 items 1–6 are cleared.
+
+
+## Latest execution session — live Production audit (2026-11-21)
+### GitHub / CI / Lovable
+- PR #3 rechecked live: OPEN, mergeable, not merged; 28 commits, 18 files; current head `17804aeb2cc18bb640146a87d40029051a5b0201`.
+- GitHub Actions for that exact head: run `44898061638`, completed SUCCESS.
+- Combined commit status: Vercel SUCCESS.
+- Lovable project `123f5b35-4f29-4afa-8018-2e20465d2648`: published; agent status `needs_attention`, reason `out_of_credits`; workspace plan FREE. No Lovable agent edits or DB export were possible.
+- Lovable `.env` identifies Supabase project ref `htsvvotamlxlkncksssq`. Supabase account project listing does not include this ref; direct get_project returned permission denied. Do not assume another project is the app's production backend.
+
+### Critical Production backend identity/schema discrepancy
+- Supabase account project named `Allify`, ref `onqadpqdontbdvecnvby`, status ACTIVE_HEALTHY, is accessible read-only.
+- This accessible `Allify` project does NOT match the Lovable app's configured Supabase ref `htsvvotamlxlkncksssq`. Its public schema is the legacy model (`profiles`, `stores`, `products`, `orders`, etc.), not the release pack's expected schema (`seller_stores`, `seller_applications`, `delivery_areas`, etc.).
+- `list_migrations` on accessible `Allify` returned an empty list. The isolated `allify-test` project ref `ltwobqpgxmkeylmpkogq` has migrations `0000`–`0024` and the expected marketplace schema. This confirms test environment is not evidence that the app's actual configured Production database is aligned.
+- Direct `get_project(htsvvotamlxlkncksssq)` returned permission denied. Production identity/ownership/access must be resolved before any release action.
+- Accessible legacy `Allify` project audit found 4 exposed SECURITY DEFINER RPCs executable by both anon and authenticated: `is_admin()`, `lookup_order(text,text)`, `owns_store(uuid)`, and `place_marketplace_order(text,text,text,text,jsonb)`. Supabase Security Advisor reports the same 4 anon and 4 authenticated findings. Do NOT apply ad-hoc revokes to this possibly non-app backend.
+- Existing policies on legacy `order_items`, `products`, `stores` call `owns_store` / `is_admin`; any grant fix needs function-body and call-path review to avoid breaking the app.
+- Legacy `product-images` bucket is public, 5 MiB, MIME allowlist JPEG/PNG/WebP; object count is 0. No Storage files were available to back up.
+- Supabase performance advisor reported 7 auth-initplan warnings, 7 unused-index informational notices and one multiple-permissive-policy warning; these are not launch blockers and should be reviewed later.
+
+### Backup / Release decision
+- No connected Supabase backup/export/restore or Storage object download/list action was found. A query result or schema listing is NOT a full backup.
+- No production migration, SQL write, privilege change, Storage mutation, PR merge, or Production deploy was performed.
+- **HARD STOP:** Do not apply PR #3 release bundle to `onqadpqdontbdvecnvby`; its schema is incompatible and it is not the Supabase ref configured in Lovable. Do not attempt to access `htsvvotamlxlkncksssq` through another project ID.
+- The new preview from previous session remains READY at `https://allify-chattogram-gyp2417d4-allify.vercel.app`; current commit Vercel status is success, but exact current Preview deployment URL was not re-resolved in this session.
+- Production Vercel remains on main's previously recorded commit `6f3ba9e768de476ac9a2d89eda5b523087e8f760`; no production deploy was made.
+
+## Next exact actions
+1. Resolve the correct configured backend ref `htsvvotamlxlkncksssq` and obtain read-only/backup access to that exact Production project; Lovable FREE/out-of-credits and Supabase permission denial currently block this.
+2. Obtain a complete database backup plus Storage object backup and verify restore before any writes.
+3. Audit the actual configured Production schema, migration history, function grants, RLS and Storage policies; compare with test project migrations `0000`–`0024` and release bundle.
+4. Continue safe code/Preview review independently; do not merge PR #3 or deploy Production until backend identity, backup, schema and release gates are verified.
