@@ -1422,6 +1422,11 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres
   REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC, anon, authenticated;
 
 DO $release_postflight$
+DECLARE
+  v_bucket_limit bigint;
+  v_bucket_public boolean;
+  v_guard_count integer;
+BEGIN
   IF EXISTS (
     SELECT 1 FROM pg_default_acl d
     CROSS JOIN LATERAL aclexplode(d.defaclacl) x
@@ -1510,11 +1515,6 @@ DO $release_postflight$
     RAISE EXCEPTION 'Postflight failed: authenticated TRUNCATE privilege remains';
   END IF;
 
-DECLARE
-  v_bucket_limit bigint;
-  v_bucket_public boolean;
-  v_guard_count integer;
-BEGIN
   IF pg_get_functiondef('public.cancel_order_item(uuid)'::regprocedure) NOT LIKE '%v_item.customer_id = auth.uid()%' THEN
     RAISE EXCEPTION 'Postflight failed: buyer cancellation ownership guard is missing';
   END IF;
