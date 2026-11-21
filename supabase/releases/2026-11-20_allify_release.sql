@@ -1285,80 +1285,111 @@ BEGIN
   IF char_length(p_recipient) NOT BETWEEN 2 AND 100 THEN
     RAISE EXCEPTION 'Invalid name';
   END IF;
-  IF p_phone !~ '^01[3-9][0-9]{8}
-DECLARE
-  v_bucket_limit bigint;
-  v_bucket_public boolean;
-  v_guard_count integer;
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.role_table_grants
-    WHERE table_schema='public' AND grantee='anon' AND privilege_type <> 'SELECT'
-  ) THEN
-    RAISE EXCEPTION 'Postflight failed: anon retains non-read table privileges';
+  IF p_phone !~ '^01[3-9][0-9]{8}$' THEN
+    RAISE EXCEPTION 'Invalid phone number';
   END IF;
-  IF NOT has_table_privilege('anon','public.categories','SELECT')
-     OR NOT has_table_privilege('anon','public.delivery_areas','SELECT')
-     OR NOT has_table_privilege('anon','public.products','SELECT')
-     OR NOT has_table_privilege('anon','public.seller_stores','SELECT')
-     OR NOT has_table_privilege('anon','public.product_images','SELECT') THEN
-    RAISE EXCEPTION 'Postflight failed: public catalog read grants are missing';
+  IF char_length(p_address) NOT BETWEEN 5 AND 300 THEN
+    RAISE EXCEPTION 'Invalid address';
   END IF;
-  IF pg_get_functiondef('public.cancel_order_item(uuid)'::regprocedure) NOT LIKE '%v_item.customer_id = auth.uid()%' THEN
-    RAISE EXCEPTION 'Postflight failed: buyer cancellation ownership guard is missing';
-  END IF;
-  IF has_function_privilege('authenticated','public.place_order(jsonb,text,text,text,text,text,boolean)','EXECUTE')
-     OR has_function_privilege('anon','public.place_order(jsonb,text,text,text,text,text,boolean)','EXECUTE')
-     OR has_function_privilege('public','public.place_order(jsonb,text,text,text,text,text,boolean)','EXECUTE') THEN
-    RAISE EXCEPTION 'Postflight failed: legacy non-idempotent checkout RPC remains executable';
-  END IF;
-  IF NOT has_function_privilege('authenticated','public.place_order(jsonb,text,text,text,text,uuid,text,boolean)','EXECUTE')
-     OR has_function_privilege('anon','public.place_order(jsonb,text,text,text,text,uuid,text,boolean)','EXECUTE') THEN
-    RAISE EXCEPTION 'Postflight failed: idempotent place_order grants are incorrect';
-  END IF;
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_indexes
-    WHERE schemaname='public' AND tablename='orders'
-      AND indexname='orders_customer_checkout_request_uidx'
-  ) THEN
-    RAISE EXCEPTION 'Postflight failed: checkout idempotency index is missing';
-  END IF;
-  IF NOT has_function_privilege('authenticated','public.review_seller_application(uuid,boolean,text)','EXECUTE')
-     OR has_function_privilege('anon','public.review_seller_application(uuid,boolean,text)','EXECUTE') THEN
-    RAISE EXCEPTION 'Postflight failed: seller review grants are incorrect';
-  END IF;
-  IF NOT has_function_privilege('authenticated','public.cancel_order_item(uuid)','EXECUTE')
-     OR has_function_privilege('anon','public.cancel_order_item(uuid)','EXECUTE') THEN
-    RAISE EXCEPTION 'Postflight failed: cancellation RPC grants are incorrect';
+  IF p_note IS NOT NULL AND char_length(p_note) > 500 THEN
+    RAISE EXCEPTION 'Note too long';
   END IF;
 
-  IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname='claim_first_admin') THEN
-    RAISE EXCEPTION 'Postflight failed: obsolete first-admin claim function remains';
+  SELECT fee INTO v_fee
+  FROM public.delivery_areas
+  WHERE name_en = p_area AND active;
+  IF v_fee IS NULL THEN
+    RAISE EXCEPTION 'Delivery not available in this area';
   END IF;
 
-  SELECT count(*) INTO v_guard_count FROM pg_trigger
-  WHERE tgrelid='public.order_items'::regclass
-    AND tgname IN ('order_items_guard','order_items_guard_update')
-    AND NOT tgisinternal;
-  IF v_guard_count<>1
-     OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid='public.orders'::regclass AND tgname='orders_guard' AND NOT tgisinternal)
-     OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid='public.seller_applications'::regclass AND tgname='seller_applications_update_guard' AND NOT tgisinternal) THEN
-    RAISE EXCEPTION 'Postflight failed: required order/application triggers are missing or duplicated';
+  PERFORM set_config('app.internal', '1', true);
+
+  v_no := 'ALF-' || to_char(now() AT TIME ZONE 'Asia/Dhaka', 'YYMMDD')
+          || '-' || nextval('public.order_no_seq');
+  INSERT INTO public.orders (
+    order_no, customer_id, subtotal, delivery_fee, total,
+    recipient, phone, area, address_line, note, checkout_request_id
+  )
+  VALUES (
+    v_no, v_uid, 0, v_fee, 0,
+    p_recipient, p_phone, p_area, p_address,
+    nullif(btrim(coalesce(p_note, '')), ''), p_request_id
+  )
+  RETURNING id INTO v_order_id;
+
+  FOR it IN SELECT * FROM jsonb_array_elements(p_items) LOOP
+    v_qty := (it->>'quantity')::int;
+    IF v_qty < 1 OR v_qty > 99 THEN
+      RAISE EXCEPTION 'Invalid quantity';
+    END IF;
+
+    SELECT p.* INTO v_p
+    FROM public.products p
+    JOIN public.seller_stores s ON s.id = p.store_id
+    WHERE p.id = (it->>'product_id')::uuid
+      AND p.status = 'active'
+      AND s.status = 'active'
+      AND s.is_demo = false
+    FOR UPDATE OF p;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'A product is no longer available';
+    END IF;
+    IF v_p.stock < v_qty THEN
+      RAISE EXCEPTION 'Not enough stock for %', v_p.title_bn;
+    END IF;
+
+    SELECT url INTO v_img
+    FROM public.product_images
+    WHERE product_id = v_p.id
+    ORDER BY sort_order
+    LIMIT 1;
+
+    UPDATE public.products
+    SET stock = stock - v_qty, sold_count = sold_count + v_qty
+    WHERE id = v_p.id;
+
+    INSERT INTO public.order_items (
+      order_id, product_id, store_id, title, image_url, unit_price, quantity
+    )
+    VALUES (
+      v_order_id, v_p.id, v_p.store_id, v_p.title_bn, v_img, v_p.price, v_qty
+    );
+
+    v_sub := v_sub + v_p.price * v_qty;
+  END LOOP;
+
+  UPDATE public.orders
+  SET subtotal = v_sub, total = v_sub + v_fee
+  WHERE id = v_order_id;
+
+  IF p_save_address THEN
+    INSERT INTO public.addresses (
+      user_id, recipient, phone, area, address_line, is_default
+    )
+    VALUES (
+      v_uid, p_recipient, p_phone, p_area, p_address,
+      NOT EXISTS (SELECT 1 FROM public.addresses WHERE user_id = v_uid)
+    );
   END IF;
 
-  SELECT file_size_limit,public INTO v_bucket_limit,v_bucket_public
-  FROM storage.buckets WHERE id='product-images';
-  IF v_bucket_limit<>5242880 OR v_bucket_public IS DISTINCT FROM true THEN
-    RAISE EXCEPTION 'Postflight failed: product image bucket settings are incorrect';
-  END IF;
+  DELETE FROM public.cart_items
+  WHERE cart_id IN (SELECT id FROM public.carts WHERE user_id = v_uid);
 
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='storage' AND tablename='objects' AND policyname='Sellers upload to their own product folder' AND cmd='INSERT')
-     OR NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='storage' AND tablename='objects' AND policyname='Product images are publicly readable' AND cmd='SELECT')
-     OR EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='storage' AND tablename='objects' AND policyname IN ('product images own upload','product images own delete','product images public read')) THEN
-    RAISE EXCEPTION 'Postflight failed: product image Storage policies are incorrect';
-  END IF;
+  PERFORM set_config('app.internal', v_previous_internal, true);
+  RETURN v_no;
 END;
-$release_postflight$;
+$$;
+
+REVOKE ALL ON FUNCTION public.place_order(jsonb,text,text,text,text,uuid,text,boolean)
+  FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.place_order(jsonb,text,text,text,text,uuid,text,boolean)
+  TO authenticated;
+
+-- Retire the legacy overload: the current client always supplies a request ID.
+-- Leaving the old signature executable would allow retries to bypass idempotency.
+REVOKE ALL ON FUNCTION public.place_order(jsonb,text,text,text,text,text,boolean)
+  FROM public, anon, authenticated;
 
 -- ===== drizzle/migrations/0022_minimize_anon_table_grants.sql =====
 -- Anonymous API clients may read the public catalog, but hold no write privileges.
@@ -1542,4 +1573,3 @@ $release_postflight$;
 COMMIT;
 
 SELECT jsonb_build_object('status','applied','migration_pack','0004-0027') AS release_result;
-
