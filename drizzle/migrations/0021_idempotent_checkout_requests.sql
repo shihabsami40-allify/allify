@@ -180,3 +180,8 @@ REVOKE ALL ON FUNCTION public.place_order(jsonb,text,text,text,text,uuid,text,bo
   FROM public, anon;
 GRANT EXECUTE ON FUNCTION public.place_order(jsonb,text,text,text,text,uuid,text,boolean)
   TO authenticated;
+
+-- Retire the legacy overload: the current client always supplies a request ID.
+-- Leaving the old signature executable would allow retries to bypass idempotency.
+REVOKE ALL ON FUNCTION public.place_order(jsonb,text,text,text,text,text,boolean)
+  FROM public, anon, authenticated;
