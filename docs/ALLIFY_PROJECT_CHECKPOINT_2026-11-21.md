@@ -119,5 +119,14 @@ Updated: 2026-11-21
 20. Confirm recovery procedure and document backup timestamp, restore test, migration commit, deployment ID and rollback steps.
 21. Defer non-launch-critical enhancements, paid integrations, online payment gateways, advanced analytics, loyalty/referrals and district expansion until the core marketplace is stable.
 
+## Latest session verification — 2026-11-21 (after prior checkpoint)
+- Rechecked PR #3 live: OPEN, mergeable, not merged; 27 commits and 18 changed files. Current head is `a5f7752329a67e816b6ea5103656c64b4adcb35a`.
+- GitHub Actions for that exact head completed successfully: run `44897967485`, conclusion `success`.
+- Combined commit status reports Vercel `success`.
+- Previously BUILDING Preview deployment `dpl_9zVm1vhDCm3Q7G8w3YZSayGRUZAM` is now `READY`; URL `https://allify-chattogram-gyp2417d4-allify.vercel.app`; branch `allify-order-lifecycle-2026-11-20`, commit `5a7a6eb02379fa45494454845c9089866aadeb40`. This is Preview only, not Production.
+- The release SQL pack was inspected read-only; its header confirms it has NOT been applied to Production and explicitly requires a restorable backup and preflight.
+- No Production DB query/write, migration, PR merge, or Production deployment was performed in this session.
+- Current blocker remains verified full Production DB + Storage backup/restore and live DB preflight. Lovable plan/action limits and lack of a backup/restore action remain unresolved.
+
 ## Next exact action
-Recheck deployment `dpl_9zVm1vhDCm3Q7G8w3YZSayGRUZAM` until terminal state, then resume safe PR/release review. Do not merge or mutate Production until P0 items 1–6 are cleared.
+Resume read-only release-bundle and migration review on PR #3, and retry Lovable Production read-only access/backup path only when supported. Do not merge or mutate Production until P0 items 1–6 are cleared.
