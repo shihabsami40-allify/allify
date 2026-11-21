@@ -1518,9 +1518,11 @@ BEGIN
   IF pg_get_functiondef('public.cancel_order_item(uuid)'::regprocedure) NOT LIKE '%v_item.customer_id = auth.uid()%' THEN
     RAISE EXCEPTION 'Postflight failed: buyer cancellation ownership guard is missing';
   END IF;
-  IF NOT has_function_privilege('authenticated','public.place_order(jsonb,text,text,text,text,text,boolean)','EXECUTE')
+  IF NOT has_function_privilege('authenticated','public.place_order(jsonb,text,text,text,text,uuid,text,boolean)','EXECUTE')
+     OR has_function_privilege('anon','public.place_order(jsonb,text,text,text,text,uuid,text,boolean)','EXECUTE')
+     OR has_function_privilege('authenticated','public.place_order(jsonb,text,text,text,text,text,boolean)','EXECUTE')
      OR has_function_privilege('anon','public.place_order(jsonb,text,text,text,text,text,boolean)','EXECUTE') THEN
-    RAISE EXCEPTION 'Postflight failed: place_order grants are incorrect';
+    RAISE EXCEPTION 'Postflight failed: idempotent/legacy place_order grants are incorrect';
   END IF;
   IF NOT has_function_privilege('authenticated','public.review_seller_application(uuid,boolean,text)','EXECUTE')
      OR has_function_privilege('anon','public.review_seller_application(uuid,boolean,text)','EXECUTE') THEN
