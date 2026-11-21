@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/$page")({ component: MarketplacePage });
@@ -56,6 +56,7 @@ function MarketplacePage() {
   const [applications, setApplications] = useState<any[]>([]);
   const [myStore, setMyStore] = useState<any>(null);
   const [productImage, setProductImage] = useState<File | null>(null);
+  const checkoutRequestRef = useRef<{fingerprint:string;id:string}|null>(null);
 
   const set = (key: string, value: string) => setForm(v => ({...v, [key]: value}));
   const refreshCart = () => {
@@ -423,14 +424,20 @@ function MarketplacePage() {
     if (!areas.some(a=>a.name_en===area)) { setError("ডেলিভারির এলাকা নির্বাচন করুন।"); return; }
     if (address.length<5 || address.length>300) { setError("সম্পূর্ণ ঠিকানা ৫ থেকে ৩০০ অক্ষরের মধ্যে লিখুন।"); return; }
     if (note.length>500) { setError("অতিরিক্ত নির্দেশনা সর্বোচ্চ ৫০০ অক্ষরের হতে পারবে।"); return; }
+    const requestFingerprint=JSON.stringify({user:user.id,items:cart.map(x=>({product_id:x.product.id,quantity:x.quantity})),recipient,phone,area,address,note,save:form.save_address==="yes"});
+    if (!checkoutRequestRef.current || checkoutRequestRef.current.fingerprint!==requestFingerprint) {
+      checkoutRequestRef.current={fingerprint:requestFingerprint,id:crypto.randomUUID()};
+    }
     setBusy(true); setError(""); setMessage("");
     try {
       const {data,error} = await supabase.rpc("place_order", {
         p_items:cart.map(x=>({product_id:x.product.id,quantity:x.quantity})),
         p_recipient:recipient, p_phone:phone, p_area:area,
-        p_address:address, p_note:note||null, p_save_address:form.save_address==="yes"
+        p_address:address, p_request_id:checkoutRequestRef.current.id,
+        p_note:note||null, p_save_address:form.save_address==="yes"
       });
       if (error) throw error;
+      checkoutRequestRef.current=null;
       saveCart([]);
       setMessage("অর্ডার সফলভাবে জমা হয়েছে। অর্ডার নম্বর: "+data);
       navigate({to: "/account" as any});
