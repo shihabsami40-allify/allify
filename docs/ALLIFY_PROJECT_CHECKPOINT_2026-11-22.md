@@ -292,3 +292,13 @@ Updated: 2026-11-22
 - Code commits: `85d3e522a6319fef9925fd879a55c478aee853bb` and `de4a9718971d7d3432ab989025b4e99b50dc2023`.
 - Exact-head GitHub Actions run `45020847029` was IN_PROGRESS at checkpoint update; Vercel status was PENDING. Do not mark this change verified until CI and Preview finish.
 - PR #3 remains OPEN and unmerged. No Production database/Storage mutation, Production deployment, PR merge, credential change, or Cloudflare configuration change was performed.
+
+
+## Seller application release-pack completion — 2026-11-22
+- Found that the two latest migrations, `0028_one_pending_seller_application_per_user.sql` and `0029_require_explicit_seller_review_decision.sql`, were present in the migration directory but missing from the consolidated release pack. The pack still ended at 0027, so a future Production release would have omitted these protections.
+- Added both migrations to `supabase/releases/2026-11-20_allify_release.sql` in order, changed the release marker to `0004-0029`, and added postflight assertions for the unique pending-application index, explicit non-NULL approval/rejection decision, and authenticated-only seller-review RPC execution.
+- During review, corrected the postflight PUBLIC privilege check to inspect the function ACL directly (PUBLIC is an ACL grantee, not a database role name for `has_function_privilege`).
+- Applied migrations 0028 and 0029 sequentially only to isolated test project `ltwobqpgxmkeylmpkogq`; preflight duplicate-pending check returned no rows. Read-only verification confirmed the unique index exists, explicit-decision guard is present, authenticated EXECUTE=true, anon EXECUTE=false, and PUBLIC EXECUTE=false. A dedicated postflight DO assertion completed successfully. This is test-project validation only, not Production.
+- Release-pack commits: `089ca67c85492b00d09633c03c746e9d135c2ba7` and `af535b1e46b7d6128d9461be1f39eb475228679e`.
+- On exact code head `af535b1e46b7d6128d9461be1f39eb475228679e`, GitHub Actions run `45021344646` was IN_PROGRESS at checkpoint time; Vercel Preview status was SUCCESS. Do not mark CI complete until the workflow finishes.
+- PR #3 remains OPEN and unmerged. No Production database/Storage mutation, Production deployment, PR merge, credentials/secrets operation, or Cloudflare configuration change was performed.
