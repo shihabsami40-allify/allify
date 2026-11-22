@@ -125,3 +125,12 @@ Updated: 2026-11-22
 - Exact-head GitHub checks on `254fa3deb7998149f21a3b9c3d664e60b31fcbbc`: build SUCCESS and Vercel Preview Comments SUCCESS.
 - PR #3 remains OPEN and unmerged. GitHub reports `mergeable=true` but `mergeable_state=unstable` at the latest check; recheck after all status contexts settle. No merge attempted.
 - Preview is not Production. All Production access, backup, source reconciliation and signed-in role-based E2E gates remain NOT CLEARED.
+
+
+## Product pricing validation refinement — 2026-11-22
+- Tightened `validateSellerProductNumbers` so an optional comparison/list price must be strictly greater than the sale price; equal or lower comparison prices are rejected with a Bengali validation message.
+- Added Vitest coverage for equal and lower comparison-price cases. Existing checks for invalid/non-finite/over-limit prices and integer stock remain in place.
+- Commits: helper `6d864dfe78097e165ff0dbb3b6582cfef3f9bbd9`; tests `279f3e2f72e64b44f13a1c4cad33b137a244a087`.
+- Exact-head GitHub Actions run `44986400719` completed SUCCESS: dependency installation, application build and Vitest all passed.
+- Exact-head Vercel Preview deployment `dpl_DQA9Ltmzum1eR5ZffhsTz8xEmoA4` reached READY at https://allify-chattogram-jnxnvkvwt-allify.vercel.app (Preview only; target is not Production). Combined Vercel commit status is success.
+- PR #3 remains OPEN, unmerged and mergeable. No Production database, Storage, deployment, alias, billing, credential or source-reconciliation action was performed.
