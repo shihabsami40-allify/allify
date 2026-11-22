@@ -274,3 +274,12 @@ Updated: 2026-11-22
 - Build also emits a non-fatal `vite-tsconfig-paths` warning; project config comments say the Lovable preset already installs tsconfig path support. Avoid manually adding/removing plugins or changing the preset until the actual resolved Vite config and compatibility are verified.
 - Exact-head Cloudflare check `Workers Builds: allifychattogram` is still IN_PROGRESS (build `ccdbc433-d0f9-48e9-bbde-be4e1202b79d`) at this check. GitHub check exposes only dashboard URL, no log text, and zero annotations. No connected Cloudflare log action was found. Root cause remains unknown; do not state this as a failure or modify Cloudflare/Nitro settings without the build output.
 - No further code change was justified by the available evidence. No Production deployment, DB/Storage write, secret action, or PR merge occurred.
+
+
+## Cart persistence write-path hardening — 2026-11-22
+- Follow-up review found the shared cart sanitizer was applied when the catch-all marketplace route restored cart state, but `saveCart` still wrote every mutation directly to localStorage.
+- Updated `src/routes/$page.tsx` so every cart write passes through `sanitizeStoredCart` first; React state and localStorage now receive the same sanitized rows. This covers add, quantity changes, and removals through the shared save path without duplicating validation rules.
+- Existing `src/lib/cart-validation.ts` tests cover malformed snapshots, invalid/over-stock quantities, demo products, duplicate IDs, and the 50-line cap. Exact-head CI is running; do not mark this commit verified until its build and Vitest steps finish.
+- Code commit: `43513016838804039d3a5ceed15bfb73cb046945`.
+- Previous head `4c18b88438bc9537bffc0ed1e36eab62b19a46f4`: `Workers Builds: allifychattogram` completed FAILURE (build `628651b2-c4a7-4382-aed1-99014dd4cb71`); `Workers Builds: allify` remained IN_PROGRESS (build `e3c2fb9c-5e51-42df-94b1-1cfa6696220e`). GitHub check output exposes no build log/annotations, so cause remains unknown.
+- PR #3 remains OPEN/unmerged/mergeable. No Production deployment, database/storage mutation, secrets action, or PR merge occurred.
