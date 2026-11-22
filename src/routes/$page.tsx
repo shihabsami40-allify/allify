@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { deriveOrderStatus } from "@/lib/order-status";
 
 export const Route = createFileRoute("/$page")({ component: MarketplacePage });
 
@@ -14,15 +15,6 @@ type Area = { name_bn: string; name_en: string; fee: number; zone: string };
 type CartLine = { product: Product; quantity: number };
 
 const money = (n: number) => "৳" + Number(n || 0).toLocaleString("bn-BD");
-const deriveOrderStatus = (items:any[]) => {
-  if (!items.length) return "pending";
-  if (items.every(item=>item.status==="cancelled")) return "cancelled";
-  if (items.some(item=>item.status==="pending")) return "pending";
-  if (items.some(item=>item.status==="confirmed")) return "confirmed";
-  if (items.some(item=>item.status==="shipped")) return "shipped";
-  if (items.some(item=>item.status==="delivered")) return "delivered";
-  return "pending";
-};
 const queryValue = (key: string, searchStr: string) => new URLSearchParams(searchStr).get(key) || "";
 const panel = "rounded-2xl border bg-card p-4 shadow-sm";
 const field = "w-full rounded-lg border bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary";
