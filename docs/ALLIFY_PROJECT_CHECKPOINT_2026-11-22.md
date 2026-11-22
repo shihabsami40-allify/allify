@@ -153,3 +153,13 @@ Updated: 2026-11-22
 - Exact-head Vercel Preview deployment `dpl_EffXXhhdZELwyYtGxhbTM4bWQo8Q` reached READY at https://allify-chattogram-92uajq89c-allify.vercel.app (Preview only; Vercel target is not Production). Combined Vercel status is success.
 - PR #3 remains OPEN, unmerged and mergeable on the verified head. This is a client-side persisted-cart hygiene layer only; checkout RPC remains authoritative for price, stock and order creation.
 - No Production DB/Storage mutation, Production deployment/alias change, PR merge, billing or credential operation was performed.
+
+
+## Seller product image validation hardening — 2026-11-22
+- Reviewed Seller upload flow against Storage migrations `0006`, `0007`, and `0016`. Clarification: the existing object path `user_id/store_id/filename` is compatible with the policy's `storage.foldername(name)` length of 2, because the filename is not counted as a folder. No path/policy change was needed.
+- Added `src/lib/product-image-input.ts` to validate supported MIME types (JPEG/PNG/WebP), reject empty/non-finite/invalid sizes, and enforce the 5 MB limit before creating the product/uploading the object.
+- Integrated the helper into Seller product creation and added `src/test/product-image-input.test.ts` for supported types, exact size boundary, unsupported formats, empty/invalid sizes and over-limit files.
+- This is client-side input validation for usability; Supabase bucket MIME/size configuration and Storage RLS remain the enforcement boundary. MIME metadata can be spoofed by a hostile client, so production must retain server-side/bucket checks.
+- Commits: `fef9999e0e2ce898f01b60c283bb0650b2dc8a1d` (helper), `8037890e03909136802b002dd7bddc8dd63b86ba` (tests), `9cccbc2b084ab6d9d2c183e55d8b124e76a34793` (Seller integration).
+- Exact-head CI/Preview verification pending; verify latest branch head and checks before release claims.
+- No migration, database, Storage object, Production deployment/alias, PR merge, billing or credential operation was performed.
