@@ -302,3 +302,10 @@ Updated: 2026-11-22
 - Release-pack commits: `089ca67c85492b00d09633c03c746e9d135c2ba7` and `af535b1e46b7d6128d9461be1f39eb475228679e`.
 - On exact code head `af535b1e46b7d6128d9461be1f39eb475228679e`, GitHub Actions run `45021344646` was IN_PROGRESS at checkpoint time; Vercel Preview status was SUCCESS. Do not mark CI complete until the workflow finishes.
 - PR #3 remains OPEN and unmerged. No Production database/Storage mutation, Production deployment, PR merge, credentials/secrets operation, or Cloudflare configuration change was performed.
+
+
+## Release SQL syntax rehearsal correction — 2026-11-22
+- Static comparison of the newly bundled 0028/0029 sections caught a dollar-quote delimiter truncation in the consolidated SQL text. Replaced the affected anonymous `$$` delimiters with explicit unique PostgreSQL tags (`$migration_0028$` and `$migration_0029$`) to keep the bundled blocks syntactically complete.
+- Rehearsed the exact two bundled migration sections on isolated `allify-test` inside an explicit transaction: temporarily dropped the test index, recreated it, replaced the seller-review RPC, verified index/function/grants in a DO assertion, then rolled back. The SQL execution completed without error and the test DB state was restored by rollback.
+- Corrected release-pack commit: `bf082ef739218ef7e1a0fadc29a40743c126a90c`.
+- This remains isolated-test validation only. No Production database/Storage changes, Production deployment, PR merge, secrets action, or Cloudflare configuration change.
