@@ -34,9 +34,9 @@ export const validateSellerProductNumbers = (
 
   if (
     comparePrice !== null &&
-    (!Number.isFinite(comparePrice) || comparePrice <= 0 || comparePrice > 100000000)
+    (!Number.isFinite(comparePrice) || comparePrice <= price || comparePrice > 100000000)
   ) {
-    return { ok: false, error: "তুলনামূলক মূল্য সঠিকভাবে লিখুন।" };
+    return { ok: false, error: "তুলনামূলক মূল্য পণ্যের মূল্যের চেয়ে বেশি হতে হবে।" };
   }
 
   return { ok: true, value: { price, comparePrice, stock } };
