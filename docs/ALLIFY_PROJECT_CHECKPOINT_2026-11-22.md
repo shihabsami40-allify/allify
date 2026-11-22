@@ -283,3 +283,12 @@ Updated: 2026-11-22
 - Code commit: `43513016838804039d3a5ceed15bfb73cb046945`.
 - Previous head `4c18b88438bc9537bffc0ed1e36eab62b19a46f4`: `Workers Builds: allifychattogram` completed FAILURE (build `628651b2-c4a7-4382-aed1-99014dd4cb71`); `Workers Builds: allify` remained IN_PROGRESS (build `e3c2fb9c-5e51-42df-94b1-1cfa6696220e`). GitHub check output exposes no build log/annotations, so cause remains unknown.
 - PR #3 remains OPEN/unmerged/mergeable. No Production deployment, database/storage mutation, secrets action, or PR merge occurred.
+
+
+## Stored-cart snapshot shape hardening — 2026-11-22
+- Continued from the latest verified branch head without repeating the earlier cart persistence work.
+- Tightened `sanitizeStoredCart` to reject array-shaped product/store relation values and malformed non-boolean `seller_stores.is_demo` flags. Accepted product IDs and Bengali titles are normalized before returning sanitized rows, preventing whitespace variants from persisting as distinct IDs.
+- Added focused Vitest coverage for ID/title normalization and malformed seller relation shapes in the existing cart-validation test file.
+- Code commits: `85d3e522a6319fef9925fd879a55c478aee853bb` and `de4a9718971d7d3432ab989025b4e99b50dc2023`.
+- Exact-head GitHub Actions run `45020847029` was IN_PROGRESS at checkpoint update; Vercel status was PENDING. Do not mark this change verified until CI and Preview finish.
+- PR #3 remains OPEN and unmerged. No Production database/Storage mutation, Production deployment, PR merge, credential change, or Cloudflare configuration change was performed.
