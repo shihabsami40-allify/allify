@@ -70,3 +70,12 @@ Updated: 2026-11-22
 - The Advisor warning is caused by these SECURITY DEFINER functions being callable by signed-in users; the read-only test-project grant check did not find anon or PUBLIC EXECUTE on them. Keep the warning visible and re-review if any function body/grant changes; do not blindly revoke required application RPCs.
 - These findings apply only to `allify-test`, not the inaccessible configured Production database. No SQL, grant, schema or data change was made.
 - The Performance Advisor still reports four unused-index informational findings; no index was dropped.
+
+
+## External deployment checks and PR mergeability — 2026-11-22
+- On PR head `d42710999b844cf99a411ae4f168845c8321982d`, GitHub Actions build/test run `44978680142` passed and the exact-head Vercel Preview reached READY.
+- GitHub check-runs also show two separate Cloudflare Workers Builds failures: service `allify` and service `allifychattogram`. The Cloudflare check summaries expose build IDs, but the detailed dashboard logs are not accessible through the current authorized connector. These failures are distinct from the successful Vercel Preview and GitHub Actions build; do not claim Cloudflare deployment success.
+- The Vercel Preview Comments check is successful with no unresolved feedback.
+- Raw GitHub PR API reports OPEN, unmerged, `mergeable=true`, `mergeable_state=unstable`. Branch-protection endpoint returned 403 to the integration; repository rulesets query returned an empty list. Whether the Cloudflare checks are required merge gates is therefore unverified. Do not merge.
+- PR #3 description was refreshed to show the current code/test evidence, Cloudflare failures and Production release gates.
+- No Cloudflare configuration, DNS, deployment target, credentials or secrets were changed.
