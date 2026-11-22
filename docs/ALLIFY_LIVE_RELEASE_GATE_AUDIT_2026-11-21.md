@@ -86,3 +86,15 @@ IN PROGRESS — latest PR head CI and Vercel Preview are READY. Production check
 - After the rebuilt SQL pack and audit notes were committed, PR head `35637bfcc0973492ac1d3600fec8117b5187a61f` passed GitHub Actions run `44911142783`; dependency installation, application build and tests all completed successfully.
 - Exact-head Vercel Preview deployment `dpl_HS68pxfoMpYzJRFemA8AuT3fSVx2` is READY at https://allify-chattogram-nbpobciqm-allify.vercel.app (Preview only, not Production).
 - PR #3 remains OPEN, mergeable, and unmerged. Production remains unchanged.
+
+
+## Automated revalidation and order-status test coverage — 2026-11-22
+- Live PR #3 check: OPEN, mergeable, not merged; candidate branch `allify-order-lifecycle-2026-11-20`.
+- Refactored `deriveOrderStatus` into `src/lib/order-status.ts` and added seven focused Vitest cases in `src/test/order-status.test.ts`; UI imports the helper. No schema or Production data changes.
+- Verified code/test commit `1ed8d8ac791a5c11be92160e37685e381928ce2e`: GitHub Actions run `44978458542` SUCCESS, including install, build and tests; exact-head Vercel Preview `dpl_9ECtwwLDNS3fQjowSUrvvRHDooQG` READY at https://allify-chattogram-3izqsf6h0-allify.vercel.app.
+- Production deployment remains READY on `main` at `6f3ba9e768de476ac9a2d89eda5b523087e8f760`; no Production alias or deployment changes.
+- Correctly parameterized read-only Supabase project lookup for configured ref `htsvvotamlxlkncksssq` still returned permission denied. Accessible project list still contains only legacy Allify and allify-test. No substitution or Production mutation.
+- Lovable remains published but `needs_attention / out_of_credits`; source divergence remains unresolved.
+- Current isolated test Security Advisor reports seven authenticated-callable SECURITY DEFINER RPC warnings and Performance Advisor reports four unused-index informational findings. Review function authorization individually; do not blindly revoke app-required RPCs or drop indexes.
+- Live Preview route fetch through the available web/container network was unavailable in this run. READY status is not represented as a successful browser or signed-in E2E test.
+- No Production DB/Storage write, PR merge, Production deploy, billing change or credential operation was performed.
