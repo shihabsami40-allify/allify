@@ -134,3 +134,13 @@ Updated: 2026-11-22
 - Exact-head GitHub Actions run `44986400719` completed SUCCESS: dependency installation, application build and Vitest all passed.
 - Exact-head Vercel Preview deployment `dpl_DQA9Ltmzum1eR5ZffhsTz8xEmoA4` reached READY at https://allify-chattogram-jnxnvkvwt-allify.vercel.app (Preview only; target is not Production). Combined Vercel commit status is success.
 - PR #3 remains OPEN, unmerged and mergeable. No Production database, Storage, deployment, alias, billing, credential or source-reconciliation action was performed.
+
+
+## Buyer cart persistence hardening — 2026-11-22 (current run)
+- Added `src/lib/cart-validation.ts` with `sanitizeStoredCart` to treat browser localStorage as untrusted input before restoring the Buyer cart.
+- The sanitizer drops malformed product snapshots, invalid/non-finite or non-positive prices, invalid stock, invalid quantities, quantities above stock, demo-store products and duplicate product IDs; it caps restored carts at 50 distinct lines.
+- Integrated sanitization into the cart restore path and rewrites the localStorage snapshot with only accepted lines. Server-side checkout RPC remains the authoritative price/stock/order validator; this client guard is not a replacement for it.
+- Added `src/test/cart-validation.test.ts` for valid lines, malformed payloads, invalid product data, quantity boundaries, demo/duplicate items and the 50-line cap.
+- Commits: `1c9e5d91cccd68ad39d94c6780be9db4754ceff0` (sanitizer), `b7032324b5f6783e8b69740f1c0436229a16deb0` (tests), `031e14e5e506b7aa1f3cb16990846d7979f5adbe` and `91abad719fa180d5f9936aceda473a18af0b5139` (Buyer integration/type narrowing).
+- Exact-head CI and Preview verification are pending at checkpoint authoring; verify the latest branch head before treating this change as complete.
+- No database, Storage, Production deployment/alias, billing, credential or PR-merge operation was performed.
