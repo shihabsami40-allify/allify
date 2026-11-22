@@ -167,3 +167,12 @@ Updated: 2026-11-22
 - Exact Seller integration commit `9cccbc2b084ab6d9d2c183e55d8b124e76a34793` GitHub Actions run `44986727233` completed SUCCESS: dependency installation, build and Vitest passed. The image-validation test commit `8037890e03909136802b002dd7bddc8dd63b86ba` run `44986720777` also completed SUCCESS.
 - Checkpoint head `a612105d87491af4d9c89c04f82bcee2ff895b03` has a READY Vercel Preview deployment `dpl_GY2Bx92x1N2QQ5EEo6oEMgkZDrTC`: https://allify-chattogram-hyxpnhdye-allify.vercel.app. Preview only, not Production.
 - PR #3 remains OPEN, unmerged and mergeable after checks. No Production or database/storage changes were made.
+
+
+## Seller/Admin stale-write feedback hardening — 2026-11-22
+- Reviewed the Seller product update, Admin product moderation, and Admin order-item status update calls.
+- Found that Supabase UPDATE requests without selecting affected rows can return no error even when a row no longer matches the expected ID/store/current-status filters. The UI could then optimistically show a successful update that did not happen.
+- Updated these paths to request the changed row ID and explicitly handle a zero-row result with a Bengali refresh/retry message. Admin cancellation now also checks the protected RPC's boolean result.
+- Existing server-side RLS, triggers and RPCs remain authoritative; this is client-side stale-state/error feedback, not an authorization replacement.
+- Commit: `804857b57e267799afa41cb2577df5c5d9c5c092`.
+- No database, Storage object, Production deployment/alias, PR merge, billing or credential operation was performed. Exact-head CI/Preview verification pending.
