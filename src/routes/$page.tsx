@@ -66,8 +66,9 @@ function MarketplacePage() {
     } catch { setCart([]); }
   };
   const saveCart = (next: CartLine[]) => {
-    setCart(next);
-    localStorage.setItem("allify-cart", JSON.stringify(next));
+    const safeCart = sanitizeStoredCart(next);
+    setCart(safeCart as CartLine[]);
+    localStorage.setItem("allify-cart", JSON.stringify(safeCart));
   };
   const addToCart = (p: Product) => {
     if (p.seller_stores?.is_demo) {
