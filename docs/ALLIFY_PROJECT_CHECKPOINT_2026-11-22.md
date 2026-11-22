@@ -186,3 +186,7 @@ Updated: 2026-11-22
 - Commit: `5dd404275a093457d7c3c2b897c9e447e8ade084`.
 - PR #3 remains open/unmerged. Exact-head CI and Preview verification pending.
 - Seller application submission currently has a client-side pending-application guard; the review RPC serializes approval attempts per applicant and rejects an existing store. Do not treat the client-side guard as a database uniqueness guarantee: no server-side unique-pending-application constraint has been verified in the reviewed migration set.
+
+- Exact code commit `5dd404275a093457d7c3c2b897c9e447e8ade084` passed GitHub Actions run `44989403324`; checkpoint head `923f4cca5506ac9119c06ff39b58424fff386dec` passed run `44989413839` (dependency install, application build and Vitest SUCCESS).
+- Exact checkpoint-head Vercel Preview deployment `dpl_7dzo65AW73KkS24UcQk2mt8dkaci` reached READY at https://allify-chattogram-80qbrvkjl-allify.vercel.app (Preview only; target is not Production). PR #3 remains OPEN and unmerged.
+- Separate Cloudflare Workers Builds checks on the prior exact head `6b748a02698144104c31bc19858ae83094d9bba2` were still failing for services `allify` and `allifychattogram`; current head check runs must be inspected independently. Do not infer Cloudflare deployment success from Vercel.
