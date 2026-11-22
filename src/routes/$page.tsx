@@ -375,8 +375,9 @@ function MarketplacePage() {
     if (!window.confirm("এই পণ্যের অর্ডারটি বাতিল করতে চাও?")) return;
     setBusy(true); setError(""); setMessage("");
     try {
-      const {error} = await supabase.rpc("cancel_order_item",{p_item_id:itemId});
+      const {data,error} = await supabase.rpc("cancel_order_item",{p_item_id:itemId});
       if (error) throw error;
+      if (data !== true) throw new Error("অর্ডারটি বাতিল করা যায়নি; তথ্য হালনাগাদ করে আবার চেষ্টা করুন।");
       setOrders(rows=>rows.map(order=>{
         if(order.id!==orderId) return order;
         const order_items=(order.order_items||[]).map((item:any)=>item.id===itemId?{...item,status:"cancelled"}:item);
@@ -395,8 +396,17 @@ function MarketplacePage() {
     }
     setBusy(true); setError(""); setMessage("");
     try {
-      const {error} = status === "cancelled" ? (await supabase.rpc("cancel_order_item",{p_item_id:itemId})).error : (await supabase.from("order_items").update({status}).eq("id",itemId).eq("status",item.status)).error;
-      if (error) throw error;
+      if (status === "cancelled") {
+        const {data,error} = await supabase.rpc("cancel_order_item",{p_item_id:itemId});
+        if (error) throw error;
+        if (data !== true) throw new Error("অর্ডারটি বাতিল করা যায়নি; তথ্য হালনাগাদ করে আবার চেষ্টা করুন।");
+      } else {
+        const {data,error} = await supabase.from("order_items").update({status})
+          .eq("id",itemId).eq("store_id",myStore?.id).eq("status",item.status)
+          .select("id").maybeSingle();
+        if (error) throw error;
+        if (!data) throw new Error("অর্ডারের অবস্থা ইতিমধ্যে পরিবর্তিত হয়েছে; তথ্য হালনাগাদ করে আবার চেষ্টা করুন।");
+      }
       setSellerOrders(rows=>rows.map(row=>row.id===itemId?{...row,status}:row));
       setMessage("অর্ডারের অবস্থা আপডেট হয়েছে।");
     } catch(e:any) { setError(e.message || "অর্ডার আপডেট করা যায়নি।"); }
