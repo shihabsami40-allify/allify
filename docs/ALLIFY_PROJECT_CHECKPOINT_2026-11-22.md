@@ -144,3 +144,12 @@ Updated: 2026-11-22
 - Commits: `1c9e5d91cccd68ad39d94c6780be9db4754ceff0` (sanitizer), `b7032324b5f6783e8b69740f1c0436229a16deb0` (tests), `031e14e5e506b7aa1f3cb16990846d7979f5adbe` and `91abad719fa180d5f9936aceda473a18af0b5139` (Buyer integration/type narrowing).
 - Exact-head CI and Preview verification are pending at checkpoint authoring; verify the latest branch head before treating this change as complete.
 - No database, Storage, Production deployment/alias, billing, credential or PR-merge operation was performed.
+
+
+### Buyer cart persistence hardening — exact-head verification
+- Final code commits: `1c9e5d91cccd68ad39d94c6780be9db4754ceff0` (sanitizer), `b7032324b5f6783e8b69740f1c0436229a16deb0` (tests), `031e14e5e506b7aa1f3cb16990846d7979f5adbe` and `91abad719fa180d5f9936aceda473a18af0b5139` (integration).
+- Final checkpoint head before this verification note: `cfb4bf943c043708f8d0209be58eed9561941e19`.
+- GitHub Actions run `44986576387` completed SUCCESS; dependency installation, application build and Vitest all passed: https://github.com/shihabsami40-allify/allify/actions/runs/44986576387.
+- Exact-head Vercel Preview deployment `dpl_EffXXhhdZELwyYtGxhbTM4bWQo8Q` reached READY at https://allify-chattogram-92uajq89c-allify.vercel.app (Preview only; Vercel target is not Production). Combined Vercel status is success.
+- PR #3 remains OPEN, unmerged and mergeable on the verified head. This is a client-side persisted-cart hygiene layer only; checkout RPC remains authoritative for price, stock and order creation.
+- No Production DB/Storage mutation, Production deployment/alias change, PR merge, billing or credential operation was performed.
