@@ -163,3 +163,7 @@ Updated: 2026-11-22
 - Commits: `fef9999e0e2ce898f01b60c283bb0650b2dc8a1d` (helper), `8037890e03909136802b002dd7bddc8dd63b86ba` (tests), `9cccbc2b084ab6d9d2c183e55d8b124e76a34793` (Seller integration).
 - Exact-head CI/Preview verification pending; verify latest branch head and checks before release claims.
 - No migration, database, Storage object, Production deployment/alias, PR merge, billing or credential operation was performed.
+
+- Exact Seller integration commit `9cccbc2b084ab6d9d2c183e55d8b124e76a34793` GitHub Actions run `44986727233` completed SUCCESS: dependency installation, build and Vitest passed. The image-validation test commit `8037890e03909136802b002dd7bddc8dd63b86ba` run `44986720777` also completed SUCCESS.
+- Checkpoint head `a612105d87491af4d9c89c04f82bcee2ff895b03` has a READY Vercel Preview deployment `dpl_GY2Bx92x1N2QQ5EEo6oEMgkZDrTC`: https://allify-chattogram-hyxpnhdye-allify.vercel.app. Preview only, not Production.
+- PR #3 remains OPEN, unmerged and mergeable after checks. No Production or database/storage changes were made.
