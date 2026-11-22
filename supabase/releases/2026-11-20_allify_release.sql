@@ -1433,7 +1433,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres
 -- Keep all existing rows intact: if legacy duplicate pending applications exist,
 -- stop the migration and require an explicit administrative review before retrying.
 
-DO $
+DO $migration_0028$
 BEGIN
   IF EXISTS (
     SELECT 1
@@ -1447,7 +1447,7 @@ BEGIN
       'Duplicate pending seller applications exist; review them explicitly before creating the unique index';
   END IF;
 END;
-$;
+$migration_0028$;
 
 CREATE UNIQUE INDEX seller_applications_one_pending_per_user
   ON public.seller_applications (user_id)
@@ -1468,7 +1468,7 @@ RETURNS uuid
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $migration_0029$
 DECLARE
   v_app public.seller_applications%ROWTYPE;
   v_store uuid;
@@ -1540,7 +1540,7 @@ BEGIN
 
   RETURN v_store;
 END;
-$;
+$migration_0029$;
 
 REVOKE EXECUTE ON FUNCTION public.review_seller_application(uuid, boolean, text) FROM anon, public;
 GRANT EXECUTE ON FUNCTION public.review_seller_application(uuid, boolean, text) TO authenticated;
