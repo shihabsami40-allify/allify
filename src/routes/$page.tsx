@@ -301,8 +301,9 @@ function MarketplacePage() {
     }
     setBusy(true);
     try {
-      const {error} = await supabase.from("products").update(safeValues).eq("id",id).eq("store_id",myStore.id);
+      const {data,error} = await supabase.from("products").update(safeValues).eq("id",id).eq("store_id",myStore.id).select("id").maybeSingle();
       if (error) throw error;
+      if (!data) throw new Error("পণ্যটি পাওয়া যায়নি বা পরিবর্তনের অনুমতি নেই।");
       setSellerProducts(rows=>rows.map(p=>p.id===id?{...p,...safeValues}:p));
       setMessage("পণ্যের তথ্য আপডেট হয়েছে।");
     } catch(e:any) { setError(e.message || "পণ্য আপডেট করা যায়নি।"); }
@@ -316,8 +317,9 @@ function MarketplacePage() {
     }
     setBusy(true); setError(""); setMessage("");
     try {
-      const {error} = await supabase.from("products").update({status}).eq("id",id);
+      const {data,error} = await supabase.from("products").update({status}).eq("id",id).select("id").maybeSingle();
       if (error) throw error;
+      if (!data) throw new Error("পণ্যটি পাওয়া যায়নি বা প্রকাশ-অবস্থা পরিবর্তন করা যায়নি।");
       setAdminProducts(rows=>rows.map(p=>p.id===id?{...p,status}:p));
       setMessage("পণ্যের প্রকাশ-অবস্থা আপডেট হয়েছে।");
     } catch(e:any) { setError(e.message || "পণ্য আপডেট করা যায়নি।"); }
@@ -334,8 +336,15 @@ function MarketplacePage() {
     }
     setBusy(true); setError(""); setMessage("");
     try {
-      const {error} = status === "cancelled" ? (await supabase.rpc("cancel_order_item",{p_item_id:itemId})).error : (await supabase.from("order_items").update({status}).eq("id",itemId).eq("status",item.status)).error;
-      if (error) throw error;
+      if (status === "cancelled") {
+        const {data,error} = await supabase.rpc("cancel_order_item",{p_item_id:itemId});
+        if (error) throw error;
+        if (data !== true) throw new Error("অর্ডারটি বাতিল করা যায়নি; আবার তথ্য হালনাগাদ করে চেষ্টা করুন।");
+      } else {
+        const {data,error} = await supabase.from("order_items").update({status}).eq("id",itemId).eq("status",item.status).select("id").maybeSingle();
+        if (error) throw error;
+        if (!data) throw new Error("অর্ডারের অবস্থা ইতিমধ্যে পরিবর্তিত হয়েছে; তথ্য হালনাগাদ করে আবার চেষ্টা করুন।");
+      }
       setAdminOrders(rows=>rows.map(order=>{
         if(order.id!==orderId) return order;
         const order_items=(order.order_items||[]).map((item:any)=>item.id===itemId?{...item,status}:item);
