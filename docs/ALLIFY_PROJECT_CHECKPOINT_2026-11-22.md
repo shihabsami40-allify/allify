@@ -79,3 +79,14 @@ Updated: 2026-11-22
 - Raw GitHub PR API reports OPEN, unmerged, `mergeable=true`, `mergeable_state=unstable`. Branch-protection endpoint returned 403 to the integration; repository rulesets query returned an empty list. Whether the Cloudflare checks are required merge gates is therefore unverified. Do not merge.
 - PR #3 description was refreshed to show the current code/test evidence, Cloudflare failures and Production release gates.
 - No Cloudflare configuration, DNS, deployment target, credentials or secrets were changed.
+
+
+## Order-transition policy coverage — 2026-11-22 (current run)
+- Continued from the verified PR #3 head and preserved all prior work.
+- Added `src/lib/order-transitions.ts` as the shared pure policy for item-level order status changes.
+- Replaced the duplicated transition guard in both Seller and Admin order-update handlers with the shared policy. This keeps both roles aligned and rejects unsupported direct jumps or changes from terminal states.
+- Added `src/test/order-transitions.test.ts`: five permitted transitions and thirteen rejected transitions, including no-op, skipped/backward transitions, terminal-state changes and unknown states.
+- Commits: `b8067ea656fb941a45cadab8a3017da94b1a6dce` (policy), `9de6b9f1d85d7b94b68cba0c1590fccda51fd0b4` (tests), `a73fba29970505aa5e15878259eb79c646f67017` (Seller/Admin integration).
+- No database, Storage, Supabase configuration, Production deployment, alias, billing or credential changes were made.
+- Exact-head CI and Vercel Preview verification for `a73fba29970505aa5e15878259eb79c646f67017` were pending at checkpoint write time; do not treat this commit as verified until both are rechecked.
+- Next: confirm exact-head workflow, Vercel Preview and PR check state; then continue repository-only Buyer checkout/accessibility/security tests while Production access and backup gates remain blocked.
