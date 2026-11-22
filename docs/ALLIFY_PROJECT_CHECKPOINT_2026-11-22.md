@@ -256,3 +256,13 @@ Updated: 2026-11-22
 - Vercel build emitted non-fatal warnings: `vite-tsconfig-paths` is detected although Vite has native tsconfig-path support; client JS chunk `index-DQqBDNSp.js` is 563.06 kB (gzip 166.36 kB), over the 500 kB warning threshold; generated SSR React Router chunk is 762.58 kB. No build failure. Treat chunk splitting and config cleanup as a separately tested performance task; did not silence the warning or change build configuration without measuring impact.
 - Latest exact-head Cloudflare checks: `allifychattogram` failed (build `b4e4574f-b380-4144-b6e3-91a71a11e283`); `allify` remained in progress (build `5789d472-1321-4c2d-9aa1-495f68e8eeee`). GitHub check output contains only build/service links and zero annotations, not the underlying error text. No Cloudflare build-log tool is available in the connected integrations; authorized Cloudflare dashboard access is still required for root-cause diagnosis.
 - No code change was warranted by this review. No Production deployment, DB/Storage mutation, secret change, or PR merge occurred.
+
+
+## Homepage cart validation parity — 2026-11-22
+- Found homepage `src/routes/index.tsx` used a separate localStorage cart path that trusted raw parsed rows; unlike the marketplace cart, it did not apply the shared sanitizer during cart-count restore or before adding an item. This could preserve malformed rows/duplicates or invalid quantities when shopping starts from the homepage.
+- Integrated `sanitizeStoredCart` in homepage cart restore and add-to-cart. Restore now writes the sanitized cart back and calculates count from accepted integer quantities; add-to-cart starts from sanitized rows and preserves existing stock-limit behavior.
+- Reused existing `src/lib/cart-validation.ts` helper and its test suite; no new duplicate validation implementation.
+- Code commit: `a83e0f61043ead45809991e914a7f39dea133981`.
+- Exact-head GitHub Actions run `44990591975` completed SUCCESS; dependency install, application build and Vitest all passed. Exact-head Vercel Preview `dpl_BpNg4QfgvBPjFNZNk8Aqv6wgULT8` READY (target null; Preview only).
+- Exact-head Cloudflare check `Workers Builds: allifychattogram` remained IN_PROGRESS at checkpoint time. Earlier exact-head check for `allifychattogram` failed, but latest status must be polled before describing it as a current failure. Cloudflare logs still not exposed through GitHub check output.
+- PR #3 remains OPEN/unmerged/mergeable. No Production deployment, DB/Storage mutation, secrets change, or PR merge occurred.
