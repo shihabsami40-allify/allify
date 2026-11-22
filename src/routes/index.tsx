@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeStoredCart, type StoredCartLine } from "@/lib/cart-validation";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -76,7 +77,9 @@ function Index() {
     const update = () => {
       try {
         const saved = JSON.parse(localStorage.getItem("allify-cart") || "[]");
-        setCartCount(Array.isArray(saved) ? saved.reduce((n: number, row: any) => n + Number(row.quantity || 0), 0) : 0);
+        const safeCart = sanitizeStoredCart(saved);
+        setCartCount(safeCart.reduce((n, row) => n + row.quantity, 0));
+        localStorage.setItem("allify-cart", JSON.stringify(safeCart));
       } catch {
         setCartCount(0);
       }
@@ -89,7 +92,7 @@ function Index() {
   const addToCart = (product: StoreProduct) => {
     try {
       const saved = JSON.parse(localStorage.getItem("allify-cart") || "[]");
-      const next = Array.isArray(saved) ? [...saved] : [];
+      const next = sanitizeStoredCart(saved);
       const found = next.find((row: any) => row.product?.id === product.id);
       const stockLimit = Math.max(0, Math.min(99, Number(product.stock) || 0));
       if (stockLimit < 1) {
@@ -104,7 +107,7 @@ function Index() {
           return;
         }
         found.quantity = Number(found.quantity || 0) + 1;
-      } else next.push({ product, quantity: 1 });
+      } else next.push({ product: product as StoredCartLine["product"], quantity: 1 });
       localStorage.setItem("allify-cart", JSON.stringify(next));
       setCartCount(next.reduce((n: number, row: any) => n + Number(row.quantity || 0), 0));
       setToast("পণ্যটি কার্টে যোগ হয়েছে");
