@@ -364,8 +364,11 @@ function MarketplacePage() {
     }
     setBusy(true); setError(""); setMessage("");
     try {
-      const {error} = await supabase.rpc("review_seller_application",{p_app_id:id,p_approve:approve,p_note:null});
+      const {data,error} = await supabase.rpc("review_seller_application",{p_app_id:id,p_approve:approve,p_note:null});
       if (error) throw error;
+      if (approve && (typeof data !== "string" || !data)) {
+        throw new Error("দোকান তৈরি নিশ্চিত করা যায়নি; আবেদন তালিকা হালনাগাদ করে আবার যাচাই করুন।");
+      }
       setApplications(rows=>rows.map(a=>a.id===id?{...a,status:approve?"approved":"rejected"}:a));
       setMessage(approve?"বিক্রেতার আবেদন অনুমোদিত হয়েছে।":"আবেদনটি বাতিল করা হয়েছে।");
     } catch(e:any) { setError(e.message || "আবেদন আপডেট করা যায়নি।"); }
