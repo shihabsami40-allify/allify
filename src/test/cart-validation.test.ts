@@ -50,6 +50,21 @@ describe("sanitizeStoredCart", () => {
     ])).toEqual([{ product: product(), quantity: 2 }]);
   });
 
+  it("normalizes product IDs and titles before storing accepted rows", () => {
+    expect(sanitizeStoredCart([
+      { product: product({ id: "  product-1  ", title_bn: "  শার্ট  " }), quantity: 1 },
+    ])).toEqual([
+      { product: product({ id: "product-1", title_bn: "শার্ট" }), quantity: 1 },
+    ]);
+  });
+
+  it("rejects malformed seller relation shapes without treating them as real stores", () => {
+    expect(sanitizeStoredCart([
+      { product: product({ seller_stores: [] }), quantity: 1 },
+      { product: product({ seller_stores: { is_demo: "false" } }), quantity: 1 },
+    ])).toEqual([]);
+  });
+
   it("limits the cart to 50 distinct lines", () => {
     const lines = Array.from({ length: 55 }, (_, index) => ({
       product: product({ id: `product-${index}` }),
