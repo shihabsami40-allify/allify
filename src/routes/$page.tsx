@@ -5,6 +5,7 @@ import { deriveOrderStatus } from "@/lib/order-status";
 import { canTransitionOrderItemStatus } from "@/lib/order-transitions";
 import { validateSellerProductNumbers } from "@/lib/product-input";
 import { validateSellerProductImage } from "@/lib/product-image-input";
+import { getSellerApplicationSubmitError } from "@/lib/seller-application-error";
 import { sanitizeStoredCart } from "@/lib/cart-validation";
 
 export const Route = createFileRoute("/$page")({ component: MarketplacePage });
@@ -221,7 +222,7 @@ function MarketplacePage() {
       });
       if (error) throw error;
       setMessage("বিক্রেতা আবেদন জমা হয়েছে। অ্যাডমিন অনুমোদনের পর দোকান চালু হবে।");
-    } catch(e:any) { setError(e.message || "আবেদন জমা হয়নি।"); }
+    } catch(e:any) { setError(getSellerApplicationSubmitError(e)); }
     finally { setBusy(false); }
   };
 
