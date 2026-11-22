@@ -98,3 +98,11 @@ Updated: 2026-11-22
 - Exact-head Vercel Preview deployment `dpl_AkUq5RrzQWWL2kRkDU9dpXjrUiwj` reached READY for the same commit: https://allify-chattogram-e438e6jdq-allify.vercel.app (Preview only; target is not Production).
 - Combined commit status reports Vercel success. PR #3 remains OPEN and unmerged; mergeability was true on recheck.
 - These checks validate install/build/tests and Preview build only. They do not replace signed-in Buyer/Seller/Admin E2E or Production verification.
+
+
+## Checkout accessibility improvement — 2026-11-22 (current run)
+- Added explicit accessible names to the Buyer checkout recipient, phone, delivery-area, address, optional-note and save-address controls.
+- Checkout success feedback now uses a polite live status region; error feedback uses an alert region; the initial loading message is announced as a status.
+- This is a UI-only accessibility improvement. It does not change checkout validation, RPC arguments, order data, schema, or Production configuration.
+- Code commit: `c5b066f6b0c64283125c813da98896a7785bc082`.
+- Exact-head CI and Preview verification for the follow-up accessibility commit and checkpoint are pending; recheck before treating them as verified.
