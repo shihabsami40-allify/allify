@@ -25,7 +25,7 @@ export function sanitizeStoredCart(value: unknown): StoredCartLine[] {
 
     const line = candidate as Record<string, unknown>;
     const product = line.product;
-    if (!product || typeof product !== "object") continue;
+    if (!product || typeof product !== "object" || Array.isArray(product)) continue;
 
     const item = product as Record<string, unknown>;
     const id = typeof item.id === "string" ? item.id.trim() : "";
@@ -50,12 +50,16 @@ export function sanitizeStoredCart(value: unknown): StoredCartLine[] {
       quantity < 1 ||
       quantity > 99 ||
       quantity > stock ||
-      (seller !== null && seller !== undefined && typeof seller !== "object") ||
+      (seller !== null && seller !== undefined && (typeof seller !== "object" || Array.isArray(seller))) ||
+      (seller && typeof (seller as Record<string, unknown>).is_demo !== "undefined" && typeof (seller as Record<string, unknown>).is_demo !== "boolean") ||
       (seller && (seller as Record<string, unknown>).is_demo === true)
     ) continue;
 
     seen.add(id);
-    safe.push({ product: item as StoredCartLine["product"], quantity });
+    safe.push({
+      product: { ...item, id, title_bn: title } as StoredCartLine["product"],
+      quantity,
+    });
   }
 
   return safe;
