@@ -176,3 +176,13 @@ Updated: 2026-11-22
 - Existing server-side RLS, triggers and RPCs remain authoritative; this is client-side stale-state/error feedback, not an authorization replacement.
 - Commit: `804857b57e267799afa41cb2577df5c5d9c5c092`.
 - No database, Storage object, Production deployment/alias, PR merge, billing or credential operation was performed. Exact-head CI/Preview verification pending.
+
+
+## Seller/Buyer order stale-state feedback — 2026-11-22
+- Extended the stale-write audit to Seller order lifecycle actions and Buyer cancellation.
+- Seller non-cancellation status updates now require the expected item ID, owning store ID, and previously observed status to match, then select the affected row; a zero-row result is surfaced as a refresh/retry error instead of an optimistic success.
+- Seller and Buyer cancellation now both verify the protected `cancel_order_item` RPC returned boolean `true`; an unexpected false/null response is not shown as success.
+- The database RPC and RLS/triggers remain authoritative. This is UI feedback hardening only; no database, Storage, Production, or role permissions changed.
+- Commit: `5dd404275a093457d7c3c2b897c9e447e8ade084`.
+- PR #3 remains open/unmerged. Exact-head CI and Preview verification pending.
+- Seller application submission currently has a client-side pending-application guard; the review RPC serializes approval attempts per applicant and rejects an existing store. Do not treat the client-side guard as a database uniqueness guarantee: no server-side unique-pending-application constraint has been verified in the reviewed migration set.
