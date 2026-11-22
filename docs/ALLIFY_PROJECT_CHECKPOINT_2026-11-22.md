@@ -199,3 +199,11 @@ Updated: 2026-11-22
 - Important: migration is committed to the PR only. It has NOT been applied to Production or any database. Production DB read access and verified restorable backup remain prerequisites for preflight/application.
 - Cloudflare audit clarification: the two Workers Builds failures observed in check-runs belong to old commit `6b748a02698144104c31bc19858ae83094d9bba2`; their check summaries expose build IDs/service names but no diagnostic log text through the available GitHub response. The checked-in Cloudflare deploy workflow runs on pushes to `main` or manual dispatch, not on this PR branch. Do not represent those historical failures as current PR-head build failures; detailed Cloudflare logs still require authorized dashboard access.
 - Current PR branch continues to use Vercel Preview plus GitHub CI as verification; no Cloudflare deploy, Production mutation, PR merge, or credential change was performed.
+
+## Admin seller-application review decision hardening — 2026-11-22
+- Review of migration `0014_guard_seller_application_review.sql` found that `p_approve IS NULL` was not rejected explicitly. In PL/pgSQL, `IF NOT p_approve` does not enter the rejection branch for NULL, so an undefined decision could fall through into the approval path.
+- Added migration `0029_require_explicit_seller_review_decision.sql` to reject NULL decisions at the database boundary while preserving Admin authorization, per-applicant advisory locking, existing-store check, atomic store/role/application updates, and explicit EXECUTE grants.
+- Admin UI now also verifies that the approval RPC returns a non-empty store UUID before showing approval success. Rejection continues to expect a successful null result.
+- Commit: `62efaec95ae4fe74ad5b076ab749b6e701abd163` (SQL guard); `960b89543d37b1476a617cf3075ab086afb71161` (UI result verification).
+- Migration is committed to PR branch only; it has NOT been applied to any database. Production access/backup prerequisites remain unchanged.
+- Validation scope: source-level review only until the migration is applied in an authorized isolated test database and exercised with Admin/non-Admin, true/false/NULL decisions, concurrent approvals, existing-store applicants, and already-reviewed applications.
