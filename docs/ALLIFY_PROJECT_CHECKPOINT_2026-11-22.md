@@ -117,3 +117,11 @@ Updated: 2026-11-22
 - No database, Storage, Supabase configuration, Production deployment, alias, billing or credential changes were made.
 - Exact-head CI and Vercel Preview verification for the code and checkpoint commits is pending and must be rechecked before claiming verification.
 - Next: verify exact-head build/tests/Preview, then continue repository-only Buyer/Seller/Admin QA and source-of-truth checks. Production gates remain unchanged.
+
+
+### Seller product validation — verification result
+- Code commit `0ad67bc0ea94fb04eb97631368075aa4954c3147` passed GitHub Actions run `44986014656`: dependency installation, application build and Vitest all SUCCESS. Run: https://github.com/shihabsami40-allify/allify/actions/runs/44986014656.
+- Final checkpoint head before this verification note, `254fa3deb7998149f21a3b9c3d664e60b31fcbbc`, has exact-head Vercel Preview READY: https://allify-chattogram-bzhruq6v3-allify.vercel.app. Deployment: `dpl_2tjnbYxdJ8LGM4xoU71Gq8bBtrjR`.
+- Exact-head GitHub checks on `254fa3deb7998149f21a3b9c3d664e60b31fcbbc`: build SUCCESS and Vercel Preview Comments SUCCESS.
+- PR #3 remains OPEN and unmerged. GitHub reports `mergeable=true` but `mergeable_state=unstable` at the latest check; recheck after all status contexts settle. No merge attempted.
+- Preview is not Production. All Production access, backup, source reconciliation and signed-in role-based E2E gates remain NOT CLEARED.
