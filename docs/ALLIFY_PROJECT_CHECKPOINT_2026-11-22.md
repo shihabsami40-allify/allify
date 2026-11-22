@@ -309,3 +309,13 @@ Updated: 2026-11-22
 - Rehearsed the exact two bundled migration sections on isolated `allify-test` inside an explicit transaction: temporarily dropped the test index, recreated it, replaced the seller-review RPC, verified index/function/grants in a DO assertion, then rolled back. The SQL execution completed without error and the test DB state was restored by rollback.
 - Corrected release-pack commit: `bf082ef739218ef7e1a0fadc29a40743c126a90c`.
 - This remains isolated-test validation only. No Production database/Storage changes, Production deployment, PR merge, secrets action, or Cloudflare configuration change.
+
+## Consolidated release-pack static QA — 2026-11-22
+- Continued from the existing checkpoint without repeating the earlier isolated 0028/0029 rehearsal.
+- Re-read the consolidated `supabase/releases/2026-11-20_allify_release.sql` and confirmed its 26 migration section markers are contiguous and ordered from `0004` through `0029`, with no missing marker or ordering gap.
+- Confirmed the pack is wrapped in one explicit transaction, has a baseline schema/signature preflight before migration DDL, includes the 0028 duplicate-pending-application guard and unique partial index, includes the 0029 explicit approve/reject decision guard, runs release postflight assertions, commits, and returns the `0004-0029` pack marker.
+- The 0028 migration itself explicitly aborts before index creation if a user has duplicate pending applications; this preserves existing rows and requires explicit review rather than silently deleting or choosing one.
+- Reconfirmed PR #3 is OPEN, unmerged, and GitHub reports mergeable=true. Exact current branch HEAD: `54d7cd136ab5ea2b3ef1f26297cb512d37a9002a`.
+- Exact-head GitHub Actions run `45021490636` completed SUCCESS; the combined Vercel status is SUCCESS. Its Preview deployment is READY (Preview only, not Production).
+- This was a repository/static QA review only. No SQL was applied to any database, no Storage objects changed, no Production deployment or alias changed, and no PR merge was attempted.
+- Remaining limits: this static review does not establish compatibility with the inaccessible configured Production database, a restorable backup, or signed-in Buyer/Seller/Admin end-to-end behavior. PR #3 remains unmerged pending those release gates and external deployment-check review.
