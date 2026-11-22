@@ -31,10 +31,14 @@ describe("validateSellerProductNumbers", () => {
     },
   );
 
-  it.each(["0", "-1", "NaN", "Infinity", "100000001"])(
+  it.each(["0", "-1", "NaN", "Infinity", "100000001", "100"])(
     "rejects invalid comparison price %s",
     (comparePrice) => {
       expect(validateSellerProductNumbers("100", 0, comparePrice)).toMatchObject({ ok: false });
     },
   );
+
+  it("rejects a comparison price below the sale price", () => {
+    expect(validateSellerProductNumbers("100", 0, "90")).toMatchObject({ ok: false });
+  });
 });
