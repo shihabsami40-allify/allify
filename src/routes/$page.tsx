@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { deriveOrderStatus } from "@/lib/order-status";
 import { canTransitionOrderItemStatus } from "@/lib/order-transitions";
+import { validateSellerProductNumbers } from "@/lib/product-input";
 
 export const Route = createFileRoute("/$page")({ component: MarketplacePage });
 
@@ -236,13 +237,15 @@ function MarketplacePage() {
         const imageUrl = new URL(form.image_url);
         if (imageUrl.protocol !== "https:") throw new Error("ছবির URL অবশ্যই HTTPS হতে হবে।");
       }
+      const productNumbers = validateSellerProductNumbers(form.price, form.stock || 0, form.compare_price);
+      if (!productNumbers.ok) throw new Error(productNumbers.error);
       const slug = (form.product_slug || "product-"+Date.now()).toLowerCase().replace(/[^a-z0-9-]/g,"-").replace(/-+/g,"-").replace(/^-|-$/g,"").slice(0,90);
       if (slug.length < 3) throw new Error("পণ্যের URL slug কমপক্ষে ৩ অক্ষরের হতে হবে।");
       const {data,error} = await supabase.from("products").insert({
         store_id:myStore.id, category_id:form.category_id||null, slug,
         title_bn:form.title_bn, title_en:form.title_en||null, description:form.description||null,
-        price:Number(form.price), compare_price:form.compare_price?Number(form.compare_price):null,
-        stock:Number(form.stock||0), status:"active"
+        price:productNumbers.value.price, compare_price:productNumbers.value.comparePrice,
+        stock:productNumbers.value.stock, status:"active"
       }).select("id").single();
       if (error) throw error;
       createdProductId = data.id;
