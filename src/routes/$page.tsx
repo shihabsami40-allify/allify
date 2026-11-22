@@ -59,7 +59,7 @@ function MarketplacePage() {
       const raw = localStorage.getItem("allify-cart");
       const parsed = raw ? JSON.parse(raw) : [];
       const safeCart = sanitizeStoredCart(parsed);
-      setCart(safeCart as CartLine[]);
+      setCart(safeCart as unknown as CartLine[]);
       localStorage.setItem("allify-cart", JSON.stringify(safeCart));
     } catch { setCart([]); }
   };
