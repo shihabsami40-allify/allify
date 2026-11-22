@@ -216,3 +216,7 @@ Updated: 2026-11-22
 - Updated submission to request and verify the inserted application row, add it to local state, and show a pending-review notice instead of a duplicate submission form. Rejected applications can still reapply; approved users see their store dashboard when the store data is available.
 - Commit: `12ab527731ff8601d54629cc1291870ca3c6cc2b`.
 - This is source/migration review and UI behavior hardening, not a live database test. Migrations `0028` and `0029` remain unapplied; no database or Storage changes were made.
+
+- Exact Seller application UI commit `12ab527731ff8601d54629cc1291870ca3c6cc2b` GitHub Actions run `44989892647` completed SUCCESS (build and Vitest).
+- Checkpoint head `f4053b6b5ce5dcbebf53b19ccf6b5d795a7dce78` Vercel Preview deployment `dpl_BkWikFCFc55e26rzUDAmDmdciZeH` reached READY: https://allify-chattogram-ih4yc009g-allify.vercel.app (Preview only, target null).
+- PR #3 remains OPEN, unmerged and mergeable. No Production deployment, DB/Storage write, migration application, or merge occurred.
