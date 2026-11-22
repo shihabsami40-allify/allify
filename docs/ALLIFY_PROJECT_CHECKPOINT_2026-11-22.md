@@ -319,3 +319,10 @@ Updated: 2026-11-22
 - Exact-head GitHub Actions run `45021490636` completed SUCCESS; the combined Vercel status is SUCCESS. Its Preview deployment is READY (Preview only, not Production).
 - This was a repository/static QA review only. No SQL was applied to any database, no Storage objects changed, no Production deployment or alias changed, and no PR merge was attempted.
 - Remaining limits: this static review does not establish compatibility with the inaccessible configured Production database, a restorable backup, or signed-in Buyer/Seller/Admin end-to-end behavior. PR #3 remains unmerged pending those release gates and external deployment-check review.
+
+## CI lint coverage improvement — 2026-11-22
+- Reviewed the existing CI workflow and confirmed pull-request checks installed dependencies, built the app and ran Vitest, but did not execute the repository's already-configured ESLint script.
+- Added a dedicated `bun run lint` step before the build in `.github/workflows/ci.yml`. This changes only CI quality gates; it does not change runtime application behavior or Production configuration.
+- Workflow commit: `8a497ba391e286df9eae36ab2026a6a0d2841b92`.
+- The new exact-head CI run must complete before treating lint as passing. If lint surfaces pre-existing findings, review and fix them separately rather than weakening or suppressing the rules.
+- No database/Storage mutation, Production deployment, PR merge, secret action, or Cloudflare configuration change was performed.
