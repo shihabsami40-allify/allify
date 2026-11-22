@@ -1666,7 +1666,14 @@ BEGIN
   END IF;
   IF NOT has_function_privilege('authenticated','public.review_seller_application(uuid,boolean,text)','EXECUTE')
      OR has_function_privilege('anon','public.review_seller_application(uuid,boolean,text)','EXECUTE')
-     OR has_function_privilege('public','public.review_seller_application(uuid,boolean,text)','EXECUTE') THEN
+     OR EXISTS (
+       SELECT 1
+       FROM pg_proc p
+       CROSS JOIN LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+       WHERE p.oid='public.review_seller_application(uuid,boolean,text)'::regprocedure
+         AND a.grantee=0
+         AND a.privilege_type='EXECUTE'
+     ) THEN
     RAISE EXCEPTION 'Postflight failed: seller review RPC grants are incorrect';
   END IF;
 
