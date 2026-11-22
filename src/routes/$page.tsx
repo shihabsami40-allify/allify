@@ -2,6 +2,7 @@ import { createFileRoute, Link, useLocation, useNavigate } from "@tanstack/react
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { deriveOrderStatus } from "@/lib/order-status";
+import { canTransitionOrderItemStatus } from "@/lib/order-transitions";
 
 export const Route = createFileRoute("/$page")({ component: MarketplacePage });
 
@@ -322,8 +323,7 @@ function MarketplacePage() {
     const order = adminOrders.find(order => order.id === orderId);
     const item = order?.order_items?.find((row:any)=>row.id===itemId);
     if (order?.is_demo) { setError("নমুনা অর্ডারের অবস্থা পরিবর্তন করা যাবে না।"); return; }
-    const transitions:Record<string,string[]> = {pending:["confirmed","cancelled"],confirmed:["shipped","cancelled"],shipped:["delivered"]};
-    if (!item || !transitions[item.status]?.includes(status)) {
+    if (!item || !canTransitionOrderItemStatus(item.status, status)) {
       setError("এই অর্ডারের বর্তমান অবস্থা থেকে নির্বাচিত পরিবর্তনটি অনুমোদিত নয়।");
       return;
     }
@@ -375,8 +375,7 @@ function MarketplacePage() {
 
   const updateSellerOrderStatus = async (itemId:string, status:string) => {
     const item = sellerOrders.find(row=>row.id===itemId);
-    const transitions:Record<string,string[]> = {pending:["confirmed","cancelled"],confirmed:["shipped","cancelled"],shipped:["delivered"]};
-    if (!item || !transitions[item.status]?.includes(status)) {
+    if (!item || !canTransitionOrderItemStatus(item.status, status)) {
       setError("এই অর্ডারের বর্তমান অবস্থা থেকে নির্বাচিত পরিবর্তনটি অনুমোদিত নয়।");
       return;
     }
