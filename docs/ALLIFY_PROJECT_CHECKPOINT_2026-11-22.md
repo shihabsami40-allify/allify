@@ -106,3 +106,14 @@ Updated: 2026-11-22
 - This is a UI-only accessibility improvement. It does not change checkout validation, RPC arguments, order data, schema, or Production configuration.
 - Code commit: `c5b066f6b0c64283125c813da98896a7785bc082`.
 - Accessibility code commit `c5b066f6b0c64283125c813da98896a7785bc082` was included in final verified PR head `56e770dc051afb987a92294bd40ffaabb6bfe391`; GitHub Actions run `44985640186` passed install/build/Vitest, and exact-head Vercel Preview `dpl_AFMaR3VXNNdsEDP2B59VrSozyjA9` reached READY. The checkpoint-only commit that follows is separately revalidated.
+
+
+## Seller product numeric validation — continued run
+- Added `src/lib/product-input.ts` with a pure validator for product price, optional comparison price and integer stock before the seller product insert.
+- Validation uses the same bounds as the existing seller product-update handler: price and optional comparison price must be finite, greater than zero and no more than 100,000,000; stock must be an integer from 0 through 100,000.
+- Integrated the validator into the Seller product-create path so invalid values are rejected before any database insert is attempted.
+- Added Vitest coverage for valid values, omitted comparison price, zero stock, invalid/empty/non-finite/negative/over-limit prices, fractional/negative/over-limit stock and invalid comparison prices.
+- Commits: `17a2f37e8ca2a8a90058dcbf1dce6d8726ef51e5` (validator), `cc2381d704ba881e1de7ed8a8caa1dc64004f94c` (tests), `0ad67bc0ea94fb04eb97631368075aa4954c3147` (Seller integration).
+- No database, Storage, Supabase configuration, Production deployment, alias, billing or credential changes were made.
+- Exact-head CI and Vercel Preview verification for the code and checkpoint commits is pending and must be rechecked before claiming verification.
+- Next: verify exact-head build/tests/Preview, then continue repository-only Buyer/Seller/Admin QA and source-of-truth checks. Production gates remain unchanged.
