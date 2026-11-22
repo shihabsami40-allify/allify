@@ -207,3 +207,12 @@ Updated: 2026-11-22
 - Commit: `62efaec95ae4fe74ad5b076ab749b6e701abd163` (SQL guard); `960b89543d37b1476a617cf3075ab086afb71161` (UI result verification).
 - Migration is committed to PR branch only; it has NOT been applied to any database. Production access/backup prerequisites remain unchanged.
 - Validation scope: source-level review only until the migration is applied in an authorized isolated test database and exercised with Admin/non-Admin, true/false/NULL decisions, concurrent approvals, existing-store applicants, and already-reviewed applications.
+
+## Seller application status visibility and lifecycle QA — 2026-11-22
+- Audited the initial schema and migrations `0010`, `0012`, `0015`, `0016`, and Storage migrations `0006`–`0008`.
+- Confirmed in source that `seller_stores_owner_unique` enforces one non-null owner per store; application insert trigger forces pending status/clears admin review fields, serializes per-user submissions, rejects an existing pending application or existing store; application review RPC adds Seller role and creates the store in one transaction; store update trigger protects ownership, status, demo flag, rating and slug; suspended/non-demo checks protect product and product-image table writes; Storage upload/update requires an active non-demo owned store.
+- Intentional policy distinction: product image object deletion remains allowed for the owner after suspension so old objects can be cleaned up. This is not upload/update permission.
+- Found a Seller UX gap: after successful submission, the applicant did not immediately see the newly created pending record in local state, and the Seller landing page continued to show the application form rather than a clear review-pending state.
+- Updated submission to request and verify the inserted application row, add it to local state, and show a pending-review notice instead of a duplicate submission form. Rejected applications can still reapply; approved users see their store dashboard when the store data is available.
+- Commit: `12ab527731ff8601d54629cc1291870ca3c6cc2b`.
+- This is source/migration review and UI behavior hardening, not a live database test. Migrations `0028` and `0029` remain unapplied; no database or Storage changes were made.
