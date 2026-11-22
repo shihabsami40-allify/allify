@@ -266,3 +266,11 @@ Updated: 2026-11-22
 - Exact-head GitHub Actions run `44990591975` completed SUCCESS; dependency install, application build and Vitest all passed. Exact-head Vercel Preview `dpl_BpNg4QfgvBPjFNZNk8Aqv6wgULT8` READY (target null; Preview only).
 - Exact-head Cloudflare check `Workers Builds: allifychattogram` remained IN_PROGRESS at checkpoint time. Earlier exact-head check for `allifychattogram` failed, but latest status must be polled before describing it as a current failure. Cloudflare logs still not exposed through GitHub check output.
 - PR #3 remains OPEN/unmerged/mergeable. No Production deployment, DB/Storage mutation, secrets change, or PR merge occurred.
+
+
+## Preview bundle and Cloudflare follow-up — 2026-11-22
+- Rechecked exact checkpoint head `c46390a36d32bdbb281dfb49802f79e7894b9f70`: PR #3 OPEN/unmerged/mergeable; GitHub Actions run `44990634728` SUCCESS (dependency install, Vite application build, Vitest); Vercel Preview deployment `dpl_4643jFo7HtC3kyikghVNYSDi3ibE` READY, target null.
+- Read actual Vercel build events for this exact head. Client output remains `index-ykYWbx0i.js` 563.27 kB (gzip 166.49 kB). SSR output includes `@tanstack/react-router` 762.58 kB (gzip 160.50 kB). The existing `src/routes/$page.tsx` is a large catch-all route containing buyer, seller and admin page flows; this is a plausible source of client bundle concentration, but a route-level code-splitting refactor requires a separate design and regression pass. No warning threshold was raised and no build config was changed.
+- Build also emits a non-fatal `vite-tsconfig-paths` warning; project config comments say the Lovable preset already installs tsconfig path support. Avoid manually adding/removing plugins or changing the preset until the actual resolved Vite config and compatibility are verified.
+- Exact-head Cloudflare check `Workers Builds: allifychattogram` is still IN_PROGRESS (build `ccdbc433-d0f9-48e9-bbde-be4e1202b79d`) at this check. GitHub check exposes only dashboard URL, no log text, and zero annotations. No connected Cloudflare log action was found. Root cause remains unknown; do not state this as a failure or modify Cloudflare/Nitro settings without the build output.
+- No further code change was justified by the available evidence. No Production deployment, DB/Storage write, secret action, or PR merge occurred.
