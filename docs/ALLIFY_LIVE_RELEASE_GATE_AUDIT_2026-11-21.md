@@ -98,3 +98,14 @@ IN PROGRESS — latest PR head CI and Vercel Preview are READY. Production check
 - Current isolated test Security Advisor reports seven authenticated-callable SECURITY DEFINER RPC warnings and Performance Advisor reports four unused-index informational findings. Review function authorization individually; do not blindly revoke app-required RPCs or drop indexes.
 - Live Preview route fetch through the available web/container network was unavailable in this run. READY status is not represented as a successful browser or signed-in E2E test.
 - No Production DB/Storage write, PR merge, Production deploy, billing change or credential operation was performed.
+
+
+## Security function and privilege review — 2026-11-22
+- Performed read-only SQL inspection on isolated `allify-test` for the seven Security Advisor flagged RPC/helper functions and both `place_order` overloads.
+- The seven intended authenticated-callable functions are `cancel_order_item`, `has_role`, `is_my_order`, `order_has_my_store`, `owns_store`, the eight-argument idempotent `place_order`, and `review_seller_application`.
+- For those seven functions, effective privileges are `authenticated EXECUTE=true`, `anon EXECUTE=false`, and `PUBLIC EXECUTE=false`; each has a fixed `search_path=public`.
+- The legacy seven-argument `place_order` overload remains present but has `authenticated EXECUTE=false`, `anon EXECUTE=false`, and `PUBLIC EXECUTE=false`.
+- Function-body review confirmed: `has_role` binds the supplied user ID to `auth.uid()`; store/order helper functions scope lookups to `auth.uid()`; `cancel_order_item` checks signed-in identity and buyer/store-owner/admin authorization; `place_order` requires `auth.uid()`; `review_seller_application` requires the admin role.
+- The Advisor warning is caused by these SECURITY DEFINER functions being callable by signed-in users; the read-only test-project grant check did not find anon or PUBLIC EXECUTE on them. Keep the warning visible and re-review if any function body/grant changes; do not blindly revoke required application RPCs.
+- These findings apply only to `allify-test`, not the inaccessible configured Production database. No SQL, grant, schema or data change was made.
+- The Performance Advisor still reports four unused-index informational findings; no index was dropped.
