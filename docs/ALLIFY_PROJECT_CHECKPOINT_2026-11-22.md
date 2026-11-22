@@ -105,4 +105,4 @@ Updated: 2026-11-22
 - Checkout success feedback now uses a polite live status region; error feedback uses an alert region; the initial loading message is announced as a status.
 - This is a UI-only accessibility improvement. It does not change checkout validation, RPC arguments, order data, schema, or Production configuration.
 - Code commit: `c5b066f6b0c64283125c813da98896a7785bc082`.
-- Exact-head CI and Preview verification for the follow-up accessibility commit and checkpoint are pending; recheck before treating them as verified.
+- Accessibility code commit `c5b066f6b0c64283125c813da98896a7785bc082` was included in final verified PR head `56e770dc051afb987a92294bd40ffaabb6bfe391`; GitHub Actions run `44985640186` passed install/build/Vitest, and exact-head Vercel Preview `dpl_AFMaR3VXNNdsEDP2B59VrSozyjA9` reached READY. The checkpoint-only commit that follows is separately revalidated.
