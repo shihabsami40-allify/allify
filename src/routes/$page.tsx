@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { deriveOrderStatus } from "@/lib/order-status";
 import { canTransitionOrderItemStatus } from "@/lib/order-transitions";
 import { validateSellerProductNumbers } from "@/lib/product-input";
+import { validateSellerProductImage } from "@/lib/product-image-input";
 import { sanitizeStoredCart } from "@/lib/cart-validation";
 
 export const Route = createFileRoute("/$page")({ component: MarketplacePage });
@@ -230,11 +231,9 @@ function MarketplacePage() {
     let createdProductId: string | null = null;
     let uploadedImagePath: string | null = null;
     try {
-      if (productImage && !["image/jpeg","image/png","image/webp"].includes(productImage.type)) {
-        throw new Error("শুধু JPG, PNG বা WebP ছবি আপলোড করা যাবে।");
-      }
-      if (productImage && productImage.size > 5 * 1024 * 1024) {
-        throw new Error("ছবির আকার সর্বোচ্চ ৫ MB হতে পারবে।");
+      if (productImage) {
+        const imageValidation = validateSellerProductImage(productImage);
+        if (!imageValidation.ok) throw new Error(imageValidation.error);
       }
       if (form.image_url) {
         const imageUrl = new URL(form.image_url);
