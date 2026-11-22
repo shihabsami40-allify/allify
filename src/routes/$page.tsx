@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { deriveOrderStatus } from "@/lib/order-status";
 import { canTransitionOrderItemStatus } from "@/lib/order-transitions";
 import { validateSellerProductNumbers } from "@/lib/product-input";
+import { sanitizeStoredCart } from "@/lib/cart-validation";
 
 export const Route = createFileRoute("/$page")({ component: MarketplacePage });
 
@@ -57,7 +58,9 @@ function MarketplacePage() {
     try {
       const raw = localStorage.getItem("allify-cart");
       const parsed = raw ? JSON.parse(raw) : [];
-      setCart(Array.isArray(parsed) ? parsed : []);
+      const safeCart = sanitizeStoredCart(parsed);
+      setCart(safeCart as CartLine[]);
+      localStorage.setItem("allify-cart", JSON.stringify(safeCart));
     } catch { setCart([]); }
   };
   const saveCart = (next: CartLine[]) => {
