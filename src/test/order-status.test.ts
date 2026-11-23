@@ -43,6 +43,10 @@ describe("deriveOrderStatus", () => {
     expect(deriveOrderStatus([{ status: "delivered" }, { status: "cancelled" }])).toBe("delivered");
   });
 
+  it("ignores unexpected statuses when a recognized item status exists", () => {
+    expect(deriveOrderStatus([{ status: "unknown" }, { status: "delivered" }])).toBe("delivered");
+  });
+
   it("falls back safely for an unexpected item status", () => {
     expect(deriveOrderStatus([{ status: "unknown" }])).toBe("pending");
   });
