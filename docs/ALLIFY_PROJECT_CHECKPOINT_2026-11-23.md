@@ -70,3 +70,13 @@ Updated: 2026-11-23
 - Exact current PR head at verification: `8cc9e8ed4c5ffdc1e2888bf28ce576bd46beb632`, which only updates this checkpoint after the verified code commit. PR #3 remains OPEN, unmerged, mergeable.
 - Exact-head Vercel Preview deployment `dpl_BVEpfMRb3SqPyLSCrPyBDxYjbnG8` is READY: https://allify-chattogram-c0ibyvs8q-allify.vercel.app (Preview only).
 - The demo-product homepage guard, its three focused tests, and formatting correction are included in the verified code. No Production database, Storage, alias, or customer data was changed.
+
+## Seller product-input hardening — 2026-11-23
+- Re-verified PR #3 and current branch before work. The prior candidate code commit `e0e7f4a7fdbd5f69a189b1553d6b9ce31ba1770b` had passing CI and a READY Preview; latest PR head was the checkpoint-only commit `ae63a3644f99e9bdd2a7a68df2c32205eac2b153`.
+- Reviewed seller product creation and update validation. Found `Number(value)` would coerce booleans and arrays into numbers (e.g. `true` -> 1), which is inappropriate for price/stock input validation.
+- Updated `src/lib/product-input.ts` to accept only number or non-empty string inputs for price, stock and comparison price, retaining existing numeric range/integer checks. Added regression cases in `src/test/product-input.test.ts` for boolean/array/object inputs.
+- Commits: `5ed4d1b66a4c106fc0087db5b249902ddc06c8d7` (validation hardening), `895cc1a57b764d166f407e70848763e50c9b08d7` (tests).
+- Exact-head GitHub Actions run `45119291176` completed SUCCESS, including dependency install, ESLint, app build and Vitest: https://github.com/shihabsami40-allify/allify/actions/runs/45119291176
+- Exact-head Vercel Preview deployment `dpl_AUfaQqJRVrsaFaR33EKjsrqejbTV` is READY: https://allify-chattogram-9odjpejvp-allify.vercel.app (Preview only).
+- PR #3 remains OPEN, unmerged and mergeable at head `895cc1a...`. No Production DB/Storage or deployment changes occurred.
+- Production release gates remain unresolved: configured Production Supabase access denied; no verified restorable DB+Storage backup; Lovable/GitHub source divergence; role-based signed-in Buyer/Seller/Admin E2E and Production read-only security preflight outstanding.
