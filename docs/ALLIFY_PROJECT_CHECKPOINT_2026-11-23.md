@@ -63,3 +63,4 @@ Updated: 2026-11-23
 ## Lint correction — 2026-11-23
 - Exact CI log for run `45105916232` identified only Prettier formatting issues: leading blank line and wrapped return expression in `src/lib/cart-validation.ts`, plus one extra trailing blank line in `src/test/cart-validation.test.ts`. No application build or test failure had occurred; those steps were skipped after lint failed.
 - Applied formatting-only corrections in commits `72e0326d0170eb63c30b990741e23e9828c86802` and `083004adf99f3b8ca3b113be0f8081ff69647e52` (replace with actual commit SHAs immediately below).
+- Follow-up CI run `45105998111` isolated one remaining Prettier issue: two blank lines between the cart sanitizer and purchase-guard describe blocks. Removed the extra separator in commit `e0e7f4a7fdbd5f69a189b1553d6b9ce31ba1770b`; re-run CI before marking the change verified.
