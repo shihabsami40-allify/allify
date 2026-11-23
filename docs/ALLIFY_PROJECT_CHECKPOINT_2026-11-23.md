@@ -103,3 +103,12 @@ Updated: 2026-11-23
 - First lint run `45119581435` failed only on five Prettier formatting differences in `src/test/product-image-input.test.ts`; application build and Vitest were skipped. Exact log was reviewed; no functional lint issue was reported.
 - Applied formatting-only correction in commit `58ed0432e86b4d7edb807c5b5bb2806c3de60f84`. The corrected exact-head CI run had not yet appeared at checkpoint time; do not mark the feature verified until CI succeeds.
 - Preview for the feature code head `3d6f314...` was READY at https://allify-chattogram-ntszxz9xy-allify.vercel.app. The corrected commit still requires exact-head CI/Preview confirmation.
+
+## Seller dashboard inline price/stock edit UX hardening — 2026-11-23
+- Re-verified PR #3 at head `d5f423134270233a6c095ea5f9e22875a6176dd2`, OPEN and unmerged before this task.
+- Reviewed Seller Dashboard inline product editing. Invalid stock values were left visible in the input even though they were rejected by the update handler; price values above the server-side maximum were also left visible. This made the displayed form state misleading after a rejected edit.
+- Updated the inline price/stock blur handlers to restore the last saved value whenever input is invalid, and only call the existing store-scoped update handler for valid changed values. Price upper bound now matches the shared validator.
+- Commit: `8720ac7d49c6fc74722d63cadee9498f8c665a90` (`fix: restore invalid seller price and stock edits`).
+- At checkpoint time, no Actions run had yet appeared for this exact code commit; latest previous verified CI is `45119664433` on prior commit `d5f4231...`: https://github.com/shihabsami40-allify/allify/actions/runs/45119664433. Do not claim this new UI change is CI-verified until exact-head checks complete.
+- Exact-head Vercel Preview deployment `dpl_FJQc7tLfK35areygDjqquXVwi64X` was BUILDING: https://allify-chattogram-lvi3u2m3n-allify.vercel.app. Preview only; verify READY before claiming deployment success.
+- PR #3 remains OPEN and unmerged. No Production database, Storage objects/policies, credentials, production alias, or customer data were changed.
