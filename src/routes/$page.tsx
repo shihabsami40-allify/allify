@@ -289,15 +289,15 @@ function MarketplacePage() {
       if (!title || title.length>160) { setError("পণ্যের নাম ১ থেকে ১৬০ অক্ষরের মধ্যে লিখুন।"); return; }
       safeValues.title_bn=title;
     }
-    if ("price" in values) {
-      const price=Number(values.price);
-      if (!Number.isFinite(price) || price<=0 || price>100000000) { setError("পণ্যের সঠিক মূল্য লিখুন।"); return; }
-      safeValues.price=price;
-    }
-    if ("stock" in values) {
-      const stock=Number(values.stock);
-      if (!Number.isInteger(stock) || stock<0 || stock>100000) { setError("স্টক ০ থেকে ১,০০,০০০-এর মধ্যে পূর্ণসংখ্যা হতে হবে।"); return; }
-      safeValues.stock=stock;
+    if ("price" in values || "stock" in values) {
+      const productNumbers = validateSellerProductNumbers(
+        "price" in values ? values.price : 1,
+        "stock" in values ? values.stock : 0,
+        "",
+      );
+      if (!productNumbers.ok) { setError(productNumbers.error); return; }
+      if ("price" in values) safeValues.price=productNumbers.value.price;
+      if ("stock" in values) safeValues.stock=productNumbers.value.stock;
     }
     if ("status" in values) {
       if (!["active","hidden","draft"].includes(values.status)) { setError("পণ্যের প্রকাশ-অবস্থা সঠিক নয়।"); return; }
