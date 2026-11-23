@@ -64,3 +64,9 @@ Updated: 2026-11-23
 - Exact CI log for run `45105916232` identified only Prettier formatting issues: leading blank line and wrapped return expression in `src/lib/cart-validation.ts`, plus one extra trailing blank line in `src/test/cart-validation.test.ts`. No application build or test failure had occurred; those steps were skipped after lint failed.
 - Applied formatting-only corrections in commits `72e0326d0170eb63c30b990741e23e9828c86802` and `083004adf99f3b8ca3b113be0f8081ff69647e52` (replace with actual commit SHAs immediately below).
 - Follow-up CI run `45105998111` isolated one remaining Prettier issue: two blank lines between the cart sanitizer and purchase-guard describe blocks. Removed the extra separator in commit `e0e7f4a7fdbd5f69a189b1553d6b9ce31ba1770b`; re-run CI before marking the change verified.
+
+## Final verification — 2026-11-23
+- Corrected candidate code/test commit `e0e7f4a7fdbd5f69a189b1553d6b9ce31ba1770b` is covered by GitHub Actions run `45106044246`, completed SUCCESS: ESLint, application build, and Vitest all passed. Link: https://github.com/shihabsami40-allify/allify/actions/runs/45106044246
+- Exact current PR head at verification: `8cc9e8ed4c5ffdc1e2888bf28ce576bd46beb632`, which only updates this checkpoint after the verified code commit. PR #3 remains OPEN, unmerged, mergeable.
+- Exact-head Vercel Preview deployment `dpl_BVEpfMRb3SqPyLSCrPyBDxYjbnG8` is READY: https://allify-chattogram-c0ibyvs8q-allify.vercel.app (Preview only).
+- The demo-product homepage guard, its three focused tests, and formatting correction are included in the verified code. No Production database, Storage, alias, or customer data was changed.
