@@ -46,3 +46,10 @@ export function buildSellerProductImagePath(
 
   return userId + "/" + storeId + "/" + productId + "-" + timestamp + "." + extension;
 }
+
+export function isProductDeletionConfirmed(result: {
+  data?: { id?: string } | null;
+  error?: unknown;
+}) {
+  return !result.error && Boolean(result.data?.id);
+}
