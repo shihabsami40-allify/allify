@@ -80,3 +80,12 @@ Updated: 2026-11-23
 - Exact-head Vercel Preview deployment `dpl_AUfaQqJRVrsaFaR33EKjsrqejbTV` is READY: https://allify-chattogram-9odjpejvp-allify.vercel.app (Preview only).
 - PR #3 remains OPEN, unmerged and mergeable at head `895cc1a...`. No Production DB/Storage or deployment changes occurred.
 - Production release gates remain unresolved: configured Production Supabase access denied; no verified restorable DB+Storage backup; Lovable/GitHub source divergence; role-based signed-in Buyer/Seller/Admin E2E and Production read-only security preflight outstanding.
+
+## Seller product edit validation — 2026-11-23
+- Re-verified branch and PR #3 before work: latest head `b9623db97f6e45ab98a4384cbe20181d3ce66fb7`, PR OPEN, unmerged, mergeable.
+- Reviewed `updateSellerProduct` and found it used direct `Number(value)` coercion for seller edits, unlike the stricter product-creation validator. Boolean values could be coerced to numeric values.
+- Updated seller edit handling to reuse `validateSellerProductNumbers` for price and stock changes, retaining allowed-field checks and store-scoped database update.
+- Commit: `a0516aefe612670d5b8cd4933dadf30536595c99` (`fix: reuse strict numeric validation for seller edits`).
+- Exact-head GitHub Actions run `45119438228` was IN_PROGRESS at checkpoint time (dependency installation running; ESLint/build/Vitest pending): https://github.com/shihabsami40-allify/allify/actions/runs/45119438228. Do not mark verified until it completes successfully.
+- Exact-head Vercel Preview `dpl_BcwJCHQnJHGbQCFnrR6KmNBD9VQZ` was BUILDING at checkpoint time: https://allify-chattogram-nfwvylrgq-allify.vercel.app. Preview only; verify READY before claiming deployment success.
+- No Production DB/Storage, credentials, production alias, or customer data were changed.
