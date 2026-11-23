@@ -89,3 +89,12 @@ Updated: 2026-11-23
 - Exact-head GitHub Actions run `45119438228` was IN_PROGRESS at checkpoint time (dependency installation running; ESLint/build/Vitest pending): https://github.com/shihabsami40-allify/allify/actions/runs/45119438228. Do not mark verified until it completes successfully.
 - Exact-head Vercel Preview `dpl_BcwJCHQnJHGbQCFnrR6KmNBD9VQZ` was BUILDING at checkpoint time: https://allify-chattogram-nfwvylrgq-allify.vercel.app. Preview only; verify READY before claiming deployment success.
 - No Production DB/Storage, credentials, production alias, or customer data were changed.
+
+## Seller product-image Storage path hardening — 2026-11-23
+- Re-verified PR #3 before changes: prior head `975f7a308fe831648206272a1e5737c35efd46a7`, OPEN and unmerged. Reviewed seller upload path construction against Storage RLS policies in migrations `0006`–`0009` and `0016`.
+- Added `buildSellerProductImagePath` to centralize the required `user_id/store_id/file` path layout, reject empty or slash-containing path segments, reject unsupported MIME types and invalid timestamps, and map the three accepted MIME types to explicit extensions.
+- Updated seller product creation to use the helper and fail safely if path construction is invalid. Added tests for all supported MIME types, RLS-compatible folder structure, path-segment rejection, unsupported MIME and invalid timestamp.
+- Commits: `e32ca7810304a7a5a3cbb205ee8b0acae8e6280b` (helper), `1fc45c2df24e716ad60ce36d1ca68be80c2fdd1e` (tests), `3d6f314b387dabcc3b0619750e895a654070a3b4` (seller upload integration).
+- At checkpoint time, exact code-head Actions run `45119581435` was IN_PROGRESS at ESLint after successful dependency installation; Build and Vitest were pending: https://github.com/shihabsami40-allify/allify/actions/runs/45119581435. Verify final status before claiming CI pass.
+- Exact code-head Vercel Preview deployment `dpl_85tFohmhK43Sz1rurfwDfoM664fP` was BUILDING: https://allify-chattogram-ntszxz9xy-allify.vercel.app. Preview only; verify READY before claiming deployment success.
+- PR #3 remains OPEN and unmerged. No Production database, Storage objects/policies, credentials, production alias, or customer data were changed.
