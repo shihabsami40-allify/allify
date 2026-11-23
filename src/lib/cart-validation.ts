@@ -1,10 +1,11 @@
-
 /** Demo listings are visible for discovery but must never enter a buyer's cart. */
 export function canPurchaseProduct(product: {
   stock: number;
   seller_stores?: { is_demo?: boolean } | null;
 }): boolean {
-  return product.seller_stores?.is_demo !== true && Number.isInteger(product.stock) && product.stock > 0;
+  return (
+    product.seller_stores?.is_demo !== true && Number.isInteger(product.stock) && product.stock > 0
+  );
 }
 
 export type StoredCartLine = {
