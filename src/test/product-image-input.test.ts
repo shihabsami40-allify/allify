@@ -57,3 +57,15 @@ describe("buildSellerProductImagePath", () => {
     ).toBeNull();
   });
 });
+
+describe("isProductDeletionConfirmed", () => {
+  it("confirms cleanup only when the product delete returns a deleted row", async () => {
+    const { isProductDeletionConfirmed } = await import("@/lib/product-image-input");
+
+    expect(isProductDeletionConfirmed({ data: { id: "product-1" }, error: null })).toBe(true);
+    expect(isProductDeletionConfirmed({ data: null, error: null })).toBe(false);
+    expect(isProductDeletionConfirmed({ data: null, error: new Error("delete denied") })).toBe(
+      false,
+    );
+  });
+});
