@@ -1,3 +1,15 @@
+export type SellerProductTitleResult =
+  | { ok: true; value: string }
+  | { ok: false; error: string };
+
+export const validateSellerProductTitle = (input: unknown): SellerProductTitleResult => {
+  const title = typeof input === "string" ? input.trim() : "";
+  if (title.length < 2 || title.length > 120) {
+    return { ok: false, error: "পণ্যের নাম ২ থেকে ১২০ অক্ষরের মধ্যে লিখুন।" };
+  }
+  return { ok: true, value: title };
+};
+
 export type SellerProductNumbers = {
   price: number;
   comparePrice: number | null;
@@ -26,7 +38,7 @@ export const validateSellerProductNumbers = (
       : typeof priceInput === "string" && priceInput.trim() !== ""
         ? Number(priceInput)
         : Number.NaN;
-  if (!Number.isFinite(price) || price <= 0 || price > 100000000) {
+  if (!Number.isFinite(price) || price <= 0 || price >= 10000000) {
     return { ok: false, error: "পণ্যের সঠিক মূল্য লিখুন।" };
   }
 
@@ -51,7 +63,7 @@ export const validateSellerProductNumbers = (
 
   if (
     comparePrice !== null &&
-    (!Number.isFinite(comparePrice) || comparePrice <= price || comparePrice > 100000000)
+    (!Number.isFinite(comparePrice) || comparePrice <= price || comparePrice > 99999999.99)
   ) {
     return { ok: false, error: "তুলনামূলক মূল্য পণ্যের মূল্যের চেয়ে বেশি হতে হবে।" };
   }
