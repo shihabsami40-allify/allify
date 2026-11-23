@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { sanitizeStoredCart } from "@/lib/cart-validation";
+import { canPurchaseProduct, sanitizeStoredCart } from "@/lib/cart-validation";
 
 const product = (overrides: Record<string, unknown> = {}) => ({
   id: "product-1",
@@ -91,5 +91,21 @@ describe("sanitizeStoredCart", () => {
       quantity: 1,
     }));
     expect(sanitizeStoredCart(lines)).toHaveLength(50);
+  });
+});
+
+
+describe("canPurchaseProduct", () => {
+  it("allows an in-stock product from a real store", () => {
+    expect(canPurchaseProduct({ stock: 3, seller_stores: { is_demo: false } })).toBe(true);
+  });
+
+  it("blocks demo products even when they have stock", () => {
+    expect(canPurchaseProduct({ stock: 3, seller_stores: { is_demo: true } })).toBe(false);
+  });
+
+  it("blocks products with no valid stock", () => {
+    expect(canPurchaseProduct({ stock: 0 })).toBe(false);
+    expect(canPurchaseProduct({ stock: 1.5 })).toBe(false);
   });
 });
