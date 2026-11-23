@@ -76,7 +76,6 @@ describe("sanitizeStoredCart", () => {
     ).toEqual([]);
   });
 
-
   it("deduplicates IDs after trimming whitespace", () => {
     expect(
       sanitizeStoredCart([
