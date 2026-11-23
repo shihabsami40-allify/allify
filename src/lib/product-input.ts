@@ -20,12 +20,22 @@ export const validateSellerProductNumbers = (
   stockInput: unknown,
   comparePriceInput: unknown,
 ): SellerProductNumbersResult => {
-  const price = Number(priceInput);
+  const price =
+    typeof priceInput === "number"
+      ? priceInput
+      : typeof priceInput === "string" && priceInput.trim() !== ""
+        ? Number(priceInput)
+        : Number.NaN;
   if (!Number.isFinite(price) || price <= 0 || price > 100000000) {
     return { ok: false, error: "পণ্যের সঠিক মূল্য লিখুন।" };
   }
 
-  const stock = Number(stockInput);
+  const stock =
+    typeof stockInput === "number"
+      ? stockInput
+      : typeof stockInput === "string" && stockInput.trim() !== ""
+        ? Number(stockInput)
+        : Number.NaN;
   if (!Number.isInteger(stock) || stock < 0 || stock > 100000) {
     return { ok: false, error: "স্টক ০ থেকে ১,০০,০০০-এর মধ্যে পূর্ণসংখ্যা হতে হবে।" };
   }
@@ -33,7 +43,11 @@ export const validateSellerProductNumbers = (
   const comparePrice =
     comparePriceInput === "" || comparePriceInput === null || comparePriceInput === undefined
       ? null
-      : Number(comparePriceInput);
+      : typeof comparePriceInput === "number"
+        ? comparePriceInput
+        : typeof comparePriceInput === "string" && comparePriceInput.trim() !== ""
+          ? Number(comparePriceInput)
+          : Number.NaN;
 
   if (
     comparePrice !== null &&
