@@ -50,3 +50,12 @@ Updated: 2026-11-23
 - PR #3 currently reports `mergeable=false` after the new commit; this is a temporary or unresolved GitHub mergeability result and must be investigated before any future merge decision. No merge was attempted.
 - The prior exact-head commit `e903abc75cf880f7b01925590d875453d06ad911` had successful GitHub Actions run `45105602813`, including install, ESLint, application build, and Vitest.
 - Production Supabase access, verified DB + Storage backups, Lovable/GitHub source reconciliation, role-based signed-in E2E, and Cloudflare diagnosis remain blocked/outstanding as above. No Production action, merge, credential, billing, or external contact occurred.
+
+## Additional run — 2026-11-23 (home-page demo purchase guard)
+- Re-verified PR #3 before editing. PR remains OPEN, unmerged, and mergeable; branch head before this run was `7928d1d3811a83d5586bb6015cc755860c049af9`.
+- Confirmed the exact `7928d1d...` commit's GitHub Actions run `45105739282` completed SUCCESS and its exact-head Vercel Preview `dpl_Edy2kgrb4CAFQw6jQF3z56db4pwA` is READY at https://allify-chattogram-lzjqzenwl-allify.vercel.app (Preview only).
+- Found a buyer UX inconsistency: the homepage product-card handler allowed a demo-store product to be written into localStorage, although the shared cart sanitizer and checkout already reject demo products. Added shared `canPurchaseProduct` guard, unit tests for real/demo/out-of-stock cases, and applied the guard to homepage button state and click handler.
+- Commits (same branch, in order): `b0eae945f42825d661d452a0f3bd650832857563` (shared guard), `ec3a88c457cbac27c80cd344ce085228c9a0a861` (tests), `55bedba421ad06a68eba93e772d1e29ab38d0e29` (homepage integration).
+- No database, Storage, Production code, or customer data changed.
+- At checkpoint update, latest-head GitHub Actions build check for `55bedba...` was QUEUED (run link https://github.com/shihabsami40-allify/allify/actions/runs/45105916232); Vercel Preview deployment `dpl_EFJi9vzT173qpiyfsUPfkxAg4xoU` was QUEUED. Recheck before claiming either passed/ready.
+- PR #3 current head is `55bedba...`, OPEN and unmerged. Keep merge blocked until production identity/access, restorable DB + Storage backups, source reconciliation, security preflight and signed-in Buyer/Seller/Admin E2E gates are cleared.
