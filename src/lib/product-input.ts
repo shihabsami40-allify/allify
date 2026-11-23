@@ -1,6 +1,4 @@
-export type SellerProductTitleResult =
-  | { ok: true; value: string }
-  | { ok: false; error: string };
+export type SellerProductTitleResult = { ok: true; value: string } | { ok: false; error: string };
 
 export const validateSellerProductTitle = (input: unknown): SellerProductTitleResult => {
   const title = typeof input === "string" ? input.trim() : "";
