@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { validateSellerProductNumbers } from "@/lib/product-input";
+import { validateSellerProductNumbers, validateSellerProductTitle } from "@/lib/product-input";
 
 describe("validateSellerProductNumbers", () => {
   it("accepts a valid price, optional comparison price and integer stock", () => {
@@ -17,7 +17,7 @@ describe("validateSellerProductNumbers", () => {
     });
   });
 
-  it.each(["", "0", "-1", "NaN", "Infinity", "100000001"])("rejects invalid price %s", (price) => {
+  it.each(["", "0", "-1", "NaN", "Infinity", "10000000", "100000001"])("rejects invalid price %s", (price) => {
     expect(validateSellerProductNumbers(price, 0, "")).toMatchObject({ ok: false });
   });
 
@@ -25,7 +25,7 @@ describe("validateSellerProductNumbers", () => {
     expect(validateSellerProductNumbers("100", stock, "")).toMatchObject({ ok: false });
   });
 
-  it.each(["0", "-1", "NaN", "Infinity", "100000001", "100"])(
+  it.each(["0", "-1", "NaN", "Infinity", "100000000", "100"])(
     "rejects invalid comparison price %s",
     (comparePrice) => {
       expect(validateSellerProductNumbers("100", 0, comparePrice)).toMatchObject({ ok: false });
@@ -47,4 +47,21 @@ describe("validateSellerProductNumbers", () => {
   it("rejects a comparison price below the sale price", () => {
     expect(validateSellerProductNumbers("100", 0, "90")).toMatchObject({ ok: false });
   });
+});
+
+describe("validateSellerProductTitle", () => {
+  it("trims and accepts a title within the database length limit", () => {
+    expect(validateSellerProductTitle("  সুন্দর পণ্য  ")).toEqual({
+      ok: true,
+      value: "সুন্দর পণ্য",
+    });
+    expect(validateSellerProductTitle("ক".repeat(120))).toMatchObject({ ok: true });
+  });
+
+  it.each(["", " ", "ক", "ক".repeat(121), null, 42, true])(
+    "rejects an invalid product title %s",
+    (title) => {
+      expect(validateSellerProductTitle(title)).toMatchObject({ ok: false });
+    },
+  );
 });
