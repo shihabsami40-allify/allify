@@ -4,7 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { deriveOrderStatus } from "@/lib/order-status";
 import { canTransitionOrderItemStatus } from "@/lib/order-transitions";
 import { validateSellerProductNumbers } from "@/lib/product-input";
-import { buildSellerProductImagePath, validateSellerProductImage } from "@/lib/product-image-input";
+import {
+  buildSellerProductImagePath,
+  isProductDeletionConfirmed,
+  validateSellerProductImage,
+} from "@/lib/product-image-input";
 import { getSellerApplicationSubmitError } from "@/lib/seller-application-error";
 import { sanitizeStoredCart } from "@/lib/cart-validation";
 
@@ -276,9 +280,33 @@ function MarketplacePage() {
       }
       setMessage("পণ্য যোগ হয়েছে।"); setForm({}); setProductImage(null);
     } catch(e:any) {
-      if (createdProductId) await supabase.from("products").delete().eq("id", createdProductId);
-      if (uploadedImagePath) await supabase.storage.from("product-images").remove([uploadedImagePath]);
-      setError(e.message || "পণ্য যোগ করা যায়নি।");
+      let cleanupWarning = "";
+      if (createdProductId) {
+        try {
+          const cleanup = await supabase
+            .from("products")
+            .delete()
+            .eq("id", createdProductId)
+            .eq("store_id", myStore.id)
+            .select("id")
+            .maybeSingle();
+          if (isProductDeletionConfirmed(cleanup)) {
+            if (uploadedImagePath) {
+              const imageCleanup = await supabase.storage
+                .from("product-images")
+                .remove([uploadedImagePath]);
+              if (imageCleanup.error) {
+                cleanupWarning = "তবে আপলোড করা ছবিটি Storage থেকে সরানো যায়নি।";
+              }
+            }
+          } else {
+            cleanupWarning = "পণ্যের রেকর্ড মুছে ফেলা নিশ্চিত হয়নি; ছবিটি সংরক্ষিত রাখা হয়েছে।";
+          }
+        } catch {
+          cleanupWarning = "পণ্যের রেকর্ড পরিষ্কারের অবস্থা নিশ্চিত হয়নি; ছবিটি সংরক্ষিত রাখা হয়েছে।";
+        }
+      }
+      setError([e.message || "পণ্য যোগ করা যায়নি।", cleanupWarning].filter(Boolean).join(" "));
     }
     finally { setBusy(false); }
   };
