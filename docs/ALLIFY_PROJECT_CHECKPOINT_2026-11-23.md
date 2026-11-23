@@ -59,3 +59,7 @@ Updated: 2026-11-23
 - No database, Storage, Production code, or customer data changed.
 - At checkpoint update, latest-head GitHub Actions build check for `55bedba...` was QUEUED (run link https://github.com/shihabsami40-allify/allify/actions/runs/45105916232); Vercel Preview deployment `dpl_EFJi9vzT173qpiyfsUPfkxAg4xoU` was QUEUED. Recheck before claiming either passed/ready.
 - PR #3 current head is `55bedba...`, OPEN and unmerged. Keep merge blocked until production identity/access, restorable DB + Storage backups, source reconciliation, security preflight and signed-in Buyer/Seller/Admin E2E gates are cleared.
+
+## Lint correction — 2026-11-23
+- Exact CI log for run `45105916232` identified only Prettier formatting issues: leading blank line and wrapped return expression in `src/lib/cart-validation.ts`, plus one extra trailing blank line in `src/test/cart-validation.test.ts`. No application build or test failure had occurred; those steps were skipped after lint failed.
+- Applied formatting-only corrections in commits `72e0326d0170eb63c30b990741e23e9828c86802` and `083004adf99f3b8ca3b113be0f8081ff69647e52` (replace with actual commit SHAs immediately below).
