@@ -39,3 +39,14 @@ Updated: 2026-11-23
 - Removed that extra blank line in commit `ba399ab12fa3397d119ee823a1124f777656989f`. This is the current candidate head at the time of this checkpoint update.
 - Exact-head Vercel Preview is still BUILDING; GitHub Actions check-runs for this latest commit have not yet exposed a build job. Do not claim success until the checks complete.
 - PR #3 is OPEN and unmerged. No Production or external irreversible action occurred.
+
+
+## Additional run — 2026-11-23 (order-status regression)
+- Re-verified PR #3 and the candidate branch before continuing. PR #3 remains OPEN and unmerged; current head is `bb67515f1da8db532af2901c4ad1d202223c791e`.
+- Added a focused Vitest case in `src/test/order-status.test.ts`: an unexpected item status must not mask a recognized `delivered` item when deriving the parent order status. The existing implementation already handles this correctly; the new test locks that behavior in.
+- Commit: `bb67515f1da8db532af2901c4ad1d202223c791e` (`test: cover unknown order status alongside valid items`). No production code, database schema, or data changed.
+- Exact-head GitHub Actions run `45105706159` was IN_PROGRESS at checkpoint update; dependency installation was still running, with lint/build/Vitest pending. Verify final conclusion before claiming CI pass.
+- Exact-head Vercel Preview deployment `dpl_7gytkYrP8E9C2yjvjSueXba5Y3Si` was BUILDING at checkpoint update: https://allify-chattogram-9vt5hmrf2-allify.vercel.app. Verify READY before claiming deployment success.
+- PR #3 currently reports `mergeable=false` after the new commit; this is a temporary or unresolved GitHub mergeability result and must be investigated before any future merge decision. No merge was attempted.
+- The prior exact-head commit `e903abc75cf880f7b01925590d875453d06ad911` had successful GitHub Actions run `45105602813`, including install, ESLint, application build, and Vitest.
+- Production Supabase access, verified DB + Storage backups, Lovable/GitHub source reconciliation, role-based signed-in E2E, and Cloudflare diagnosis remain blocked/outstanding as above. No Production action, merge, credential, billing, or external contact occurred.
