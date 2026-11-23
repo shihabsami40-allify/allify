@@ -33,7 +33,20 @@ export function sanitizeStoredCart(value: unknown): StoredCartLine[] {
     const price = item.price;
     const stock = item.stock;
     const quantity = line.quantity;
-    const seller = item.seller_stores;
+    const sellerStore = item.seller_stores;
+
+    if (sellerStore !== null && sellerStore !== undefined) {
+      if (typeof sellerStore !== "object" || Array.isArray(sellerStore)) continue;
+
+      const sellerStoreRecord = sellerStore as Record<string, unknown>;
+      if (
+        sellerStoreRecord.is_demo !== undefined &&
+        typeof sellerStoreRecord.is_demo !== "boolean"
+      ) {
+        continue;
+      }
+      if (sellerStoreRecord.is_demo === true) continue;
+    }
 
     if (
       !id ||
@@ -49,11 +62,10 @@ export function sanitizeStoredCart(value: unknown): StoredCartLine[] {
       !Number.isInteger(quantity) ||
       quantity < 1 ||
       quantity > 99 ||
-      quantity > stock ||
-      (seller !== null && seller !== undefined && (typeof seller !== "object" || Array.isArray(seller))) ||
-      (seller && typeof (seller as Record<string, unknown>).is_demo !== "undefined" && typeof (seller as Record<string, unknown>).is_demo !== "boolean") ||
-      (seller && (seller as Record<string, unknown>).is_demo === true)
-    ) continue;
+      quantity > stock
+    ) {
+      continue;
+    }
 
     seen.add(id);
     safe.push({

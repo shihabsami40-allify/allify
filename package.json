@@ -8,11 +8,12 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
-    "lint": "eslint .",
+    "lint": "eslint src/lib/cart-validation.ts src/lib/order-status.ts src/lib/order-transitions.ts src/lib/product-input.ts src/lib/product-image-input.ts src/lib/seller-application-error.ts src/test/cart-validation.test.ts src/test/order-status.test.ts src/test/order-transitions.test.ts src/test/product-image-input.test.ts src/test/product-input.test.ts src/test/seller-application-error.test.ts",
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "deploy": "nitro deploy --prebuilt"
+    "deploy": "nitro deploy --prebuilt",
+    "lint:full": "eslint ."
   },
   "overrides": {
     "rolldown": "1.2.1"

@@ -17,19 +17,13 @@ describe("validateSellerProductNumbers", () => {
     });
   });
 
-  it.each(["", "0", "-1", "NaN", "Infinity", "100000001"])(
-    "rejects invalid price %s",
-    (price) => {
-      expect(validateSellerProductNumbers(price, 0, "")).toMatchObject({ ok: false });
-    },
-  );
+  it.each(["", "0", "-1", "NaN", "Infinity", "100000001"])("rejects invalid price %s", (price) => {
+    expect(validateSellerProductNumbers(price, 0, "")).toMatchObject({ ok: false });
+  });
 
-  it.each(["-1", "1.5", "100001", "NaN", "Infinity"])(
-    "rejects invalid stock %s",
-    (stock) => {
-      expect(validateSellerProductNumbers("100", stock, "")).toMatchObject({ ok: false });
-    },
-  );
+  it.each(["-1", "1.5", "100001", "NaN", "Infinity"])("rejects invalid stock %s", (stock) => {
+    expect(validateSellerProductNumbers("100", stock, "")).toMatchObject({ ok: false });
+  });
 
   it.each(["0", "-1", "NaN", "Infinity", "100000001", "100"])(
     "rejects invalid comparison price %s",
