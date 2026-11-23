@@ -94,7 +94,6 @@ describe("sanitizeStoredCart", () => {
   });
 });
 
-
 describe("canPurchaseProduct", () => {
   it("allows an in-stock product from a real store", () => {
     expect(canPurchaseProduct({ stock: 3, seller_stores: { is_demo: false } })).toBe(true);
