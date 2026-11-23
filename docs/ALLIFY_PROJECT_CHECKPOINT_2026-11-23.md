@@ -124,3 +124,12 @@ Updated: 2026-11-23
 - No Production DB/Storage, credentials, production alias, customer data, or Lovable source was changed.
 - Production release gates remain blocked: configured Production Supabase access denied; no verified restorable DB+Storage backup; Lovable/GitHub source divergence; role-based signed-in Buyer/Seller/Admin E2E and Production read-only security preflight outstanding.
 
+## Seller product field validation alignment — 2026-11-23
+- Database schema defines Bengali product title length as 2–120 characters, English title up to 120, description up to 3000, price greater than zero and below 10,000,000, and stock as an integer 0–100,000.
+- Seller UI previously allowed Bengali title up to 160 characters and price up to 100,000,000, while the update handler used the same oversized title/price limits. These values could pass client validation but fail database constraints.
+- Added shared `validateSellerProductTitle` (trims and enforces 2–120 characters), used it for both new product creation and seller inline title updates; constrained English title and description before insert; aligned price validation and inputs to the actual numeric/database range; added regression tests.
+- Commits: `38a5155b88a702214d9187d80451cda3286dcafd` (shared validation), `3a7e2cd9d80e74c01a0a3ede7a3eb592669a9883` (tests), `6f34e75c512b9739a152fc7ff0bae0aaa87881af` (first UI integration), `0bea67b45e147fd883a97766337e7422c9833f8c` and `5da13d95d6f3c64a9ebfe0fecba30827a16f986c` (format/build correction attempts), `702f7decf4782b99a78deafcddcaf9d2495c2338` (final route syntax correction).
+- Earlier CI failures were inspected: Prettier formatting errors and one stray literal `\\n` in the route file. Both were corrected. Final exact-code-head Actions run `45120364007` completed SUCCESS: install, ESLint, application build and Vitest all passed.
+- Exact-code-head Vercel Preview deployment `dpl_DsAn4kuxwHaTKovBJfVJgSQxkJkN` is READY: https://allify-chattogram-i18fse1m6-allify.vercel.app (Preview only).
+- No Production DB/Storage changes, Production deployment/alias changes, credentials, customer data, PR merge, or billing changes.
+
