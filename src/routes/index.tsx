@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { sanitizeStoredCart, type StoredCartLine } from "@/lib/cart-validation";
+import { canPurchaseProduct, sanitizeStoredCart, type StoredCartLine } from "@/lib/cart-validation";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -90,6 +90,11 @@ function Index() {
   }, []);
 
   const addToCart = (product: StoreProduct) => {
+    if (!canPurchaseProduct(product)) {
+      setToast(product.seller_stores?.is_demo ? "নমুনা পণ্য — অর্ডার বন্ধ" : "এই পণ্যটি বর্তমানে স্টকে নেই");
+      window.setTimeout(() => setToast(""), 2200);
+      return;
+    }
     try {
       const saved = JSON.parse(localStorage.getItem("allify-cart") || "[]");
       const next = sanitizeStoredCart(saved);
@@ -214,7 +219,7 @@ function Index() {
                 </div>
               </a>
               <div className="px-3 pb-3">
-                <button type="button" disabled={product.stock < 1} onClick={() => addToCart(product)} className="w-full rounded-lg border py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: "#cbd9d0", color: "#123b32" }}>কার্টে যোগ করুন</button>
+                <button type="button" disabled={!canPurchaseProduct(product)} onClick={() => addToCart(product)} className="w-full rounded-lg border py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: "#cbd9d0", color: "#123b32" }}>{product.seller_stores?.is_demo ? "নমুনা পণ্য — অর্ডার বন্ধ" : "কার্টে যোগ করুন"}</button>
               </div>
             </article>
           ))}
