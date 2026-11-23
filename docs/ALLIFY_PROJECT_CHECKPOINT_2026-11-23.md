@@ -98,3 +98,8 @@ Updated: 2026-11-23
 - At checkpoint time, exact code-head Actions run `45119581435` was IN_PROGRESS at ESLint after successful dependency installation; Build and Vitest were pending: https://github.com/shihabsami40-allify/allify/actions/runs/45119581435. Verify final status before claiming CI pass.
 - Exact code-head Vercel Preview deployment `dpl_85tFohmhK43Sz1rurfwDfoM664fP` was BUILDING: https://allify-chattogram-ntszxz9xy-allify.vercel.app. Preview only; verify READY before claiming deployment success.
 - PR #3 remains OPEN and unmerged. No Production database, Storage objects/policies, credentials, production alias, or customer data were changed.
+
+## CI formatting correction — seller image path tests — 2026-11-23
+- First lint run `45119581435` failed only on five Prettier formatting differences in `src/test/product-image-input.test.ts`; application build and Vitest were skipped. Exact log was reviewed; no functional lint issue was reported.
+- Applied formatting-only correction in commit `58ed0432e86b4d7edb807c5b5bb2806c3de60f84`. The corrected exact-head CI run had not yet appeared at checkpoint time; do not mark the feature verified until CI succeeds.
+- Preview for the feature code head `3d6f314...` was READY at https://allify-chattogram-ntszxz9xy-allify.vercel.app. The corrected commit still requires exact-head CI/Preview confirmation.
