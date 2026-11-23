@@ -8,9 +8,7 @@ describe("deriveOrderStatus", () => {
   });
 
   it("marks an order cancelled only when every item is cancelled", () => {
-    expect(deriveOrderStatus([{ status: "cancelled" }, { status: "cancelled" }])).toBe(
-      "cancelled",
-    );
+    expect(deriveOrderStatus([{ status: "cancelled" }, { status: "cancelled" }])).toBe("cancelled");
   });
 
   it("gives pending items priority over later lifecycle states", () => {
@@ -42,9 +40,7 @@ describe("deriveOrderStatus", () => {
   });
 
   it("keeps delivered when remaining items are already delivered or cancelled", () => {
-    expect(deriveOrderStatus([{ status: "delivered" }, { status: "cancelled" }])).toBe(
-      "delivered",
-    );
+    expect(deriveOrderStatus([{ status: "delivered" }, { status: "cancelled" }])).toBe("delivered");
   });
 
   it("falls back safely for an unexpected item status", () => {

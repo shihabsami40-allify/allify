@@ -4,9 +4,10 @@ export type SellerProductNumbers = {
   stock: number;
 };
 
-export type SellerProductNumbersResult =
-  | { ok: true; value: SellerProductNumbers }
-  | { ok: false; error: string };
+export type SellerProductNumbersResult = { ok: true; value: SellerProductNumbers } | {
+  ok: false;
+  error: string;
+};
 
 /**
  * Validate numeric values before a seller product is sent to the database.

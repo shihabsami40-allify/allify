@@ -21,8 +21,7 @@ export const deriveOrderStatus = (items: readonly OrderItemState[]): OrderStatus
   if (items.every((item) => item.status === "cancelled")) return "cancelled";
 
   return (
-    ACTIVE_ORDER_STATUS_PRIORITY.find((status) =>
-      items.some((item) => item.status === status),
-    ) ?? "pending"
+    ACTIVE_ORDER_STATUS_PRIORITY.find((status) => items.some((item) => item.status === status)) ??
+    "pending"
   );
 };
