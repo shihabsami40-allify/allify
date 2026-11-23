@@ -250,7 +250,8 @@ function MarketplacePage() {
       const productTitle = validateSellerProductTitle(form.title_bn);
       if (!productTitle.ok) throw new Error(productTitle.error);
       if ((form.title_en || "").length > 120) throw new Error("ইংরেজি নাম সর্বোচ্চ ১২০ অক্ষরের হতে হবে।");
-      if ((form.description || "").length > 3000) throw new Error("পণ্যের বিবরণ সর্বোচ্চ ৩০০০ অক্ষরের হতে হবে।");\n      const productNumbers = validateSellerProductNumbers(form.price, form.stock || 0, form.compare_price);
+      if ((form.description || "").length > 3000) throw new Error("পণ্যের বিবরণ সর্বোচ্চ ৩০০০ অক্ষরের হতে হবে।");
+      const productNumbers = validateSellerProductNumbers(form.price, form.stock || 0, form.compare_price);
       if (!productNumbers.ok) throw new Error(productNumbers.error);
       const slug = (form.product_slug || "product-"+Date.now()).toLowerCase().replace(/[^a-z0-9-]/g,"-").replace(/-+/g,"-").replace(/^-|-$/g,"").slice(0,90);
       if (slug.length < 3) throw new Error("পণ্যের URL slug কমপক্ষে ৩ অক্ষরের হতে হবে।");
