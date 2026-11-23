@@ -76,6 +76,16 @@ describe("sanitizeStoredCart", () => {
     ).toEqual([]);
   });
 
+
+  it("deduplicates IDs after trimming whitespace", () => {
+    expect(
+      sanitizeStoredCart([
+        { product: product({ id: "product-1" }), quantity: 1 },
+        { product: product({ id: "  product-1  ", title_bn: "অন্য নাম" }), quantity: 2 },
+      ]),
+    ).toEqual([{ product: product(), quantity: 1 }]);
+  });
+
   it("limits the cart to 50 distinct lines", () => {
     const lines = Array.from({ length: 55 }, (_, index) => ({
       product: product({ id: `product-${index}` }),
