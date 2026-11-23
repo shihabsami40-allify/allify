@@ -21,3 +21,28 @@ export function validateSellerProductImage(file: SellerProductImageInput) {
 
   return { ok: true as const };
 }
+
+export function buildSellerProductImagePath(
+  userId: string,
+  storeId: string,
+  productId: string,
+  mimeType: string,
+  timestamp: number,
+) {
+  const segments = [userId, storeId, productId];
+  if (segments.some((segment) => !segment || segment.includes("/") || segment.includes("\\"))) {
+    return null;
+  }
+
+  if (!Number.isSafeInteger(timestamp) || timestamp < 0) return null;
+
+  const extensionByMimeType: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+  const extension = extensionByMimeType[mimeType];
+  if (!extension) return null;
+
+  return userId + "/" + storeId + "/" + productId + "-" + timestamp + "." + extension;
+}
