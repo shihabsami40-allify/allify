@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { deriveOrderStatus } from "@/lib/order-status";
 import { canTransitionOrderItemStatus } from "@/lib/order-transitions";
 import { validateSellerProductNumbers } from "@/lib/product-input";
-import { validateSellerProductImage } from "@/lib/product-image-input";
+import { buildSellerProductImagePath, validateSellerProductImage } from "@/lib/product-image-input";
 import { getSellerApplicationSubmitError } from "@/lib/seller-application-error";
 import { sanitizeStoredCart } from "@/lib/cart-validation";
 
@@ -256,8 +256,14 @@ function MarketplacePage() {
       if (error) throw error;
       createdProductId = data.id;
       if (productImage) {
-        const extension = productImage.type === "image/png" ? "png" : productImage.type === "image/webp" ? "webp" : "jpg";
-        const path = user.id + "/" + myStore.id + "/" + data.id + "-" + Date.now() + "." + extension;
+        const path = buildSellerProductImagePath(
+          user.id,
+          myStore.id,
+          data.id,
+          productImage.type,
+          Date.now(),
+        );
+        if (!path) throw new Error("ছবির ফাইলের তথ্য সঠিক নয়।");
         uploadedImagePath = path;
         const uploaded = await supabase.storage.from("product-images").upload(path,productImage,{contentType:productImage.type,upsert:false});
         if (uploaded.error) throw uploaded.error;
