@@ -55,3 +55,17 @@ Updated: 2026-11-24
 ## Owner action genuinely required
 
 The only Production-specific owner action currently required is to grant authorized read-only access to the exact configured Production backend and verify/provide a restorable database backup plus separate Storage-object backup/restore evidence. No password or secret should be sent in chat.
+
+## Live verification update — 2026-11-24 12:20 Bangladesh time
+
+This section supersedes the earlier access limitation above where it conflicts with current live observations.
+
+- Supabase project actively queried: `onqadpqdontbdvecnvby` (Allify, ap-south-1). The connected database is reachable for SQL and migration operations.
+- User account `03b1af31-a4de-4477-8d65-5eea4102aa36` has a non-null `auth.users.email_confirmed_at` and both `admin` and `customer` roles.
+- Live data counts: seller applications 0; seller stores 0; products 0; orders 0; categories 8; delivery areas 27. Empty Admin lists therefore reflect no marketplace activity yet, not a missing admin role.
+- The active checkout RPC overload `place_order(jsonb,text,text,text,text,uuid,text,boolean)` has EXECUTE for authenticated users; the older overload without `p_request_id` is not executable by authenticated or anon roles.
+- Storage audit found duplicate legacy seller policies and a path-reference mismatch in the strict product-image policies. The frontend creates object paths with three directory segments: user ID / store ID / product ID. Applied Supabase migrations `fix_product_image_storage_policies` and `correct_product_image_policy_path_reference` remove the broad legacy policies and replace the policies with checks against the exact three-segment path and the owning store.
+- Verified after migration: only the three corrected seller upload/update/delete policies remain; product-images bucket is public, 5 MiB maximum, and allows JPEG/PNG/WebP. SQL policy expressions now explicitly reference `storage.objects.name`.
+- Source SQL is recorded in [ALLIFY_PRODUCT_IMAGE_STORAGE_POLICIES_2026-11-24.sql](./ALLIFY_PRODUCT_IMAGE_STORAGE_POLICIES_2026-11-24.sql).
+- Security advisor still reports SECURITY DEFINER RPCs callable by authenticated users and leaked-password protection disabled. The RPCs are used by the app for order placement/cancellation, role checks and seller approval; do not revoke them blindly. Review each function body and authorization checks before changing grants. Enable leaked-password protection in Auth settings when supported.
+- No seller application, store, product, or order was fabricated for testing. Full upload/checkout end-to-end test still requires a real approved seller store and a real non-demo product; no destructive test records were inserted.
