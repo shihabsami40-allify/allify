@@ -30,8 +30,8 @@
  */
 
 @theme inline {
-  --font-sans: "Hind Siliguri", system-ui, sans-serif;
-  --font-display: "Baloo Da 2", "Hind Siliguri", sans-serif;
+  --font-sans: "Noto Sans Bengali", "Noto Sans", system-ui, sans-serif;
+  --font-display: "Baloo Da 2", "Noto Sans Bengali", sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
