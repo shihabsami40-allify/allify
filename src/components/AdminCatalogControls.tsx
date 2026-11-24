@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 type Category = { id: string; slug: string; name_bn: string; name_en: string; sort_order: number; parent_id: string | null };
-type DeliveryArea = { id: string; name_bn: string; name_en: string; zone: string; fee: number; active: boolean; sort_order: number };
+type DeliveryArea = { id: string; name_bn: string; name_en: string; zone: string; active: boolean; sort_order: number };
 
 const field = "w-full rounded-lg border bg-background px-3 py-2 text-sm";
 const button = "rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50";
@@ -12,7 +12,7 @@ export function AdminCatalogControls() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [areas, setAreas] = useState<DeliveryArea[]>([]);
   const [categoryForm, setCategoryForm] = useState({ slug: "", name_bn: "", name_en: "", sort_order: "0", parent_id: "" });
-  const [areaForm, setAreaForm] = useState({ name_bn: "", name_en: "", zone: "city", fee: "60", sort_order: "0" });
+  const [areaForm, setAreaForm] = useState({ name_bn: "", name_en: "", zone: "city", sort_order: "0" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -20,7 +20,7 @@ export function AdminCatalogControls() {
   const load = async () => {
     const [categoryResult, areaResult] = await Promise.all([
       supabase.from("categories").select("id,slug,name_bn,name_en,sort_order,parent_id").order("sort_order"),
-      supabase.from("delivery_areas").select("id,name_bn,name_en,zone,fee,active,sort_order").order("sort_order"),
+      supabase.from("delivery_areas").select("id,name_bn,name_en,zone,active,sort_order").order("sort_order"),
     ]);
     if (categoryResult.error) throw categoryResult.error;
     if (areaResult.error) throw areaResult.error;
@@ -84,35 +84,30 @@ export function AdminCatalogControls() {
 
   const saveArea = async (event: FormEvent) => {
     event.preventDefault();
-    const fee = Number(areaForm.fee);
-    if (!areaForm.name_bn.trim() || !areaForm.name_en.trim() || !areaForm.zone.trim() || !Number.isFinite(fee) || fee < 0 || fee > 100000) {
-      setError("ডেলিভারি এলাকার নাম, জোন এবং সঠিক চার্জ দিতে হবে।");
+    if (!areaForm.name_bn.trim() || !areaForm.name_en.trim() || !areaForm.zone.trim()) {
+      setError("ডেলিভারি এলাকার বাংলা ও ইংরেজি নাম এবং জোন দিতে হবে।");
       return;
     }
     setBusy(true); setError(""); setMessage("");
     try {
       const { error: insertError } = await supabase.from("delivery_areas").insert({
         name_bn: areaForm.name_bn.trim(), name_en: areaForm.name_en.trim(), zone: areaForm.zone.trim(),
-        fee, active: true, sort_order: Number(areaForm.sort_order) || 0,
+        fee: 0, active: true, sort_order: Number(areaForm.sort_order) || 0,
       });
       if (insertError) throw insertError;
-      setAreaForm({ name_bn: "", name_en: "", zone: "city", fee: "60", sort_order: "0" });
+      setAreaForm({ name_bn: "", name_en: "", zone: "city", sort_order: "0" });
       await load(); setMessage("নতুন ডেলিভারি এলাকা যোগ হয়েছে।");
     } catch (e: unknown) { setError(e instanceof Error ? e.message : "এলাকা যোগ করা যায়নি।"); }
     finally { setBusy(false); }
   };
 
   const editArea = async (area: DeliveryArea) => {
-    const feeText = window.prompt("ডেলিভারি চার্জ (টাকা)", String(area.fee));
-    if (feeText === null) return;
-    const fee = Number(feeText);
-    if (!Number.isFinite(fee) || fee < 0 || fee > 100000) { setError("সঠিক ডেলিভারি চার্জ লিখুন।"); return; }
     const active = window.confirm("এই এলাকা সক্রিয় রাখতে OK চাপুন। নিষ্ক্রিয় করতে Cancel চাপুন।");
     setBusy(true); setError(""); setMessage("");
     try {
-      const { error: updateError } = await supabase.from("delivery_areas").update({ fee, active }).eq("id", area.id);
+      const { error: updateError } = await supabase.from("delivery_areas").update({ active }).eq("id", area.id);
       if (updateError) throw updateError;
-      await load(); setMessage("ডেলিভারি এলাকার চার্জ ও অবস্থা আপডেট হয়েছে।");
+      await load(); setMessage("ডেলিভারি এলাকার অবস্থা আপডেট হয়েছে।");
     } catch (e: unknown) { setError(e instanceof Error ? e.message : "এলাকা আপডেট করা যায়নি।"); }
     finally { setBusy(false); }
   };
@@ -137,19 +132,18 @@ export function AdminCatalogControls() {
       </div>)}</div>
     </div>
     <div className="rounded-2xl border bg-card p-4 shadow-sm">
-      <h2 className="font-bold">ডেলিভারি এলাকা ও চার্জ</h2>
-      <p className="mt-1 text-xs text-muted-foreground">এলাকা যোগ করুন, চার্জ পরিবর্তন করুন অথবা সাময়িকভাবে নিষ্ক্রিয় করুন।</p>
+      <h2 className="font-bold">ডেলিভারি এলাকা ব্যবস্থাপনা</h2>
+      <p className="mt-1 text-xs text-muted-foreground">এখানে শুধু ডেলিভারি এলাকা পরিচালনা হবে। কুরিয়ার চার্জ ALLIFY-তে নির্ধারণ করা হয় না।</p>
       <form onSubmit={saveArea} className="mt-3 grid gap-2 sm:grid-cols-2">
         <input className={field} placeholder="বাংলা এলাকার নাম" value={areaForm.name_bn} onChange={e=>setAreaForm(v=>({...v,name_bn:e.target.value}))} required />
         <input className={field} placeholder="English area name" value={areaForm.name_en} onChange={e=>setAreaForm(v=>({...v,name_en:e.target.value}))} required />
         <select className={field} aria-label="ডেলিভারি জোন" value={areaForm.zone} onChange={e=>setAreaForm(v=>({...v,zone:e.target.value}))} required><option value="city">সিটি এলাকা</option><option value="upazila">উপজেলা এলাকা</option></select>
-        <input className={field} type="number" min="0" max="100000" step="1" placeholder="ডেলিভারি চার্জ" value={areaForm.fee} onChange={e=>setAreaForm(v=>({...v,fee:e.target.value}))} required />
         <input className={field} type="number" placeholder="ক্রম" value={areaForm.sort_order} onChange={e=>setAreaForm(v=>({...v,sort_order:e.target.value}))} />
         <button className={button} disabled={busy}>এলাকা যোগ করুন</button>
       </form>
       <div className="mt-3 divide-y">{areas.map(area=><div key={area.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
-        <span><b>{area.name_bn}</b> <span className="text-muted-foreground">({area.name_en}) · {area.zone} · ৳{Number(area.fee).toLocaleString("bn-BD")} · {area.active?"সক্রিয়":"নিষ্ক্রিয়"}</span></span>
-        <button type="button" className={secondary} disabled={busy} onClick={()=>void editArea(area)}>চার্জ/অবস্থা</button>
+        <span><b>{area.name_bn}</b> <span className="text-muted-foreground">({area.name_en}) · {area.zone} · {area.active?"সক্রিয়":"নিষ্ক্রিয়"}</span></span>
+        <button type="button" className={secondary} disabled={busy} onClick={()=>void editArea(area)}>অবস্থা পরিবর্তন</button>
       </div>)}</div>
     </div>
   </section>;
