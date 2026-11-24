@@ -161,7 +161,7 @@ function MarketplacePage() {
           setOrders(orderRows.data ?? []);
           if (storeRow.data) {
             const [sellerProductRows, sellerOrderRows] = await Promise.all([
-              supabase.from("products").select("id,slug,title_bn,price,stock,status,category_id").eq("store_id",storeRow.data.id).order("created_at",{ascending:false}),
+              supabase.from("products").select("id,slug,title_bn,price,stock,status,category_id,product_images(id,url,sort_order)").eq("store_id",storeRow.data.id).order("created_at",{ascending:false}),
               supabase.from("order_items").select("id,order_id,product_id,title,unit_price,quantity,status,orders(order_no,created_at,recipient,phone,area,address_line,note,total,payment_method)").eq("store_id",storeRow.data.id).limit(100)
             ]);
             setSellerProducts(sellerProductRows.data ?? []);
@@ -392,6 +392,50 @@ function MarketplacePage() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const addSellerProductImages = async (productId:string, files:File[]) => {
+    if (!myStore?.id || !user?.id || !productId || !files.length) return;
+    setError(""); setMessage("");
+    for (const file of files) {
+      const validation = validateSellerProductImage(file);
+      if (!validation.ok) { setError(file.name + ": " + validation.error); return; }
+    }
+    setBusy(true);
+    const uploadedPaths:string[] = [];
+    try {
+      const {data:existing,error:existingError} = await supabase.from("product_images")
+        .select("id,url,sort_order").eq("product_id",productId).order("sort_order",{ascending:true});
+      if (existingError) throw existingError;
+      const currentImages = existing || [];
+      if (currentImages.length + files.length > 8) {
+        throw new Error("একটি পণ্যে সর্বোচ্চ ৮টি ছবি রাখা যাবে। বর্তমানে " + currentImages.length + "টি আছে।");
+      }
+      const rows:{product_id:string;url:string;sort_order:number}[] = [];
+      for (let index=0; index<files.length; index++) {
+        const file=files[index];
+        const path=buildSellerProductImagePath(user.id,myStore.id,productId,file.type,Date.now()+index);
+        if (!path) throw new Error("ছবির ফাইলের তথ্য সঠিক নয়: " + file.name);
+        const upload=await supabase.storage.from("product-images").upload(path,file,{contentType:file.type,upsert:false});
+        if (upload.error) throw new Error("ছবি আপলোড ব্যর্থ ("+file.name+"): "+upload.error.message);
+        uploadedPaths.push(upload.data.path);
+        const url=supabase.storage.from("product-images").getPublicUrl(upload.data.path).data.publicUrl;
+        rows.push({product_id:productId,url,sort_order:currentImages.length+index});
+      }
+      const {data:inserted,error:insertError}=await supabase.from("product_images").insert(rows).select("id,url,sort_order");
+      if (insertError) throw new Error("ছবির তথ্য সংরক্ষণ হয়নি: "+insertError.message);
+      if (!inserted || inserted.length!==rows.length) throw new Error("সব ছবির তথ্য সংরক্ষণ নিশ্চিত করা যায়নি।");
+      setSellerProducts(items=>items.map(product=>product.id===productId
+        ? {...product,product_images:[...(product.product_images||[]),...inserted].sort((a:any,b:any)=>a.sort_order-b.sort_order)}
+        : product));
+      setMessage(files.length.toLocaleString("bn-BD")+"টি নতুন ছবি পণ্যে যোগ হয়েছে।");
+    } catch(e:any) {
+      if (uploadedPaths.length) {
+        const removal=await supabase.storage.from("product-images").remove(uploadedPaths);
+        if (removal.error) setError((e.message||"ছবি যোগ করা যায়নি।")+" আপলোড হওয়া ছবির কিছু ফাইল পরিষ্কার করা যায়নি।");
+        else setError(e.message||"ছবি যোগ করা যায়নি।");
+      } else setError(e.message||"ছবি যোগ করা যায়নি।");
+    } finally { setBusy(false); }
   };
 
   const updateSellerProduct = async (id:string, values:Record<string,any>) => {
