@@ -34,6 +34,7 @@ const bdt = (n: number) => "৳ " + Number(n || 0).toLocaleString("bn-BD");
 const categoryIcons: Record<string, string> = {
   "পোশাক": "👕", "জুতা": "👟", "ঘড়ি": "⌚", "ঘড়ি": "⌚",
   "ব্যাগ": "🎒", "বিউটি": "💄", "লাইফস্টাইল": "🏠",
+  "মোবাইল": "📱", "মোবাইল অ্যাকসেসরিজ": "🔌",
 };
 
 function Index() {
