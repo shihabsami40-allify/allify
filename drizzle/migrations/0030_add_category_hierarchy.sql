@@ -1,0 +1,6 @@
+ALTER TABLE public.categories
+  ADD COLUMN IF NOT EXISTS parent_id uuid NULL
+  REFERENCES public.categories(id) ON DELETE RESTRICT;
+
+CREATE INDEX IF NOT EXISTS categories_parent_id_idx
+  ON public.categories(parent_id);
