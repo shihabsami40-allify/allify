@@ -84,7 +84,7 @@ export function SellerCategoryPicker({
           ))}
         </select>
       )}
-      {secondChildren.length > 0 && (
+      {secondId !== rootId && secondChildren.length > 0 && (
         <select
           aria-label="নির্দিষ্ট ক্যাটাগরি"
           className={field}
