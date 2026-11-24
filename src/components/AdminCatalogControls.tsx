@@ -82,7 +82,7 @@ export function AdminCatalogControls() {
         fee, active: true, sort_order: Number(areaForm.sort_order) || 0,
       });
       if (insertError) throw insertError;
-      setAreaForm({ name_bn: "", name_en: "", zone: "চট্টগ্রাম", fee: "60", sort_order: "0" });
+      setAreaForm({ name_bn: "", name_en: "", zone: "city", fee: "60", sort_order: "0" });
       await load(); setMessage("নতুন ডেলিভারি এলাকা যোগ হয়েছে।");
     } catch (e: unknown) { setError(e instanceof Error ? e.message : "এলাকা যোগ করা যায়নি।"); }
     finally { setBusy(false); }
