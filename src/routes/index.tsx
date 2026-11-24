@@ -208,17 +208,20 @@ function Index() {
           {prods.data?.map((product) => (
             <article key={product.id} className="overflow-hidden rounded-2xl border bg-white transition hover:-translate-y-1 hover:shadow-lg" style={{ borderColor: "#e8eeeb" }}>
               <a href={"/product?slug=" + encodeURIComponent(product.slug)} className="block">
-                <div className="grid aspect-square place-items-center bg-gradient-to-br from-[#f0f3ef] to-[#e6ece7]">
+                <div className="grid aspect-square w-full place-items-center overflow-hidden bg-gradient-to-br from-[#f0f3ef] to-[#e6ece7] p-3">
                   {product.product_images?.[0]?.url
-                    ? <img src={product.product_images[0].url} alt={product.title_bn} loading="lazy" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                    ? <img src={product.product_images[0].url} alt={product.title_bn} loading="lazy" className="h-full w-full object-contain" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                     : <span className="text-5xl">🛍️</span>}
                 </div>
-                <div className="p-3">
-                  <h3 className="line-clamp-2 text-sm font-bold">{product.title_bn}</h3>
-                  <a href={product.seller_stores?.slug ? "/store?slug=" + encodeURIComponent(product.seller_stores.slug) : "/market"} onClick={(e) => e.stopPropagation()} className="mt-2 flex min-w-0 items-center gap-2 text-[10px] hover:underline" style={{ color: "#687571" }}><span className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full border bg-[#f0f3ef]" style={{ borderColor: "#e0e8e2" }}>{product.seller_stores?.logo_url ? <img src={product.seller_stores.logo_url} alt={product.seller_stores.name + " লোগো"} loading="lazy" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="font-bold">{(product.seller_stores?.name || "দোকান").slice(0,1)}</span>}</span><span className="truncate">{product.seller_stores?.name || "স্থানীয় দোকান"}{product.seller_stores?.is_demo ? " · নমুনা দোকান" : ""}</span></a>
-                  <p className="mt-2 font-black" style={{ color: "#123b32" }}>{bdt(product.price)} {product.compare_price ? <s className="ml-1 text-[10px] font-normal text-gray-400">{bdt(product.compare_price)}</s> : null}</p>
-                </div>
               </a>
+              <div className="p-3">
+                <a href={"/product?slug=" + encodeURIComponent(product.slug)} className="block"><h3 className="line-clamp-2 min-h-10 text-sm font-bold">{product.title_bn}</h3></a>
+                <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
+                  <p className="shrink-0 text-sm font-black" style={{ color: "#123b32" }}>{bdt(product.price)}</p>
+                  <a href={product.seller_stores?.slug ? "/store?slug=" + encodeURIComponent(product.seller_stores.slug) : "/market"} className="min-w-0 truncate text-right text-[10px] hover:underline" style={{ color: "#687571" }}>{product.seller_stores?.name || "স্থানীয় দোকান"}</a>
+                </div>
+                {product.compare_price ? <s className="mt-0.5 block text-[10px] text-gray-400">{bdt(product.compare_price)}</s> : null}
+              </div>
               <div className="px-3 pb-3">
                 <button type="button" disabled={!canPurchaseProduct(product)} onClick={() => addToCart(product)} className="w-full rounded-lg border py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: "#cbd9d0", color: "#123b32" }}>{product.seller_stores?.is_demo ? "নমুনা পণ্য — অর্ডার বন্ধ" : "কার্টে যোগ করুন"}</button>
               </div>
