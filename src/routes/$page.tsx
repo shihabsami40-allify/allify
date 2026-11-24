@@ -581,6 +581,10 @@ function MarketplacePage() {
     setBusy(true);setError("");setMessage("");
     try{
       for(let i=0;i<images.length;i++){
+        const {error}=await supabase.from("product_images").update({sort_order:100+i}).eq("id",images[i].id).eq("product_id",productId);
+        if(error)throw error;
+      }
+      for(let i=0;i<images.length;i++){
         const {error}=await supabase.from("product_images").update({sort_order:i}).eq("id",images[i].id).eq("product_id",productId);
         if(error)throw error;
       }
@@ -600,6 +604,10 @@ function MarketplacePage() {
       if(error)throw error;
       if(!data)throw new Error("ছবিটি মুছে ফেলার অনুমতি পাওয়া যায়নি।");
       const remaining=(product.product_images||[]).filter((row:any)=>row.id!==image.id).sort((a:any,b:any)=>a.sort_order-b.sort_order);
+      for(let i=0;i<remaining.length;i++){
+        const {error:orderError}=await supabase.from("product_images").update({sort_order:100+i}).eq("id",remaining[i].id).eq("product_id",productId);
+        if(orderError)throw orderError;
+      }
       for(let i=0;i<remaining.length;i++){
         const {error:orderError}=await supabase.from("product_images").update({sort_order:i}).eq("id",remaining[i].id).eq("product_id",productId);
         if(orderError)throw orderError;

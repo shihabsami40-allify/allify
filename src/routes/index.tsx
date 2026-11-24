@@ -61,8 +61,9 @@ function Index() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id,slug,title_bn,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,logo_url,is_demo)")
+        .select("id,slug,title_bn,price,compare_price,stock,category_id,product_images(url,sort_order),seller_stores(id,name,slug,logo_url,is_demo)")
         .eq("status", "active")
+        .order("sort_order", { referencedTable: "product_images", ascending: true })
         .order("sold_count", { ascending: false })
         .limit(12);
       if (error) throw error;
