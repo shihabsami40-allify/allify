@@ -8,6 +8,11 @@ export const validateSellerProductTitle = (input: unknown): SellerProductTitleRe
   return { ok: true, value: title };
 };
 
+const normalizeLocalizedDigits = (value: string): string => value
+  .replace(/[০-৯]/g, digit => String("০১২৩৪৫৬৭৮৯".indexOf(digit)))
+  .replace(/[٠-٩]/g, digit => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+  .replace(/٫/g, ".");
+
 export type SellerProductNumbers = {
   price: number;
   comparePrice: number | null;
@@ -34,7 +39,7 @@ export const validateSellerProductNumbers = (
     typeof priceInput === "number"
       ? priceInput
       : typeof priceInput === "string" && priceInput.trim() !== ""
-        ? Number(priceInput)
+        ? Number(normalizeLocalizedDigits(priceInput))
         : Number.NaN;
   if (!Number.isFinite(price) || price <= 0 || price >= 10000000) {
     return { ok: false, error: "পণ্যের সঠিক মূল্য লিখুন।" };
@@ -44,7 +49,7 @@ export const validateSellerProductNumbers = (
     typeof stockInput === "number"
       ? stockInput
       : typeof stockInput === "string" && stockInput.trim() !== ""
-        ? Number(stockInput)
+        ? Number(normalizeLocalizedDigits(stockInput))
         : Number.NaN;
   if (!Number.isInteger(stock) || stock < 0 || stock > 100000) {
     return { ok: false, error: "স্টক ০ থেকে ১,০০,০০০-এর মধ্যে পূর্ণসংখ্যা হতে হবে।" };
@@ -56,7 +61,7 @@ export const validateSellerProductNumbers = (
       : typeof comparePriceInput === "number"
         ? comparePriceInput
         : typeof comparePriceInput === "string" && comparePriceInput.trim() !== ""
-          ? Number(comparePriceInput)
+          ? Number(normalizeLocalizedDigits(comparePriceInput))
           : Number.NaN;
 
   if (
