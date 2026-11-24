@@ -125,7 +125,7 @@ function Index() {
     }
   };
 
-  const categoryList = (cats.data ?? []).filter((cat) => !cat.parent_id).slice(0, 8);
+  const categoryList = (cats.data ?? []).filter((cat) => !cat.parent_id).slice(0, 10);
 
   return (
     <div className="min-h-screen" style={{ background: "#f7f9f7", color: "#18211f" }}>
