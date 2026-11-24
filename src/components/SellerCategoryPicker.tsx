@@ -19,18 +19,34 @@ export function SellerCategoryPicker({
   onChange,
   labelClassName = "block space-y-1 text-sm font-medium",
 }: Props) {
-  const current = categories.find((category) => category.id === value);
-  const [rootId, setRootId] = useState(current?.parent_id ?? current?.id ?? "");
+  const selected = categories.find((category) => category.id === value);
+  const selectedParent = categories.find((category) => category.id === selected?.parent_id);
+  const initialRoot = selectedParent?.parent_id
+    ? categories.find((category) => category.id === selectedParent.parent_id)?.id ?? ""
+    : selectedParent?.id ?? selected?.id ?? "";
+
+  const [rootId, setRootId] = useState(initialRoot);
   const [selectedValue, setSelectedValue] = useState(value);
 
   useEffect(() => {
-    const selected = categories.find((category) => category.id === value);
-    setRootId(selected?.parent_id ?? selected?.id ?? "");
+    const current = categories.find((category) => category.id === value);
+    const parent = categories.find((category) => category.id === current?.parent_id);
+    const root = parent?.parent_id
+      ? categories.find((category) => category.id === parent.parent_id)
+      : parent ?? current;
+    setRootId(root?.id ?? "");
     setSelectedValue(value);
   }, [categories, value]);
 
   const root = categories.find((category) => category.id === rootId);
-  const children = categories.filter((category) => category.parent_id === rootId);
+  const rootChildren = categories.filter((category) => category.parent_id === rootId);
+  const currentSelection = categories.find((category) => category.id === selectedValue);
+  const currentParent = categories.find((category) => category.id === currentSelection?.parent_id);
+  const secondId = currentSelection?.parent_id === rootId
+    ? currentSelection.id
+    : currentParent?.id ?? rootId;
+  const second = categories.find((category) => category.id === secondId);
+  const secondChildren = categories.filter((category) => category.parent_id === secondId);
 
   const changeValue = (nextValue: string) => {
     setSelectedValue(nextValue);
@@ -55,15 +71,28 @@ export function SellerCategoryPicker({
           <option key={category.id} value={category.id}>{category.name_bn}</option>
         ))}
       </select>
-      {children.length > 0 && (
+      {rootChildren.length > 0 && (
         <select
           aria-label="সাব-ক্যাটাগরি"
           className={field}
-          value={children.some((child) => child.id === selectedValue) ? selectedValue : rootId}
+          value={rootChildren.some((child) => child.id === secondId) ? secondId : rootId}
           onChange={(event) => changeValue(event.target.value)}
         >
           <option value={rootId}>সরাসরি {root?.name_bn ?? "মূল ক্যাটাগরি"}তে রাখুন</option>
-          {children.map((child) => (
+          {rootChildren.map((child) => (
+            <option key={child.id} value={child.id}>{child.name_bn}</option>
+          ))}
+        </select>
+      )}
+      {secondChildren.length > 0 && (
+        <select
+          aria-label="নির্দিষ্ট ক্যাটাগরি"
+          className={field}
+          value={secondChildren.some((child) => child.id === selectedValue) ? selectedValue : secondId}
+          onChange={(event) => changeValue(event.target.value)}
+        >
+          <option value={secondId}>সরাসরি {second?.name_bn ?? "সাব-ক্যাটাগরি"}তে রাখুন</option>
+          {secondChildren.map((child) => (
             <option key={child.id} value={child.id}>{child.name_bn}</option>
           ))}
         </select>
