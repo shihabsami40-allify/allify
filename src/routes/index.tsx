@@ -143,6 +143,7 @@ function Index() {
           </form>
           <div className="ml-auto flex items-center gap-3 text-sm">
             <a href="/account" className="hidden sm:inline">অ্যাকাউন্ট</a>
+            <a href="/cart" className="hidden sm:inline-flex rounded-lg px-3 py-2 font-semibold" style={{ background: "#f0f5eb", color: "#123b32" }}>🛒 কার্ট ({cartCount.toLocaleString("bn-BD")})</a>
           </div>
         </div>
         <nav className="mx-auto flex max-w-6xl gap-5 overflow-x-auto whitespace-nowrap px-4 pb-3 text-xs md:px-6" style={{ color: "#52615b" }}>
