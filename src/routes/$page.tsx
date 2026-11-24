@@ -737,11 +737,32 @@ function MarketplacePage() {
       order?.note?"নির্দেশনা: "+order.note:""
     ].filter(Boolean).join("\n");
     try {
-      await navigator.clipboard.writeText(details);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(details);
+      } else {
+        throw new Error("Clipboard API unavailable");
+      }
       setMessage("অর্ডারের তথ্য কপি হয়েছে। Courier Merchant Panel-এ পেস্ট করে বুকিং করুন।");
       setError("");
     } catch {
-      setError("অর্ডারের তথ্য কপি করা যায়নি। অর্ডারের তথ্য দেখে ম্যানুয়ালি লিখুন।");
+      // Fallback for Android browsers/WebViews where Clipboard API is unavailable.
+      const textarea = document.createElement("textarea");
+      textarea.value = details;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      textarea.style.pointerEvents = "none";
+      document.body.appendChild(textarea);
+      textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length);
+      const copied = document.execCommand("copy");
+      document.body.removeChild(textarea);
+      if (copied) {
+        setMessage("অর্ডারের তথ্য কপি হয়েছে। Courier Merchant Panel-এ পেস্ট করে বুকিং করুন।");
+        setError("");
+      } else {
+        setError("স্বয়ংক্রিয়ভাবে কপি করা যায়নি। নিচের অর্ডারের তথ্য নির্বাচন করে কপি করুন।");
+      }
     }
   };
 
