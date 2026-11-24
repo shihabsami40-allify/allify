@@ -219,7 +219,7 @@ function Index() {
                 <a href={"/product?slug=" + encodeURIComponent(product.slug)} className="block"><h3 className="line-clamp-2 min-h-10 text-sm font-bold">{product.title_bn}</h3></a>
                 <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
                   <p className="shrink-0 text-sm font-black" style={{ color: "#123b32" }}>{bdt(product.price)}</p>
-                  <a href={product.seller_stores?.slug ? "/store?slug=" + encodeURIComponent(product.seller_stores.slug) : "/market"} className="min-w-0 truncate text-right text-[10px] hover:underline" style={{ color: "#687571" }}>{product.seller_stores?.name || "স্থানীয় দোকান"}</a>
+                  <a href={product.seller_stores?.slug ? "/store?slug=" + encodeURIComponent(product.seller_stores.slug) : "/market"} className="flex min-w-0 items-center justify-end gap-1.5 text-right text-[10px] hover:underline" style={{ color: "#687571" }}>{product.seller_stores?.logo_url ? <img src={product.seller_stores.logo_url} alt="" loading="lazy" className="h-5 w-5 shrink-0 rounded-full border object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full border text-[9px] font-bold" style={{ background: "#eff5e9", color: "#123b32" }}>{(product.seller_stores?.name || "দ").slice(0,1)}</span>}<span className="min-w-0 truncate">{product.seller_stores?.name || "স্থানীয় দোকান"}</span></a>
                 </div>
                 {product.compare_price ? <s className="mt-0.5 block text-[10px] text-gray-400">{bdt(product.compare_price)}</s> : null}
               </div>
