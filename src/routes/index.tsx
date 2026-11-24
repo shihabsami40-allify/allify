@@ -34,7 +34,7 @@ const bdt = (n: number) => "৳ " + Number(n || 0).toLocaleString("bn-BD");
 const categoryIcons: Record<string, string> = {
   "পোশাক": "👕", "জুতা": "👟", "ঘড়ি": "⌚", "ঘড়ি": "⌚",
   "ব্যাগ": "🎒", "বিউটি": "💄", "লাইফস্টাইল": "🏠",
-  "মোবাইল": "📱", "মোবাইল অ্যাকসেসরিজ": "🔌",
+  "মোবাইল": "📱", "মোবাইল অ্যাকসেসরিজ": "🔌", "মোবাইল ও অ্যাকসেসরিজ": "📱", "খাবার ও পানীয়": "🍱",
 };
 
 function Index() {
@@ -47,7 +47,7 @@ function Index() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
-        .select("id,slug,name_bn,name_en,sort_order")
+        .select("id,slug,name_bn,name_en,sort_order,parent_id")
         .order("sort_order");
       if (error) throw error;
       return data ?? [];
@@ -125,7 +125,7 @@ function Index() {
     }
   };
 
-  const categoryList = (cats.data ?? []).slice(0, 6);
+  const categoryList = (cats.data ?? []).filter((cat) => !cat.parent_id).slice(0, 10);
 
   return (
     <div className="min-h-screen" style={{ background: "#f7f9f7", color: "#18211f" }}>
