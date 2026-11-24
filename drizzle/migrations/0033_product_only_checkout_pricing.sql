@@ -121,7 +121,7 @@ BEGIN
   PERFORM set_config('app.internal', v_previous_internal, true);
   RETURN v_no;
 END;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.place_order(p_items jsonb, p_recipient text, p_phone text, p_area text, p_address text, p_request_id uuid, p_note text DEFAULT NULL::text, p_save_address boolean DEFAULT false)
  RETURNS text
@@ -273,4 +273,4 @@ BEGIN
   PERFORM set_config('app.internal', v_previous_internal, true);
   RETURN v_no;
 END;
-$function$
+$function$;
