@@ -10,13 +10,14 @@ Bengali-first multi-vendor marketplace for Chattogram, Bangladesh.
 - Email/password sign-up, sign-in, customer account and order history
 - Seller application workflow and seller product publishing
 - Admin seller-application review through the protected `review_seller_application` RPC
+- Admin controls for marketplace categories and Chattogram delivery areas/fees
 - Seller stock and product visibility controls; admin product moderation and order-item status controls
 - Chattogram delivery areas and BDT pricing
 - Seed/demo catalog and demo labels
 
 ## Important launch limitations
 
-This is a functional MVP, not yet verified as a fully launch-ready commercial marketplace. As of 2026-11-24, the Vercel production deployment is READY, production environment-variable entries are configured with comments identifying Supabase project ref `onqadpqdontbdvecnvby`, the admin account has an assigned admin role, all 19 public tables have RLS enabled, and the live database contains 8 categories and 27 delivery areas. Seller applications, stores, products and orders are currently empty. Do not claim end-to-end checkout, seller image upload, or order lifecycle testing as complete until each is tested in a real signed-in buyer/seller/admin browser session. The admin order screen updates individual order items; verify parent order status synchronization before launch. Never allow public signup to self-assign admin.
+This is a functional MVP, not yet verified as a fully launch-ready commercial marketplace. As of 2026-11-24, the Vercel production deployment is READY, production environment-variable entries are configured with comments identifying Supabase project ref `onqadpqdontbdvecnvby`, the admin account has an assigned admin role, all 19 public tables have RLS enabled, and the live database contains 8 categories and 27 delivery areas. Seller applications, stores, products and orders are currently empty. Do not claim end-to-end checkout, seller image upload, or order lifecycle testing as complete until each is tested in a real signed-in buyer/seller/admin browser session. The admin order screen updates individual order items; the production `sync_order_status_from_items` trigger/function is present and its status-derivation logic has been reviewed. End-to-end order lifecycle testing is still outstanding. Never allow public signup to self-assign admin.
 
 The GitHub Actions build currently runs with Bun. A successful build confirms compilation, not complete end-to-end behavior.
 
@@ -38,7 +39,7 @@ The current Vercel project environment-variable records identify `onqadpqdontbdv
 
 - Cash on delivery only; no online payment gateway is configured.
 - No courier API or production email/SMS integration is configured.
-- Seller image uploads use the `product-images` public Supabase Storage bucket. Apply migration `0002_product_image_bucket.sql` before enabling uploads; the bucket accepts JPG, PNG and WebP up to 5 MB. Public image URLs are readable by design; upload/delete paths are restricted to the signed-in seller's user folder.
+- Seller image uploads use the `product-images` public Supabase Storage bucket. The production bucket accepts JPG, PNG and WebP up to 5 MB. Production Storage policies now validate the three-part user/store/product path and active store ownership for seller upload/update; public image URLs are readable by design. A real signed-in seller upload has not yet been end-to-end tested.
 - Missing local product images fall back gracefully in the UI.
 
 ## Stack
