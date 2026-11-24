@@ -160,6 +160,7 @@ function MarketplacePage() {
   useEffect(() => {
     setLoading(true);
     refreshCart();
+    if (page === "checkout" && localStorage.getItem("allify-buy-now-mode") === "yes") setBuyNowMode(true);
     let alive = true;
     (async () => {
       try {
