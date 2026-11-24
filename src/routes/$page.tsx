@@ -954,13 +954,18 @@ function MarketplacePage() {
 
   const signOut = async () => { await supabase.auth.signOut(); setUser(null); setRole("customer"); navigate({to:"/"}); };
   const productCard = (p:Product) => <article key={p.id} className="overflow-hidden rounded-xl border bg-card">
-    <Link to={"/product" as any} search={{slug:p.slug} as any}>
-      <img src={p.product_images?.[0]?.url || "/images/products/placeholder.svg"} alt={p.title_bn} loading="lazy" onError={(e) => { const img = e.currentTarget; if (img.dataset.fallback !== "1") { img.dataset.fallback = "1"; img.src = "/images/products/placeholder.svg"; } else { img.style.display = "none"; } }} className="aspect-square w-full bg-muted object-cover"/>
+    <Link to={"/product" as any} search={{slug:p.slug} as any} className="block">
+      <div className="grid aspect-square w-full place-items-center overflow-hidden bg-muted p-3">
+        <img src={p.product_images?.[0]?.url || "/images/products/placeholder.svg"} alt={p.title_bn} loading="lazy" onError={(e) => { const img = e.currentTarget; if (img.dataset.fallback !== "1") { img.dataset.fallback = "1"; img.src = "/images/products/placeholder.svg"; } else { img.style.display = "none"; } }} className="h-full w-full object-contain"/>
+      </div>
     </Link>
-    <div className="p-3"><Link to={"/product" as any} search={{slug:p.slug} as any} className="line-clamp-2 text-sm font-semibold hover:text-primary">{p.title_bn}</Link>
-      <Link to={p.seller_stores?.slug?("/store" as any):("/market" as any)} search={p.seller_stores?.slug?({slug:p.seller_stores.slug} as any):undefined} className="mt-2 flex items-center gap-2 text-xs text-muted-foreground hover:text-primary"><span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-muted">{p.seller_stores?.logo_url?<img src={p.seller_stores.logo_url} alt="" className="h-full w-full object-cover" onError={e=>{e.currentTarget.style.display="none";}}/>:<span className="text-[10px] font-bold">{(p.seller_stores?.name||"দোকান").slice(0,1)}</span>}</span><span className="truncate">{p.seller_stores?.name || "স্থানীয় দোকান"}{p.seller_stores?.is_demo ? " · নমুনা দোকান" : ""}</span></Link>
-      <p className="mt-1 font-bold text-primary">{money(p.price)} {p.compare_price ? <s className="text-xs font-normal text-muted-foreground">{money(p.compare_price)}</s> : null}</p>
-      <p className="text-xs text-muted-foreground">স্টক: {p.stock.toLocaleString("bn-BD")}</p>
+    <div className="p-3"><Link to={"/product" as any} search={{slug:p.slug} as any} className="line-clamp-2 min-h-10 text-sm font-semibold hover:text-primary">{p.title_bn}</Link>
+      <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
+        <p className="shrink-0 text-sm font-bold text-primary">{money(p.price)}</p>
+        <Link to={p.seller_stores?.slug?("/store" as any):("/market" as any)} search={p.seller_stores?.slug?({slug:p.seller_stores.slug} as any):undefined} className="min-w-0 truncate text-right text-[10px] text-muted-foreground hover:text-primary">{p.seller_stores?.name || "স্থানীয় দোকান"}</Link>
+      </div>
+      {p.compare_price ? <s className="mt-0.5 block text-xs text-muted-foreground">{money(p.compare_price)}</s> : null}
+      <p className="mt-1 text-xs text-muted-foreground">স্টক: {p.stock.toLocaleString("bn-BD")}</p>
       <div className="mt-3 grid grid-cols-2 gap-2"><button className={secondary+" text-xs px-2"} onClick={()=>addToCart(p)} disabled={p.stock<1 || !!p.seller_stores?.is_demo}>কার্টে যোগ করুন</button><button className={primary+" text-xs px-2"} onClick={()=>buyNow(p)} disabled={p.stock<1 || !!p.seller_stores?.is_demo}>এখনই অর্ডার</button></div><button type="button" className="mt-2 w-full rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-muted" onClick={()=>toggleWishlist(p)}>{wishlistIds.includes(p.id)?"♥ পছন্দের তালিকা থেকে সরান":"♡ পছন্দের তালিকায় রাখুন"}</button>
     </div></article>;
 
