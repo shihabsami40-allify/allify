@@ -27,7 +27,7 @@ type StoreProduct = {
   stock: number;
   category_id?: string | null;
   product_images?: { url: string }[];
-  seller_stores?: { name: string; is_demo?: boolean } | null;
+  seller_stores?: { id?: string; name: string; slug?: string; logo_url?: string | null; is_demo?: boolean } | null;
 };
 
 const bdt = (n: number) => "৳ " + Number(n || 0).toLocaleString("bn-BD");
@@ -61,7 +61,7 @@ function Index() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id,slug,title_bn,price,compare_price,stock,category_id,product_images(url),seller_stores(name,is_demo)")
+        .select("id,slug,title_bn,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,logo_url,is_demo)")
         .eq("status", "active")
         .order("sold_count", { ascending: false })
         .limit(12);
@@ -214,7 +214,7 @@ function Index() {
                 </div>
                 <div className="p-3">
                   <h3 className="line-clamp-2 text-sm font-bold">{product.title_bn}</h3>
-                  <p className="mt-1 text-[10px]" style={{ color: "#687571" }}>{product.seller_stores?.name || "স্থানীয় দোকান"}{product.seller_stores?.is_demo ? " · নমুনা দোকান" : ""}</p>
+                  <a href={product.seller_stores?.slug ? "/store?slug=" + encodeURIComponent(product.seller_stores.slug) : "/market"} onClick={(e) => e.stopPropagation()} className="mt-2 flex min-w-0 items-center gap-2 text-[10px] hover:underline" style={{ color: "#687571" }}><span className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full border bg-[#f0f3ef]" style={{ borderColor: "#e0e8e2" }}>{product.seller_stores?.logo_url ? <img src={product.seller_stores.logo_url} alt={product.seller_stores.name + " লোগো"} loading="lazy" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="font-bold">{(product.seller_stores?.name || "দোকান").slice(0,1)}</span>}</span><span className="truncate">{product.seller_stores?.name || "স্থানীয় দোকান"}{product.seller_stores?.is_demo ? " · নমুনা দোকান" : ""}</span></a>
                   <p className="mt-2 font-black" style={{ color: "#123b32" }}>{bdt(product.price)} {product.compare_price ? <s className="ml-1 text-[10px] font-normal text-gray-400">{bdt(product.compare_price)}</s> : null}</p>
                 </div>
               </a>
