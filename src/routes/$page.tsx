@@ -236,7 +236,7 @@ function MarketplacePage() {
         if (error) throw error;
         setMessage("লগইন সফল হয়েছে।"); navigate({to: "/account" as any});
       } else {
-        const {error} = await supabase.auth.signUp({email:form.email||"",password:form.password||"",options:{data:{full_name:form.name||""}}});
+        const {error} = await supabase.auth.signUp({email:form.email||"",password:form.password||"",options:{data:{full_name:form.name||""},emailRedirectTo:"https://allify-chattogram.vercel.app/account"}});
         if (error) throw error;
         setMessage("রেজিস্ট্রেশন সফল। ইমেইল যাচাই করতে হতে পারে।");
       }
