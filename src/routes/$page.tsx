@@ -966,7 +966,7 @@ function MarketplacePage() {
     <div className="p-3"><Link to={"/product" as any} search={{slug:p.slug} as any} className="line-clamp-2 min-h-10 text-sm font-semibold hover:text-primary">{p.title_bn}</Link>
       <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
         <p className="shrink-0 text-sm font-bold text-primary">{money(p.price)}</p>
-        <Link to={p.seller_stores?.slug?("/store" as any):("/market" as any)} search={p.seller_stores?.slug?({slug:p.seller_stores.slug} as any):undefined} className="min-w-0 truncate text-right text-[10px] text-muted-foreground hover:text-primary">{p.seller_stores?.name || "স্থানীয় দোকান"}</Link>
+        <Link to={p.seller_stores?.slug?("/store" as any):("/market" as any)} search={p.seller_stores?.slug?({slug:p.seller_stores.slug} as any):undefined} className="flex min-w-0 items-center justify-end gap-1.5 text-right text-[10px] text-muted-foreground hover:text-primary">{p.seller_stores?.logo_url?<img src={p.seller_stores.logo_url} alt="" loading="lazy" className="h-5 w-5 shrink-0 rounded-full border object-cover" onError={e=>{e.currentTarget.style.display="none";}}/>:<span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border bg-muted text-[9px] font-bold">{(p.seller_stores?.name||"দ").slice(0,1)}</span>}<span className="min-w-0 truncate">{p.seller_stores?.name || "স্থানীয় দোকান"}</span></Link>
       </div>
       {p.compare_price ? <s className="mt-0.5 block text-xs text-muted-foreground">{money(p.compare_price)}</s> : null}
       <p className="mt-1 text-xs text-muted-foreground">স্টক: {p.stock.toLocaleString("bn-BD")}</p>
