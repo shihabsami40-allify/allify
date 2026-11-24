@@ -183,7 +183,39 @@ function MarketplacePage() {
         if (alive) setError(e.message || "তথ্য লোড করা যায়নি।");
       } finally { if (alive) setLoading(false); }
     })();
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      // Auth events can arrive after getSession() has completed. Keep the role in sync.
+      if (!session?.user) {
+        setRole("customer");
+        setAdminProducts([]);
+        setAdminOrders([]);
+        setApplications([]);
+        return;
+      }
+      window.setTimeout(() => {
+        void (async () => {
+          const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id);
+          if (error) {
+            setError("অ্যাকাউন্টের অনুমতি যাচাই করা যায়নি। পৃষ্ঠাটি রিফ্রেশ করুন।");
+            return;
+          }
+          const roles = data?.map((row) => row.role) ?? [];
+          const isAdmin = roles.includes("admin");
+          setRole(isAdmin ? "admin" : roles.includes("seller") ? "seller" : "customer");
+          if (isAdmin) {
+            const [productResult, orderResult, applicationResult] = await Promise.all([
+              supabase.from("products").select("id,title_bn,price,stock,status,seller_stores(name,is_demo)").order("created_at", { ascending: false }).limit(100),
+              supabase.from("orders").select("id,order_no,is_demo,status,total,recipient,phone,area,created_at,order_items(id,title,unit_price,quantity,status)").order("created_at", { ascending: false }).limit(100),
+              supabase.from("seller_applications").select("*").order("created_at", { ascending: false }).limit(100)
+            ]);
+            setAdminProducts(productResult.data ?? []);
+            setAdminOrders(orderResult.data ?? []);
+            setApplications(applicationResult.data ?? []);
+          }
+        })();
+      }, 0);
+    });
     return () => { alive = false; listener.subscription.unsubscribe(); };
   }, [page, searchStr]);
 
