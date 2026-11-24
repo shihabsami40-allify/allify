@@ -239,6 +239,12 @@ function Index() {
         </div>
       </footer>
 
+      <nav aria-label="মোবাইল নেভিগেশন" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur sm:hidden">
+        <a href="/" aria-current="page" className="flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-bold" style={{ color: "#123b32" }}><span aria-hidden="true" className="text-lg leading-5">⌂</span><span>হোম</span></a>
+        <a href="/category" className="flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px]" style={{ color: "#687571" }}><span aria-hidden="true" className="text-lg leading-5">▦</span><span>ক্যাটাগরি</span></a>
+        <a href="/cart" className="flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px]" style={{ color: "#687571" }}><span aria-hidden="true" className="text-lg leading-5">🛒</span><span>কার্ট ({cartCount.toLocaleString("bn-BD")})</span></a>
+        <a href="/account" className="flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px]" style={{ color: "#687571" }}><span aria-hidden="true" className="text-lg leading-5">♙</span><span>অ্যাকাউন্ট</span></a>
+      </nav>
       {toast && <div role="status" className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-xl px-5 py-3 text-sm text-white shadow-xl" style={{ background: "#0e2e27" }}>{toast}</div>}
     </div>
   );
