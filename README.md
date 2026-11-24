@@ -32,7 +32,7 @@ The current GitHub release candidate is `supabase/releases/2026-11-20_allify_rel
 4. Signed-in Buyer, Seller and Admin end-to-end tests against the intended release source.
 5. Reconciliation of the Lovable-published source with the GitHub candidate.
 
-The configured Production backend is the Lovable-managed project ref `htsvvvotamlxlkncksssq`. The authorized Supabase connector currently denies access to that ref. The connected Supabase project `onqadpqdontbdvecnvby` and isolated test project `ltwobqpgxmkeylmpkogq` are separate projects and must never be treated as Production. Do not substitute either one. A GitHub commit or Vercel/Cloudflare deployment does not apply database migrations automatically.
+The configured Production backend is the Lovable-managed project ref `htsvvotamlxlkncksssq`. The authorized Supabase connector currently denies access to that exact 20-character ref. A similarly spelled 21-character value with an extra `v` is invalid and must not be used. The connected Supabase project `onqadpqdontbdvecnvby` and isolated test project `ltwobqpgxmkeylmpkogq` are separate projects and must never be treated as Production. Do not substitute either one. A GitHub commit or Vercel/Cloudflare deployment does not apply database migrations automatically.
 
 ## Integrations
 

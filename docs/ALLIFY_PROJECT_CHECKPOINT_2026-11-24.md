@@ -29,8 +29,8 @@ Updated: 2026-11-24
 
 ## Production backend and safety blockers
 
-- Configured Production Supabase ref: `htsvvvotamlxlkncksssq`.
-- Read-only `get_project` against the configured ref returned a permission-denied response. No database query, migration or write was attempted.
+- Configured Production Supabase ref: `htsvvotamlxlkncksssq`.
+- Read-only `get_project` against the exact 20-character configured ref returned a permission-denied response. A similarly spelled 21-character ref with an extra `v` was rejected as invalid length. No database query, migration or write was attempted.
 - Connected Supabase project `onqadpqdontbdvecnvby` is not Production; isolated `allify-test` project `ltwobqpgxmkeylmpkogq` is not Production. Never substitute either project for the configured backend.
 - No verified restorable full Production database backup, separate Storage-object export or restore rehearsal is available.
 - Production read-only schema/RLS/grant preflight and signed-in Buyer/Seller/Admin end-to-end tests remain outstanding.
