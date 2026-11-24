@@ -62,7 +62,8 @@ export function AdminCatalogControls() {
     const slug = slugInput.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, "");
     const parent = categories.find(x=>x.slug===parentInput.trim() && x.id!==category.id);
     if (!slug || !name_bn.trim() || !name_en.trim() || (parentInput.trim() && !parent)) { setError("সঠিক slug, নাম এবং parent category দিন।"); return; }
-    if (parent?.parent_id) { setError("সর্বোচ্চ দুই স্তরের ক্যাটাগরি রাখা যাবে।"); return; }
+    const parentParent = parent?.parent_id ? categories.find(x=>x.id===parent.parent_id) : undefined;
+    if (parentParent?.parent_id) { setError("সর্বোচ্চ তিন স্তরের ক্যাটাগরি রাখা যাবে।"); return; }
     setBusy(true); setError(""); setMessage("");
     try {
       const { error: updateError } = await supabase.from("categories").update({slug,name_bn:name_bn.trim(),name_en:name_en.trim(),sort_order:Number(sortInput)||0,parent_id:parent?.id??null}).eq("id",category.id);
@@ -127,7 +128,7 @@ export function AdminCatalogControls() {
         <input className={field} placeholder="বাংলা নাম" value={categoryForm.name_bn} onChange={e=>setCategoryForm(v=>({...v,name_bn:e.target.value}))} required />
         <input className={field} placeholder="English name" value={categoryForm.name_en} onChange={e=>setCategoryForm(v=>({...v,name_en:e.target.value}))} required />
         <input className={field} type="number" placeholder="ক্রম" value={categoryForm.sort_order} onChange={e=>setCategoryForm(v=>({...v,sort_order:e.target.value}))} />
-        <select className={field} value={categoryForm.parent_id} onChange={e=>setCategoryForm(v=>({...v,parent_id:e.target.value}))}><option value="">মূল ক্যাটাগরি</option>{categories.filter(x=>!x.parent_id).map(x=><option key={x.id} value={x.id}>{x.name_bn} · {x.slug}</option>)}</select>
+        <select className={field} value={categoryForm.parent_id} onChange={e=>setCategoryForm(v=>({...v,parent_id:e.target.value}))}><option value="">মূল বা সাব-ক্যাটাগরি বেছে নিন</option>{categories.filter(x=>!x.parent_id || !categories.find(parent=>parent.id===x.parent_id)?.parent_id).map(x=><option key={x.id} value={x.id}>{x.parent_id?"↳ ":""}{x.name_bn} · {x.slug}</option>)}</select>
         <button className={button} disabled={busy}>ক্যাটাগরি যোগ করুন</button>
       </form>
       <div className="mt-3 divide-y">{categories.map(category=><div key={category.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
