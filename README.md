@@ -89,3 +89,16 @@ Also set these Worker runtime variables for server-side Supabase requests:
 Only use the Supabase publishable/anon key in the browser. Never put a service-role key in build variables or client code. The Supabase URL and publishable key must come from the connected project; do not guess them.
 
 Cloudflare account authorization and connecting the GitHub repository are account-owner actions. After the first setup, pushes to `main` can trigger deployment automatically. Account authorization, GitHub-to-Cloudflare connection, production variables and first deployment require the account owner. Free-plan limits apply; check current Cloudflare limits before a public launch.
+
+
+## Production verification — 2026-11-24 (latest)
+
+- Production deployment for commit `5b34f6652447f18448012e85dc8c97c3d6e6914c` is `READY`; Vercel reports the production status check as successful.
+- Supabase project `onqadpqdontbdvecnvby` reports `ACTIVE_HEALTHY`.
+- Database audit: all 19 public tables have RLS enabled and at least one policy; no public SECURITY DEFINER function is executable by `anon`.
+- Seven authenticated SECURITY DEFINER functions remain intentionally callable for application flows and RLS helper checks; their bodies and authorization checks were reviewed. Do not revoke these grants without changing their callers and policies.
+- Integrity checks returned zero orphaned products/images/order items, zero orders without items, zero order-total mismatches, zero duplicate order numbers, and zero duplicate active delivery-area English names.
+- Supabase security advisor still reports leaked-password protection disabled. This Auth setting must be enabled in the Supabase Auth dashboard; it is not changed by SQL migrations.
+- A real data + Storage backup/restore test is still required before launch. No backup/restore was claimed or simulated in this audit.
+- End-to-end checkout, seller onboarding, product-image upload, and order lifecycle testing with real non-demo records remain unverified. No fake orders or seller records were inserted.
+- Signup email throttling was observed as HTTP 429 in Auth logs. SMTP/provider configuration is still needed for reliable production email delivery; do not repeatedly resend verification emails.
