@@ -19,7 +19,7 @@ type Product = {
   id: string; slug: string; title_bn: string; title_en?: string | null;
   description?: string | null; price: number; compare_price?: number | null;
   stock: number; category_id?: string | null;
-  product_images?: { url: string }[]; seller_stores?: { id?: string; name: string; slug?: string; area?: string; logo_url?: string | null; banner_url?: string | null; is_demo?: boolean };
+  product_images?: { id?: string; url: string; sort_order?: number }[]; seller_stores?: { id?: string; name: string; slug?: string; area?: string; logo_url?: string | null; banner_url?: string | null; is_demo?: boolean };
 };
 type Area = { name_bn: string; name_en: string; fee: number; zone: string };
 type CartLine = { product: Product; quantity: number };
@@ -51,6 +51,7 @@ function MarketplacePage() {
   const [form, setForm] = useState<Record<string,string>>({});
   const [store, setStore] = useState<any>(null);
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+  const [detailImageIndex, setDetailImageIndex] = useState(0);
   const [orders, setOrders] = useState<any[]>([]);
   const [wishlistIds, setWishlistIds] = useState<string[]>([]);
   const [wishlistProducts, setWishlistProducts] = useState<Product[]>([]);
@@ -190,7 +191,7 @@ function MarketplacePage() {
             ? supabase.from("categories").select("id,slug,name_bn,name_en,sort_order").order("sort_order")
             : Promise.resolve({ data: [] as any[] }),
           needsProducts
-            ? supabase.from("products").select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area,logo_url,banner_url,is_demo)").eq("status","active").order("sold_count",{ascending:false}).limit(48)
+            ? supabase.from("products").select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(id,url,sort_order),seller_stores(id,name,slug,area,logo_url,banner_url,is_demo)").eq("status","active").order("sold_count",{ascending:false}).limit(48)
             : Promise.resolve({ data: [] as any[] }),
           needsAreas
             ? supabase.from("delivery_areas").select("name_bn,name_en,fee,zone").eq("active",true).order("sort_order")
@@ -251,6 +252,7 @@ function MarketplacePage() {
             .eq("slug", slug).eq("status", "active").maybeSingle();
           if (found.error) throw found.error;
           setDetailProduct(found.data as Product | null);
+          setDetailImageIndex(0);
           if (found.data) {
             const {data:reviewRows,error:reviewError}=await supabase.from("product_reviews").select("id,rating,review_text,created_at").eq("product_id",found.data.id).eq("status","approved").order("created_at",{ascending:false}).limit(30);
             if (reviewError) throw reviewError;
@@ -262,7 +264,7 @@ function MarketplacePage() {
             } else setReviewedOrderItemIds([]);
           } else { setProductReviews([]); setReviewedOrderItemIds([]); }
         } else if (page === "store" && slug) {
-          const found = await supabase.from("seller_stores").select("*,products(id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area,logo_url,banner_url,is_demo))").eq("slug",slug).maybeSingle();
+          const found = await supabase.from("seller_stores").select("*,products(id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(id,url,sort_order),seller_stores(id,name,slug,area,logo_url,banner_url,is_demo))").eq("slug",slug).maybeSingle();
           if (found.error) throw found.error;
           setStore(found.data);
         }
