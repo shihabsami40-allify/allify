@@ -16,7 +16,7 @@ Bengali-first multi-vendor marketplace for Chattogram, Bangladesh.
 
 ## Important launch limitations
 
-This is a functional MVP codebase, not yet a fully launch-ready commercial marketplace. Before taking real orders, complete the deployment and live browser tests, set production environment variables, apply the pending migrations, create the first admin through a trusted Supabase dashboard/service-role process, and verify RLS and order workflows using customer, seller and admin accounts. The admin order screen updates individual order items; confirm the parent order status synchronization against the live database before launch. The initial admin must never be self-claimed through public signup.
+This is a functional MVP, not yet verified as a fully launch-ready commercial marketplace. As of 2026-11-24, the Vercel production deployment is READY, production environment-variable entries are configured with comments identifying Supabase project ref `onqadpqdontbdvecnvby`, the admin account has an assigned admin role, all 19 public tables have RLS enabled, and the live database contains 8 categories and 27 delivery areas. Seller applications, stores, products and orders are currently empty. Do not claim end-to-end checkout, seller image upload, or order lifecycle testing as complete until each is tested in a real signed-in buyer/seller/admin browser session. The admin order screen updates individual order items; verify parent order status synchronization before launch. Never allow public signup to self-assign admin.
 
 The GitHub Actions build currently runs with Bun. A successful build confirms compilation, not complete end-to-end behavior.
 
@@ -32,7 +32,7 @@ The current GitHub release candidate is `supabase/releases/2026-11-20_allify_rel
 4. Signed-in Buyer, Seller and Admin end-to-end tests against the intended release source.
 5. Reconciliation of the Lovable-published source with the GitHub candidate.
 
-The configured Production backend is the Lovable-managed project ref `htsvvotamlxlkncksssq`. The authorized Supabase connector currently denies access to that exact 20-character ref. A similarly spelled 21-character value with an extra `v` is invalid and must not be used. The connected Supabase project `onqadpqdontbdvecnvby` and isolated test project `ltwobqpgxmkeylmpkogq` are separate projects and must never be treated as Production. Do not substitute either one. A GitHub commit or Vercel/Cloudflare deployment does not apply database migrations automatically.
+The current Vercel project environment-variable records identify `onqadpqdontbdvecnvby` as the Production backend. The connected Supabase project `onqadpqdontbdvecnvby` is the project used for the current production configuration; the isolated test project `ltwobqpgxmkeylmpkogq` remains separate and must not be substituted. The older Lovable-managed ref recorded in historical notes is stale for this deployment. A GitHub commit or Vercel/Cloudflare deployment does not apply database migrations automatically. Before any risky production DDL, take and verify a restorable database backup and separately export Storage objects.
 
 ## Integrations
 
@@ -51,8 +51,8 @@ The configured Production backend is the Lovable-managed project ref `htsvvotaml
 
 - Never commit `.env`, credentials, access tokens, or Supabase service-role keys.
 - The unsafe first-user admin-claim function was removed from the live database and by migration `0001_remove_first_admin_claim.sql`.
-- Bootstrap the initial admin only through a trusted dashboard/service-role process after confirming the exact Auth user's UUID. Never add a public signup/admin-claim RPC and never guess the account UUID. The app currently cannot verify an admin account until that role is assigned.
-- Review row-level security policies before launch.
+- The initial admin role has been assigned to the verified account in the current connected project. Do not add a public signup/admin-claim RPC or grant admin to another account without explicit owner authorization.
+- All 19 public tables were verified to have RLS enabled on 2026-11-24. Continue reviewing policies and SECURITY DEFINER RPC authorization before launch.
 
 ## Build and test
 
