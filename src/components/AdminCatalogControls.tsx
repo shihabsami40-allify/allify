@@ -128,7 +128,7 @@ export function AdminCatalogControls() {
         <input className={field} placeholder="বাংলা নাম" value={categoryForm.name_bn} onChange={e=>setCategoryForm(v=>({...v,name_bn:e.target.value}))} required />
         <input className={field} placeholder="English name" value={categoryForm.name_en} onChange={e=>setCategoryForm(v=>({...v,name_en:e.target.value}))} required />
         <input className={field} type="number" placeholder="ক্রম" value={categoryForm.sort_order} onChange={e=>setCategoryForm(v=>({...v,sort_order:e.target.value}))} />
-        <select className={field} value={categoryForm.parent_id} onChange={e=>setCategoryForm(v=>({...v,parent_id:e.target.value}))}><option value="">মূল ক্যাটাগরি</option>{categories.filter(x=>!x.parent_id || !categories.find(parent=>parent.id===x.parent_id)?.parent_id).map(x=><option key={x.id} value={x.id}>{x.parent_id?"↳ ":""}{x.name_bn} · {x.slug}</option>)}</select>
+        <select className={field} value={categoryForm.parent_id} onChange={e=>setCategoryForm(v=>({...v,parent_id:e.target.value}))}><option value="">মূল বা সাব-ক্যাটাগরি বেছে নিন</option>{categories.filter(x=>!x.parent_id || !categories.find(parent=>parent.id===x.parent_id)?.parent_id).map(x=><option key={x.id} value={x.id}>{x.parent_id?"↳ ":""}{x.name_bn} · {x.slug}</option>)}</select>
         <button className={button} disabled={busy}>ক্যাটাগরি যোগ করুন</button>
       </form>
       <div className="mt-3 divide-y">{categories.map(category=><div key={category.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
