@@ -12,7 +12,7 @@ export function AdminCatalogControls() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [areas, setAreas] = useState<DeliveryArea[]>([]);
   const [categoryForm, setCategoryForm] = useState({ slug: "", name_bn: "", name_en: "", sort_order: "0" });
-  const [areaForm, setAreaForm] = useState({ name_bn: "", name_en: "", zone: "চট্টগ্রাম", fee: "60", sort_order: "0" });
+  const [areaForm, setAreaForm] = useState({ name_bn: "", name_en: "", zone: "city", fee: "60", sort_order: "0" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -127,7 +127,7 @@ export function AdminCatalogControls() {
       <form onSubmit={saveArea} className="mt-3 grid gap-2 sm:grid-cols-2">
         <input className={field} placeholder="বাংলা এলাকার নাম" value={areaForm.name_bn} onChange={e=>setAreaForm(v=>({...v,name_bn:e.target.value}))} required />
         <input className={field} placeholder="English area name" value={areaForm.name_en} onChange={e=>setAreaForm(v=>({...v,name_en:e.target.value}))} required />
-        <input className={field} placeholder="জোন" value={areaForm.zone} onChange={e=>setAreaForm(v=>({...v,zone:e.target.value}))} required />
+        <select className={field} aria-label="ডেলিভারি জোন" value={areaForm.zone} onChange={e=>setAreaForm(v=>({...v,zone:e.target.value}))} required><option value="city">সিটি এলাকা</option><option value="upazila">উপজেলা এলাকা</option></select>
         <input className={field} type="number" min="0" max="100000" step="1" placeholder="ডেলিভারি চার্জ" value={areaForm.fee} onChange={e=>setAreaForm(v=>({...v,fee:e.target.value}))} required />
         <input className={field} type="number" placeholder="ক্রম" value={areaForm.sort_order} onChange={e=>setAreaForm(v=>({...v,sort_order:e.target.value}))} />
         <button className={button} disabled={busy}>এলাকা যোগ করুন</button>
