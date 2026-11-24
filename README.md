@@ -20,9 +20,19 @@ This is a functional MVP codebase, not yet a fully launch-ready commercial marke
 
 The GitHub Actions build currently runs with Bun. A successful build confirms compilation, not complete end-to-end behavior.
 
-## Database migration required for order tracking
+## Database migrations and Production release safety
 
-The migrations `drizzle/migrations/0002_product_image_bucket.sql` and `drizzle/migrations/0003_order_status_lifecycle.sql` configure the seller image bucket and its owner-folder storage policies, and add server-side order-status transition rules that synchronize the customer-visible order status with seller-managed order items. Apply both SQL files in order to the **original Lovable-provisioned database** (`htsvvotamlxlkncksssq`) before testing seller image uploads or seller order updates. The newly connected Supabase project is separate and is not the app's configured backend. A GitHub commit or Cloudflare deployment does not apply SQL migrations to the database automatically. These two migrations are designed to be re-runnable; do not re-run the initial schema/seed migration against an existing production database.
+The files `drizzle/migrations/0002_product_image_bucket.sql` and `drizzle/migrations/0003_order_status_lifecycle.sql` are early baseline migrations. Their presence in the repository is **not** authorization to apply or reapply them; inspect the exact database's migration state read-only first.
+
+The current GitHub release candidate is `supabase/releases/2026-11-20_allify_release.sql`, which consolidates migrations `0004`–`0029` with preflight and postflight assertions. It has been rehearsed on the isolated `allify-test` project only. It has **not** been applied to Production. Do not use this bundle against Production until all of the following are independently verified:
+
+1. The configured Production backend identity and owner-authorized access.
+2. A recent, restorable full database backup, a separate export of Storage objects, and a successful restore rehearsal.
+3. A fresh read-only schema, RLS, grants and migration-state preflight on that exact Production project.
+4. Signed-in Buyer, Seller and Admin end-to-end tests against the intended release source.
+5. Reconciliation of the Lovable-published source with the GitHub candidate.
+
+The configured Production backend is the Lovable-managed project ref `htsvvvotamlxlkncksssq`. The authorized Supabase connector currently denies access to that ref. The connected Supabase project `onqadpqdontbdvecnvby` and isolated test project `ltwobqpgxmkeylmpkogq` are separate projects and must never be treated as Production. Do not substitute either one. A GitHub commit or Vercel/Cloudflare deployment does not apply database migrations automatically.
 
 ## Integrations
 
@@ -48,11 +58,16 @@ The migrations `drizzle/migrations/0002_product_image_bucket.sql` and `drizzle/m
 
 ```sh
 bun install --frozen-lockfile
+bun run lint
 bun run build
 bun run test
 ```
 
-## Zero-cost Cloudflare Workers deployment
+## Cloudflare Workers deployment (secondary; currently unverified)
+
+Cloudflare is a separate deployment path from the existing Vercel project. On PR #3 head `ba9f1de740167283d6314264a6b9355c11358127`, the Cloudflare Workers Builds checks for services `allify` and `allifychattogram` both reported failure, while GitHub Actions and the Vercel Preview succeeded. The authorized connector exposes the build IDs but not the detailed Cloudflare dashboard logs. A successful Vercel build does not prove Cloudflare is healthy. Do not claim Cloudflare readiness or change its configuration without reviewing those logs.
+
+If Cloudflare remains the intended secondary deployment path, the reference setup is:
 
 The production build uses the Nitro Cloudflare preset. Connect this GitHub repository to Cloudflare Workers Builds (no ZIP upload is needed):
 
