@@ -19,18 +19,10 @@ export type CheckoutRequestFingerprintInput = {
  * Cart display order is not part of the order's meaning, so sort by product ID
  * before serializing. All order-affecting fields remain part of the key.
  */
-export function buildCheckoutRequestFingerprint(
-  input: CheckoutRequestFingerprintInput,
-): string {
+export function buildCheckoutRequestFingerprint(input: CheckoutRequestFingerprintInput): string {
   const items = input.items
     .map(({ productId, quantity }) => ({ product_id: productId, quantity }))
-    .sort((left, right) =>
-      left.product_id < right.product_id
-        ? -1
-        : left.product_id > right.product_id
-          ? 1
-          : 0,
-    );
+    .sort((left, right) => left.product_id < right.product_id ? -1 : left.product_id > right.product_id ? 1 : 0);
 
   return JSON.stringify({
     user: input.userId,
