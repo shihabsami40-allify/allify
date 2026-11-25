@@ -51,7 +51,7 @@ describe("buildCheckoutRequestFingerprint", () => {
     );
   });
 
-  it.each([
+  const changedFields: Array<[string, Partial<CheckoutRequestFingerprintInput>]> = [
     ["buyer", { userId: "buyer-2" }],
     ["recipient", { recipient: "Another buyer" }],
     ["phone", { phone: "01812345678" }],
@@ -59,7 +59,9 @@ describe("buildCheckoutRequestFingerprint", () => {
     ["address", { address: "Pahartali, Chattogram" }],
     ["note", { note: "Call before delivery" }],
     ["saved-address preference", { saveAddress: true }],
-  ])("changes when the %s changes", (_field, overrides) => {
+  ];
+
+  it.each(changedFields)("changes when the %s changes", (_field, overrides) => {
     expect(buildCheckoutRequestFingerprint(request())).not.toBe(
       buildCheckoutRequestFingerprint(request(overrides)),
     );
