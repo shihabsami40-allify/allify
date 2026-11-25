@@ -22,7 +22,9 @@ export type CheckoutRequestFingerprintInput = {
 export function buildCheckoutRequestFingerprint(input: CheckoutRequestFingerprintInput): string {
   const items = input.items
     .map(({ productId, quantity }) => ({ product_id: productId, quantity }))
-    .sort((left, right) => left.product_id < right.product_id ? -1 : left.product_id > right.product_id ? 1 : 0);
+    .sort((left, right) =>
+      left.product_id < right.product_id ? -1 : left.product_id > right.product_id ? 1 : 0,
+    );
 
   return JSON.stringify({
     user: input.userId,
