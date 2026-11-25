@@ -19,14 +19,14 @@ Updated: 2026-11-25 (Bangladesh time)
 - Added `src/test/checkout-request.test.ts` with coverage for cart reordering, quantity changes and all order-affecting fields.
 - Added the helper and test to the focused ESLint command in `package.json`.
 - The first CI attempt exposed Prettier failures in the new helper and existing `src/lib/product-input.ts`; both were formatted in follow-up commits. No runtime validation rules were changed in `product-input.ts`.
-- Latest code/test commit before this checkpoint record: `d155272140d1d22e842ee2f6303adba4090c256c`.
+- Latest verified code/test commit before this documentation refresh: `d4b8ba8e15a579915cece579d8f9034a02291b60`.
 
 ## CI and Preview evidence
 
-- GitHub Actions workflow: **ALLIFY build check**, run [45535536458](https://github.com/shihabsami40-allify/allify/actions/runs/45535536458), run number 558. It was still in progress at checkpoint creation; Bun setup had not completed, so no lint/build/test success is claimed yet.
-- Earlier run [45535424061](https://github.com/shihabsami40-allify/allify/actions/runs/45535424061) failed at ESLint. The logs identified formatting errors in the new helper and pre-existing `product-input.ts`; both were corrected before the current run.
-- Exact code-head Vercel Preview [dpl_7qnXK5gHdZ3TWFA2bCxkCMW6jsbg](https://vercel.com/allify/allify-chattogram/7qnXK5gHdZ3TWFA2bCxkCMW6jsbg) is **READY** at https://allify-chattogram-jaqp9naut-allify.vercel.app. It is a Preview, not Production.
-- Vercel's combined status for code head `d155272140d1d22e842ee2f6303adba4090c256c` is SUCCESS.
+- GitHub Actions workflow: **ALLIFY build check**, run [45535746291](https://github.com/shihabsami40-allify/allify/actions/runs/45535746291), run number 560, completed **SUCCESS** for code/test head `d4b8ba8e15a579915cece579d8f9034a02291b60`: dependency installation, ESLint, application build and Vitest all passed.
+- Earlier run [45535424061](https://github.com/shihabsami40-allify/allify/actions/runs/45535424061) found Prettier errors in the helper and existing `product-input.ts`; follow-up run [45535536458](https://github.com/shihabsami40-allify/allify/actions/runs/45535536458) found one remaining helper formatting issue. Both were corrected before successful run 560.
+- Exact code-head Vercel Preview [dpl_GzwmBFTZzfsX8SmGdND3RcFhcJNa](https://vercel.com/allify/allify-chattogram/GzwmBFTZzfsX8SmGdND3RcFhcJNa) is **READY** at https://allify-chattogram-1amk6lu1d-allify.vercel.app. It is a Preview, not Production.
+- Vercel's combined status for code/test head `d4b8ba8e15a579915cece579d8f9034a02291b60` is SUCCESS.
 - The latest `main` head `adfd4b1724db5f202734c4ef5dc3458bf43f63bc` has a Vercel status failure linking to the team's build-rate-limit notice. No Vercel deployment was returned for that exact main SHA.
 - The latest observed Vercel Production deployment remains READY on older `main` commit `6fafa655cfa67f364aa66b45eca41b38cc31e768`. Production was not changed.
 - Do not treat Vercel Preview readiness as proof that GitHub Actions, Cloudflare, database compatibility or role-based workflows passed.
