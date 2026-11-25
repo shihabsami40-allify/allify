@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { buildCheckoutRequestFingerprint } from "@/lib/checkout-request";
+import {
+  buildCheckoutRequestFingerprint,
+  type CheckoutRequestFingerprintInput,
+} from "@/lib/checkout-request";
 
-const request = (overrides: Record<string, unknown> = {}) => ({
+const request = (
+  overrides: Partial<CheckoutRequestFingerprintInput> = {},
+): CheckoutRequestFingerprintInput => ({
   userId: "buyer-1",
   items: [
     { productId: "product-b", quantity: 1 },
