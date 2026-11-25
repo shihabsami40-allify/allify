@@ -961,11 +961,14 @@ function MarketplacePage() {
 
   const signOut = async () => { await supabase.auth.signOut(); setUser(null); setRole("customer"); navigate({to:"/"}); };
   const productCard = (p:Product) => <article key={p.id} className="overflow-hidden rounded-xl border bg-card">
-    <Link to={"/product" as any} search={{slug:p.slug} as any} className="block">
-      <div className="grid aspect-square w-full place-items-center overflow-hidden bg-muted p-3">
-        <img src={p.product_images?.[0]?.url || "/images/products/placeholder.svg"} alt={p.title_bn} loading="lazy" onError={(e) => { const img = e.currentTarget; if (img.dataset.fallback !== "1") { img.dataset.fallback = "1"; img.src = "/images/products/placeholder.svg"; } else { img.style.display = "none"; } }} className="h-full w-full object-contain"/>
-      </div>
-    </Link>
+    <div className="relative">
+      <Link to={"/product" as any} search={{slug:p.slug} as any} className="block">
+        <div className="grid aspect-square w-full place-items-center overflow-hidden bg-muted p-3">
+          <img src={p.product_images?.[0]?.url || "/images/products/placeholder.svg"} alt={p.title_bn} loading="lazy" onError={(e) => { const img = e.currentTarget; if (img.dataset.fallback !== "1") { img.dataset.fallback = "1"; img.src = "/images/products/placeholder.svg"; } else { img.style.display = "none"; } }} className="h-full w-full object-contain"/>
+        </div>
+      </Link>
+      <button type="button" disabled={busy} aria-label={wishlistIds.includes(p.id)?"পছন্দের তালিকা থেকে সরান":"পছন্দের তালিকায় যোগ করুন"} aria-pressed={wishlistIds.includes(p.id)} title={wishlistIds.includes(p.id)?"পছন্দের তালিকা থেকে সরান":"পছন্দের তালিকায় যোগ করুন"} onClick={()=>toggleWishlist(p)} className="absolute right-2 top-2 z-10 grid h-9 w-9 place-items-center rounded-full border bg-white/95 text-xl leading-none text-rose-600 shadow-sm transition hover:scale-105 hover:bg-white disabled:opacity-60">{wishlistIds.includes(p.id)?"♥":"♡"}</button>
+    </div>
     <div className="p-3"><Link to={"/product" as any} search={{slug:p.slug} as any} className="line-clamp-2 min-h-10 text-sm font-semibold hover:text-primary">{p.title_bn}</Link>
       <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
         <p className="shrink-0 text-sm font-bold text-primary">{money(p.price)}</p>
@@ -973,7 +976,7 @@ function MarketplacePage() {
       </div>
       {p.compare_price ? <s className="mt-0.5 block text-xs text-muted-foreground">{money(p.compare_price)}</s> : null}
       <p className="mt-1 text-xs text-muted-foreground">স্টক: {p.stock.toLocaleString("bn-BD")}</p>
-      <div className="mt-3 grid grid-cols-2 gap-2"><button className={secondary+" text-xs px-2"} onClick={()=>addToCart(p)} disabled={p.stock<1 || !!p.seller_stores?.is_demo}>কার্টে যোগ করুন</button><button className={primary+" text-xs px-2"} onClick={()=>buyNow(p)} disabled={p.stock<1 || !!p.seller_stores?.is_demo}>এখনই অর্ডার</button></div><button type="button" className="mt-2 w-full rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-muted" onClick={()=>toggleWishlist(p)}>{wishlistIds.includes(p.id)?"♥ পছন্দের তালিকা থেকে সরান":"♡ পছন্দের তালিকায় রাখুন"}</button>
+      <div className="mt-3 grid grid-cols-2 gap-2"><button className={secondary+" text-xs px-2"} onClick={()=>addToCart(p)} disabled={p.stock<1 || !!p.seller_stores?.is_demo}>কার্টে যোগ করুন</button><button className={primary+" text-xs px-2"} onClick={()=>buyNow(p)} disabled={p.stock<1 || !!p.seller_stores?.is_demo}>এখনই অর্ডার</button></div>
     </div></article>;
 
   const shell = (title:string, children:any) => <div className="mx-auto max-w-6xl px-4 py-7"><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs text-muted-foreground"><Link to="/" className="font-black tracking-wide" style={{color:"#123b32"}}>ALLI<span style={{color:"#9bbd31"}}>F</span>Y</Link> / {title}</p><h1 className="mt-1 text-2xl font-bold">{title}</h1></div><Link to={"/cart" as any} className={secondary}>কার্ট ({cart.reduce((n,x)=>n+x.quantity,0).toLocaleString("bn-BD")})</Link></div>{message&&<p role="status" aria-live="polite" className="mb-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{message}</p>}{error&&<p role="alert" aria-live="assertive" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}{children}</div>;
