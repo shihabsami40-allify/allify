@@ -10,5 +10,8 @@ const ALLOWED_ORDER_TRANSITIONS: Readonly<Record<string, readonly OrderItemStatu
  * Return whether an order item may move directly to the requested lifecycle state.
  * Terminal states (delivered and cancelled) intentionally have no outgoing transitions.
  */
-export const canTransitionOrderItemStatus = (current: string, next: string): boolean =>
-  ALLOWED_ORDER_TRANSITIONS[current]?.includes(next as OrderItemStatus) ?? false;
+export const canTransitionOrderItemStatus = (current: string, next: string): boolean => {
+  if (!Object.prototype.hasOwnProperty.call(ALLOWED_ORDER_TRANSITIONS, current)) return false;
+
+  return ALLOWED_ORDER_TRANSITIONS[current].includes(next as OrderItemStatus);
+};
