@@ -976,7 +976,7 @@ function MarketplacePage() {
       <div className="mt-3 grid grid-cols-2 gap-2"><button className={secondary+" text-xs px-2"} onClick={()=>addToCart(p)} disabled={p.stock<1 || !!p.seller_stores?.is_demo}>কার্টে যোগ করুন</button><button className={primary+" text-xs px-2"} onClick={()=>buyNow(p)} disabled={p.stock<1 || !!p.seller_stores?.is_demo}>এখনই অর্ডার</button></div><button type="button" className="mt-2 w-full rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-muted" onClick={()=>toggleWishlist(p)}>{wishlistIds.includes(p.id)?"♥ পছন্দের তালিকা থেকে সরান":"♡ পছন্দের তালিকায় রাখুন"}</button>
     </div></article>;
 
-  const shell = (title:string, children:any) => <div className="mx-auto max-w-6xl px-4 py-7"><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs text-muted-foreground"><Link to="/" className="font-black tracking-wide" style={{color:"#123b32"}}>ALLI<span style={{color:"#9bbd31"}}>F</span>Y</Link> / {title}</p><h1 className="mt-1 text-2xl font-bold">{title}</h1></div><Link to={"/cart" as any} className={secondary}>কার্ট ({cart.reduce((n,x)=>n+x.quantity,0).toLocaleString("bn-BD")})</Link></div>{message&&<p role="status" aria-live="polite" className="mb-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{message}</p>}{error&&<p role="alert" aria-live="assertive" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}{children}</div>;
+  const shell = (title:string, children:any) => <div className={"mx-auto "+(title==="অ্যাডমিন প্যানেল"?"w-full max-w-[1600px] px-3 sm:px-5 lg:px-8":"max-w-6xl px-4")+" py-7"}><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs text-muted-foreground"><Link to="/" className="font-black tracking-wide" style={{color:"#123b32"}}>ALLI<span style={{color:"#9bbd31"}}>F</span>Y</Link> / {title}</p><h1 className="mt-1 text-2xl font-bold">{title}</h1></div><Link to={"/cart" as any} className={secondary}>কার্ট ({cart.reduce((n,x)=>n+x.quantity,0).toLocaleString("bn-BD")})</Link></div>{message&&<p role="status" aria-live="polite" className="mb-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{message}</p>}{error&&<p role="alert" aria-live="assertive" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}{children}</div>;
 
   if (loading) return <div role="status" aria-live="polite" className="mx-auto max-w-6xl p-8 text-center text-muted-foreground">ALLIFY লোড হচ্ছে…</div>;
 
@@ -1016,24 +1016,20 @@ function MarketplacePage() {
     const pendingApplications = applications.filter(a => a.status === "pending").length;
     const pendingOrders = adminOrders.filter(o => (o.order_items || []).some((item:any) => item.status === "pending")).length;
     body = shell("অ্যাডমিন প্যানেল", role === "admin" ? (
-      <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <aside className="h-fit rounded-2xl border bg-[#123b32] p-3 text-white shadow-sm lg:sticky lg:top-24">
-          <div className="px-3 pb-3 pt-2">
-            <p className="text-[10px] font-semibold tracking-[0.2em] text-white/60">ALLIFY ADMIN</p>
-            <p className="mt-1 text-base font-bold">ম্যানেজমেন্ট</p>
+      <div className="min-w-0 space-y-5">
+        <section className="rounded-2xl border bg-[#123b32] p-3 text-white shadow-sm sm:p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div><p className="text-[10px] font-semibold tracking-[0.2em] text-white/60">ALLIFY ADMIN</p><p className="mt-1 text-base font-bold">ম্যানেজমেন্ট</p></div>
+            <Link to={"/market" as any} className="rounded-lg border border-white/25 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10">ওয়েবসাইট দেখুন ↗</Link>
           </div>
-          <nav aria-label="অ্যাডমিন মেনু" className="flex gap-1 overflow-x-auto lg:flex-col">
-            <a href="#admin-overview" className="shrink-0 rounded-lg bg-white/10 px-3 py-2.5 text-sm font-medium hover:bg-white/15">⌂ <span className="ml-2">ওভারভিউ</span></a>
-            <a href="#admin-orders" className="shrink-0 rounded-lg px-3 py-2.5 text-sm text-white/85 hover:bg-white/10">▣ <span className="ml-2">অর্ডার</span><span className="ml-2 rounded-full bg-white/15 px-1.5 py-0.5 text-[10px]">{adminOrders.length.toLocaleString("bn-BD")}</span></a>
-            <a href="#admin-applications" className="shrink-0 rounded-lg px-3 py-2.5 text-sm text-white/85 hover:bg-white/10">♙ <span className="ml-2">বিক্রেতা আবেদন</span><span className="ml-2 rounded-full bg-white/15 px-1.5 py-0.5 text-[10px]">{pendingApplications.toLocaleString("bn-BD")}</span></a>
-            <a href="#admin-products" className="shrink-0 rounded-lg px-3 py-2.5 text-sm text-white/85 hover:bg-white/10">▧ <span className="ml-2">পণ্য</span></a>
-            <a href="#admin-catalog" className="shrink-0 rounded-lg px-3 py-2.5 text-sm text-white/85 hover:bg-white/10">▦ <span className="ml-2">ক্যাটাগরি</span></a>
+          <nav aria-label="অ্যাডমিন মেনু" className="mt-3 flex flex-wrap gap-2 border-t border-white/15 pt-3">
+            <a href="#admin-overview" className="rounded-lg bg-white/15 px-3 py-2 text-sm font-semibold hover:bg-white/20">⌂ ওভারভিউ</a>
+            <a href="#admin-orders" className="rounded-lg px-3 py-2 text-sm text-white/90 hover:bg-white/10">▣ অর্ডার <span className="ml-1 rounded-full bg-white/15 px-1.5 py-0.5 text-[10px]">{adminOrders.length.toLocaleString("bn-BD")}</span></a>
+            <a href="#admin-applications" className="rounded-lg px-3 py-2 text-sm text-white/90 hover:bg-white/10">♙ বিক্রেতা আবেদন <span className="ml-1 rounded-full bg-white/15 px-1.5 py-0.5 text-[10px]">{pendingApplications.toLocaleString("bn-BD")}</span></a>
+            <a href="#admin-products" className="rounded-lg px-3 py-2 text-sm text-white/90 hover:bg-white/10">▧ পণ্য</a>
+            <a href="#admin-catalog" className="rounded-lg px-3 py-2 text-sm text-white/90 hover:bg-white/10">▦ ক্যাটাগরি</a>
           </nav>
-          <div className="mt-4 hidden border-t border-white/15 px-3 pt-4 lg:block">
-            <p className="text-xs leading-5 text-white/60">দোকান ও মার্কেটপ্লেস পরিচালনার সব গুরুত্বপূর্ণ কাজ এখানে একসাথে।</p>
-            <Link to={"/market" as any} className="mt-3 inline-flex text-xs font-semibold text-white underline underline-offset-4">ওয়েবসাইট দেখুন ↗</Link>
-          </div>
-        </aside>
+        </section>
 
         <main className="min-w-0 space-y-5">
           <section id="admin-overview" className="scroll-mt-24">
