@@ -62,6 +62,10 @@ function MarketplacePage() {
   const [sellerProducts, setSellerProducts] = useState<any[]>([]);
   const [adminProducts, setAdminProducts] = useState<any[]>([]);
   const [adminOrders, setAdminOrders] = useState<any[]>([]);
+  const [adminStores, setAdminStores] = useState<any[]>([]);
+  const [adminStats, setAdminStats] = useState({ totalOrders: 0, completedOrders: 0, completedSales: 0, totalProducts: 0, activeStores: 0 });
+  const [adminOrderSearch, setAdminOrderSearch] = useState("");
+  const [adminOrderStatus, setAdminOrderStatus] = useState("all");
   const [applications, setApplications] = useState<any[]>([]);
   const [myStore, setMyStore] = useState<any>(null);
   const [storeLogoFile, setStoreLogoFile] = useState<File|null>(null);
@@ -292,7 +296,8 @@ function MarketplacePage() {
           const roles = roleRows.data?.map((row:any) => row.role) ?? [];
           if (needsRole) setRole(roles.includes("admin") ? "admin" : roles.includes("seller") ? "seller" : "customer");
           if (needsStore) setMyStore(storeRow.data);
-          if (needsOrders) setOrders(orderRows.data ?? []);
+          if (needsOrders && !roles.includes("admin")) setOrders(orderRows.data ?? []);
+          else if (needsOrders) setOrders([]);
 
           if (page === "wishlist") {
             if (savedIds.length) {
@@ -310,18 +315,31 @@ function MarketplacePage() {
           }
 
           if (needsAdminData && roles.includes("admin")) {
-            const [adminProductRows, adminOrderRows, appRows] = await Promise.all([
+            const [adminProductRows, adminOrderRows, appRows, storeRows, orderCount, completedCount, productCount, activeStoreCount] = await Promise.all([
               supabase.from("products").select("id,title_bn,price,stock,status,seller_stores(name,is_demo)").order("created_at",{ascending:false}).limit(100),
               supabase.from("orders").select("id,order_no,is_demo,status,total,recipient,phone,area,created_at,order_items(id,title,unit_price,quantity,status)").order("created_at",{ascending:false}).limit(100),
-              supabase.from("seller_applications").select("*").order("created_at",{ascending:false}).limit(100)
+              supabase.from("seller_applications").select("*").order("created_at",{ascending:false}).limit(100),
+              supabase.from("seller_stores").select("id,name,slug,area,status,is_demo,created_at").order("created_at",{ascending:false}).limit(100),
+              supabase.from("orders").select("id",{count:"exact",head:true}),
+              supabase.from("orders").select("id",{count:"exact",head:true}).eq("status","delivered"),
+              supabase.from("products").select("id",{count:"exact",head:true}),
+              supabase.from("seller_stores").select("id",{count:"exact",head:true}).eq("status","active")
             ]);
-            if (adminProductRows.error) throw adminProductRows.error;
-            if (adminOrderRows.error) throw adminOrderRows.error;
-            if (appRows.error) throw appRows.error;
+            for (const result of [adminProductRows,adminOrderRows,appRows,storeRows,orderCount,completedCount,productCount,activeStoreCount]) if (result.error) throw result.error;
+            let completedSales = 0;
+            for (let offset = 0; ; offset += 1000) {
+              const deliveredRows = await supabase.from("orders").select("total").eq("status","delivered").range(offset, offset + 999);
+              if (deliveredRows.error) throw deliveredRows.error;
+              const batch = deliveredRows.data ?? [];
+              completedSales += batch.reduce((sum:number, order:any) => sum + Number(order.total || 0), 0);
+              if (batch.length < 1000) break;
+            }
             if (!alive) return;
             setAdminProducts(adminProductRows.data ?? []);
             setAdminOrders(adminOrderRows.data ?? []);
             setApplications(appRows.data ?? []);
+            setAdminStores(storeRows.data ?? []);
+            setAdminStats({ totalOrders: orderCount.count ?? 0, completedOrders: completedCount.count ?? 0, completedSales, totalProducts: productCount.count ?? 0, activeStores: activeStoreCount.count ?? 0 });
           }
 
           if (page === "seller-dashboard" && storeRow.data) {
@@ -1123,7 +1141,23 @@ function MarketplacePage() {
     const activeOrdersCount = orders.filter(order => (order.order_items || []).some((item:any) => ["confirmed","shipped"].includes(item.status))).length;
     const completedOrdersCount = orders.filter(order => (order.order_items || []).length > 0 && (order.order_items || []).every((item:any) => item.status === "delivered")).length;
     const orderStatusLabel = (status:string) => ({pending:"নতুন অর্ডার",confirmed:"নিশ্চিত",shipped:"পাঠানো হয়েছে",delivered:"ডেলিভারি সম্পন্ন",cancelled:"বাতিল"} as Record<string,string>)[status] || "অবস্থা অজানা";
-    body = shell("আমার অ্যাকাউন্ট", user ? <div className="mx-auto max-w-5xl space-y-5">
+    body = shell(role === "admin" ? "অ্যাডমিন অ্যাকাউন্ট" : "আমার অ্যাকাউন্ট", user ? role === "admin" ? <div className="mx-auto max-w-4xl space-y-5">
+      <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="bg-[#123b32] px-5 py-6 text-white sm:px-7">
+          <p className="text-xs font-semibold tracking-[.18em] text-white/65">ALLIFY ADMIN</p>
+          <h2 className="mt-2 text-2xl font-extrabold">স্বাগতম, {user.user_metadata?.full_name || "অ্যাডমিন"}</h2>
+          <p className="mt-1 text-sm text-white/75">এখান থেকে পুরো মার্কেটপ্লেস পরিচালনা করুন।</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3">
+          <Link to={"/admin" as any} className="rounded-xl border p-4 hover:border-primary/50"><span className="text-2xl">📊</span><b className="mt-2 block text-sm">অ্যাডমিন ড্যাশবোর্ড</b><span className="mt-1 block text-xs text-muted-foreground">বিক্রি, অর্ডার ও সার্বিক হিসাব</span></Link>
+          <Link to={"/admin" as any} className="rounded-xl border p-4 hover:border-primary/50"><span className="text-2xl">🏪</span><b className="mt-2 block text-sm">দোকান ও বিক্রেতা</b><span className="mt-1 block text-xs text-muted-foreground">দোকান ও আবেদন পরিচালনা</span></Link>
+          <Link to={"/admin" as any} className="rounded-xl border p-4 hover:border-primary/50"><span className="text-2xl">📦</span><b className="mt-2 block text-sm">সব অর্ডার</b><span className="mt-1 block text-xs text-muted-foreground">মার্কেটপ্লেসের অর্ডার দেখুন</span></Link>
+          <Link to={"/admin" as any} className="rounded-xl border p-4 hover:border-primary/50"><span className="text-2xl">🛍️</span><b className="mt-2 block text-sm">পণ্য নিয়ন্ত্রণ</b><span className="mt-1 block text-xs text-muted-foreground">পণ্য ও ক্যাটাগরি</span></Link>
+          <Link to={"/help" as any} className="rounded-xl border p-4 hover:border-primary/50"><span className="text-2xl">❔</span><b className="mt-2 block text-sm">হেল্প সেন্টার</b><span className="mt-1 block text-xs text-muted-foreground">সহায়তা ও নির্দেশনা</span></Link>
+          <button type="button" onClick={signOut} className="rounded-xl border p-4 text-left hover:border-destructive/50"><span className="text-2xl">↪</span><b className="mt-2 block text-sm">লগআউট</b><span className="mt-1 block text-xs text-muted-foreground">অ্যাডমিন অ্যাকাউন্ট থেকে বের হন</span></button>
+        </div>
+      </section>
+    </div> : <div className="mx-auto max-w-5xl space-y-5">
       <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
         <div className="bg-[#123b32] px-4 py-5 text-white sm:px-6">
           <div className="flex items-center gap-4">
@@ -1202,6 +1236,12 @@ function MarketplacePage() {
   } else if (page === "admin") {
     const pendingApplications = applications.filter(a => a.status === "pending").length;
     const pendingOrders = adminOrders.filter(o => (o.order_items || []).some((item:any) => item.status === "pending")).length;
+    const filteredAdminOrders = adminOrders.filter(o => {
+      const q = adminOrderSearch.trim().toLowerCase();
+      const matchesSearch = !q || [o.order_no,o.recipient,o.phone,o.area,...(o.order_items || []).map((item:any)=>item.title)].some(value => String(value || "").toLowerCase().includes(q));
+      const matchesStatus = adminOrderStatus === "all" || o.status === adminOrderStatus || (o.order_items || []).some((item:any)=>item.status === adminOrderStatus);
+      return matchesSearch && matchesStatus;
+    });
     body = shell("অ্যাডমিন প্যানেল", role === "admin" ? (
       <div className="min-w-0 space-y-5">
         <section className="rounded-2xl border bg-[#123b32] p-3 text-white shadow-sm sm:p-4">
@@ -1209,12 +1249,13 @@ function MarketplacePage() {
             <div><p className="text-[10px] font-semibold tracking-[0.2em] text-white/60">ALLIFY ADMIN</p><p className="mt-1 text-base font-bold">ম্যানেজমেন্ট</p></div>
             <Link to={"/market" as any} className="rounded-lg border border-white/25 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10">ওয়েবসাইট দেখুন ↗</Link>
           </div>
-          <nav aria-label="অ্যাডমিন মেনু" className="mt-3 flex flex-wrap gap-2 border-t border-white/15 pt-3">
+          <nav aria-label="অ্যাডমিন মেনু" className="mt-3 flex flex-nowrap gap-2 overflow-x-auto border-t border-white/15 pt-3 pb-1">
             <a href="#admin-overview" className="rounded-lg bg-white/15 px-3 py-2 text-sm font-semibold hover:bg-white/20">⌂ ওভারভিউ</a>
-            <a href="#admin-orders" className="rounded-lg px-3 py-2 text-sm text-white/90 hover:bg-white/10">▣ অর্ডার <span className="ml-1 rounded-full bg-white/15 px-1.5 py-0.5 text-[10px]">{adminOrders.length.toLocaleString("bn-BD")}</span></a>
-            <a href="#admin-applications" className="rounded-lg px-3 py-2 text-sm text-white/90 hover:bg-white/10">♙ বিক্রেতা আবেদন <span className="ml-1 rounded-full bg-white/15 px-1.5 py-0.5 text-[10px]">{pendingApplications.toLocaleString("bn-BD")}</span></a>
-            <a href="#admin-products" className="rounded-lg px-3 py-2 text-sm text-white/90 hover:bg-white/10">▧ পণ্য</a>
-            <a href="#admin-catalog" className="rounded-lg px-3 py-2 text-sm text-white/90 hover:bg-white/10">▦ ক্যাটাগরি</a>
+            <a href="#admin-orders" className="shrink-0 rounded-lg px-3 py-2 text-sm text-white/90 hover:bg-white/10">▣ অর্ডার</a>
+            <a href="#admin-stores" className="shrink-0 rounded-lg px-3 py-2 text-sm text-white/90 hover:bg-white/10">🏪 দোকান</a>
+            <a href="#admin-applications" className="shrink-0 rounded-lg px-3 py-2 text-sm text-white/90 hover:bg-white/10">♙ আবেদন</a>
+            <a href="#admin-products" className="shrink-0 rounded-lg px-3 py-2 text-sm text-white/90 hover:bg-white/10">▧ পণ্য</a>
+            <a href="#admin-catalog" className="shrink-0 rounded-lg px-3 py-2 text-sm text-white/90 hover:bg-white/10">▦ ক্যাটাগরি</a>
           </nav>
         </section>
 
@@ -1224,18 +1265,28 @@ function MarketplacePage() {
               <div><p className="text-xs font-semibold tracking-wide text-muted-foreground">ALLIFY CONTROL CENTER</p><h2 className="mt-1 text-2xl font-bold tracking-tight">ড্যাশবোর্ড</h2><p className="mt-1 text-sm text-muted-foreground">আজকের গুরুত্বপূর্ণ কাজ ও মার্কেটপ্লেসের অবস্থা এক নজরে দেখুন।</p></div>
               <Link to={"/market" as any} className={secondary+" text-xs"}>মার্কেটপ্লেস দেখুন ↗</Link>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
-              <div className="rounded-xl border bg-card p-4"><p className="text-xs text-muted-foreground">মোট অর্ডার</p><p className="mt-2 text-2xl font-bold tabular-nums">{adminOrders.length.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">সাম্প্রতিক তালিকা</p></div>
-              <div className="rounded-xl border bg-card p-4"><p className="text-xs text-muted-foreground">নতুন অর্ডার</p><p className="mt-2 text-2xl font-bold tabular-nums">{pendingOrders.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">কাজ বাকি আছে</p></div>
-              <div className="rounded-xl border bg-card p-4"><p className="text-xs text-muted-foreground">মোট পণ্য</p><p className="mt-2 text-2xl font-bold tabular-nums">{adminProducts.length.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">পণ্য তালিকায়</p></div>
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+              <div className="rounded-xl border bg-card p-4"><p className="text-xs text-muted-foreground">মোট অর্ডার</p><p className="mt-2 text-2xl font-bold tabular-nums">{adminStats.totalOrders.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">সব সময়ের অর্ডার</p></div>
+              <div className="rounded-xl border bg-card p-4"><p className="text-xs text-muted-foreground">সম্পন্ন অর্ডার</p><p className="mt-2 text-2xl font-bold tabular-nums">{adminStats.completedOrders.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">ডেলিভারি সম্পন্ন</p></div>
+              <div className="rounded-xl border bg-card p-4"><p className="text-xs text-muted-foreground">সম্পন্ন বিক্রির পরিমাণ</p><p className="mt-2 text-xl font-bold tabular-nums">{money(adminStats.completedSales)}</p><p className="mt-1 text-[11px] text-muted-foreground">শুধু delivered অর্ডার</p></div>
+              <div className="rounded-xl border bg-card p-4"><p className="text-xs text-muted-foreground">সক্রিয় দোকান</p><p className="mt-2 text-2xl font-bold tabular-nums">{adminStats.activeStores.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">অনুমোদিত দোকান</p></div>
+              <div className="rounded-xl border bg-card p-4"><p className="text-xs text-muted-foreground">মোট পণ্য</p><p className="mt-2 text-2xl font-bold tabular-nums">{adminStats.totalProducts.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">সব পণ্য</p></div>
+              <div className="rounded-xl border bg-card p-4"><p className="text-xs text-muted-foreground">নতুন অর্ডার</p><p className="mt-2 text-2xl font-bold tabular-nums">{pendingOrders.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">সাম্প্রতিক তালিকায়</p></div>
               <div className="rounded-xl border bg-card p-4"><p className="text-xs text-muted-foreground">অপেক্ষমাণ আবেদন</p><p className="mt-2 text-2xl font-bold tabular-nums">{pendingApplications.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">যাচাই প্রয়োজন</p></div>
             </div>
+            <p className="mt-3 rounded-lg bg-muted/50 px-3 py-2 text-[11px] text-muted-foreground">বিক্রির পরিমাণে শুধু ডেলিভারি সম্পন্ন অর্ডার ধরা হয়েছে; এটি ALLIFY-এর কমিশন বা লাভ নয়।</p>
           </section>
 
           <section id="admin-orders" className="scroll-mt-24 space-y-3">
             <div className="flex flex-wrap items-end justify-between gap-2"><div><h3 className="text-lg font-bold">অর্ডার ম্যানেজমেন্ট</h3><p className="text-xs text-muted-foreground">নতুন অর্ডার আগে দেখুন এবং প্রয়োজনমতো স্ট্যাটাস আপডেট করুন।</p></div><span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">{adminOrders.length.toLocaleString("bn-BD")}টি অর্ডার</span></div>
+            <div className="grid gap-2 sm:grid-cols-[1fr_190px]">
+              <input aria-label="অর্ডার খুঁজুন" className={field} placeholder="অর্ডার নম্বর, ক্রেতা বা ফোন দিয়ে খুঁজুন" value={adminOrderSearch} onChange={e=>setAdminOrderSearch(e.target.value)} />
+              <select aria-label="অর্ডারের অবস্থা ফিল্টার" className={field} value={adminOrderStatus} onChange={e=>setAdminOrderStatus(e.target.value)}>
+                <option value="all">সব অবস্থা</option><option value="pending">নতুন</option><option value="confirmed">নিশ্চিত</option><option value="shipped">পাঠানো</option><option value="delivered">সম্পন্ন</option><option value="cancelled">বাতিল</option>
+              </select>
+            </div>
             <div className="overflow-hidden rounded-xl border bg-card">
-              {adminOrders.length ? <div className="divide-y">{adminOrders.map(o => (
+              {filteredAdminOrders.length ? <div className="divide-y">{filteredAdminOrders.map(o => (
                 <article key={o.id} className="p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><b className="text-sm">{o.order_no}</b>{o.is_demo&&<span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-800">নমুনা</span>}</div><p className="mt-1 text-xs text-muted-foreground">{o.recipient} · {o.phone}</p><p className="text-xs text-muted-foreground">{o.area}</p></div>
@@ -1249,6 +1300,18 @@ function MarketplacePage() {
                   ))}</div>
                 </article>
               ))}</div> : <p className="p-6 text-center text-sm text-muted-foreground">এখনো কোনো অর্ডার পাওয়া যায়নি।</p>}
+            </div>
+            <p className="text-[11px] text-muted-foreground">সাম্প্রতিক ১০০টি অর্ডার দেখানো হচ্ছে। ড্যাশবোর্ডের মোট অর্ডার ও সম্পন্ন বিক্রির হিসাব সম্পূর্ণ ডাটাবেস থেকে গণনা করা।</p>
+          </section>
+
+          <section id="admin-stores" className="scroll-mt-24 space-y-3">
+            <div className="flex flex-wrap items-end justify-between gap-2"><div><h3 className="text-lg font-bold">দোকান ও বিক্রেতা</h3><p className="text-xs text-muted-foreground">মার্কেটপ্লেসে যুক্ত দোকানগুলোর অবস্থা দেখুন।</p></div><span className="text-xs text-muted-foreground">{adminStats.activeStores.toLocaleString("bn-BD")}টি সক্রিয়</span></div>
+            <div className="overflow-hidden rounded-xl border bg-card">
+              {adminStores.length ? <div className="divide-y">{adminStores.map(store => <div key={store.id} className="flex items-center gap-3 p-3.5">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted text-xl">🏪</span>
+                <div className="min-w-0 flex-1"><b className="block truncate text-sm">{store.name}</b><p className="mt-0.5 text-xs text-muted-foreground">{store.area || "এলাকা উল্লেখ নেই"}</p></div>
+                <span className={"shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold "+(store.status==="active"?"bg-emerald-50 text-emerald-800":store.status==="pending"?"bg-amber-50 text-amber-800":"bg-muted text-muted-foreground")}>{store.status==="active"?"সক্রিয়":store.status==="pending"?"অপেক্ষমাণ":"স্থগিত"}</span>
+              </div>)}</div> : <p className="p-6 text-center text-sm text-muted-foreground">এখনো কোনো দোকান পাওয়া যায়নি।</p>}
             </div>
           </section>
 
