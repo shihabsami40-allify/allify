@@ -74,6 +74,37 @@ function MarketplacePage() {
   const [productImagePreviews, setProductImagePreviews] = useState<string[]>([]);
   const productImageInputRef = useRef<HTMLInputElement>(null);
   const checkoutRequestRef = useRef<{fingerprint:string;id:string}|null>(null);
+  const [helpQuery, setHelpQuery] = useState("");
+  const [helpCategory, setHelpCategory] = useState("all");
+  const helpCategories = [
+    { id: "orders", label: "অর্ডার ও অর্ডারের অবস্থা", icon: "📦", description: "অর্ডার, নিশ্চিতকরণ ও অর্ডার পরিবর্তন" },
+    { id: "delivery", label: "ডেলিভারি", icon: "🚚", description: "ডেলিভারি এলাকা, সময় ও পণ্য গ্রহণ" },
+    { id: "payments", label: "পেমেন্ট ও রিফান্ড", icon: "💳", description: "ক্যাশ অন ডেলিভারি ও টাকা ফেরত" },
+    { id: "products", label: "পণ্য ও দোকান", icon: "🛍️", description: "পণ্যের তথ্য, স্টক ও স্থানীয় দোকান" },
+    { id: "account", label: "অ্যাকাউন্ট", icon: "👤", description: "লগইন, প্রোফাইল ও নিরাপত্তা" },
+    { id: "seller", label: "সেলার সহায়তা", icon: "🏪", description: "দোকান খোলা ও পণ্য পরিচালনা" },
+  ];
+  const helpArticles = [
+    { category: "orders", question: "কীভাবে ALLIFY-তে অর্ডার করব?", answer: "পছন্দের পণ্য খুলে কার্টে যোগ করুন। এরপর কার্টে গিয়ে ডেলিভারির তথ্য পূরণ করে অর্ডার নিশ্চিত করুন। অর্ডার সম্পন্ন হলে আপনার অ্যাকাউন্টের অর্ডার অংশে অর্ডারের তথ্য দেখতে পারবেন।", keywords: "অর্ডার কার্ট কেনাকাটা order buy" },
+    { category: "orders", question: "আমার অর্ডারের অবস্থা কোথায় দেখব?", answer: "আপনার অ্যাকাউন্টে প্রবেশ করে অর্ডারসমূহ অংশে যান। সেখানে অর্ডারের বর্তমান অবস্থা দেখা যাবে।", keywords: "ট্র্যাক tracking status order" },
+    { category: "orders", question: "অর্ডার করার পর তথ্য পরিবর্তন করা যাবে?", answer: "অর্ডার নিশ্চিত করার পর ঠিকানা বা পণ্যের তথ্য পরিবর্তনের প্রয়োজন হলে দ্রুত ALLIFY সাপোর্টের সঙ্গে যোগাযোগ করুন। অর্ডার পাঠানো হয়ে গেলে পরিবর্তন সম্ভব নাও হতে পারে।", keywords: "পরিবর্তন edit address cancel" },
+    { category: "delivery", question: "ALLIFY কোথায় ডেলিভারি দেয়?", answer: "ALLIFY চট্টগ্রাম জেলার স্থানীয় কেনাকাটার জন্য তৈরি। আপনার এলাকার ডেলিভারি সুবিধা ও চার্জ চেকআউটের সময় দেখানো তথ্য অনুযায়ী নির্ধারিত হবে।", keywords: "চট্টগ্রাম এলাকা delivery area charge" },
+    { category: "delivery", question: "ডেলিভারি পেতে কত সময় লাগে?", answer: "ডেলিভারির সময় পণ্যের দোকান, আপনার এলাকা ও কুরিয়ার ব্যবস্থার ওপর নির্ভর করে। অর্ডার নিশ্চিত হওয়ার পর বিক্রেতা বা ডেলিভারি সংক্রান্ত আপডেট অনুসরণ করুন।", keywords: "সময় কতদিন shipping courier" },
+    { category: "delivery", question: "ভুল বা ক্ষতিগ্রস্ত পণ্য পেলে কী করব?", answer: "পণ্য গ্রহণের পর সমস্যা বুঝতে পারলে অর্ডার নম্বরসহ দ্রুত ALLIFY-কে জানান। পণ্যের অবস্থা ও সমস্যার বিবরণ সংরক্ষণ করুন।", keywords: "ভুল ক্ষতিগ্রস্ত damaged wrong item" },
+    { category: "payments", question: "কোন পেমেন্ট পদ্ধতি চালু আছে?", answer: "বর্তমানে চেকআউটে প্রদর্শিত পেমেন্ট পদ্ধতি ব্যবহার করুন। কোনো পদ্ধতি দেখানো না হলে সেটি আপাতত উপলভ্য নয়।", keywords: "payment পেমেন্ট টাকা cash" },
+    { category: "payments", question: "রিফান্ড বা টাকা ফেরতের বিষয়ে কীভাবে জানব?", answer: "রিফান্ডের প্রয়োজন হলে সংশ্লিষ্ট অর্ডারের তথ্যসহ ALLIFY সাপোর্টে যোগাযোগ করুন। অর্ডারের অবস্থা ও সমস্যার ধরন যাচাই করে পরবর্তী করণীয় জানানো হবে।", keywords: "refund ফেরত টাকা" },
+    { category: "products", question: "পণ্যের সাইজ, রং বা স্টক কীভাবে জানব?", answer: "পণ্যের বিস্তারিত পেজে দেওয়া বিবরণ, ছবি ও স্টকের তথ্য দেখুন। অতিরিক্ত তথ্য প্রয়োজন হলে সংশ্লিষ্ট দোকানের বিবরণ দেখে সহায়তা নিন।", keywords: "size colour color stock product" },
+    { category: "products", question: "ALLIFY-তে থাকা দোকানগুলো কি স্থানীয়?", answer: "ALLIFY চট্টগ্রাম জেলার স্থানীয় বিক্রেতা ও ক্রেতাদের সংযুক্ত করার লক্ষ্য নিয়ে তৈরি। দোকানের পেজে বিক্রেতার দেওয়া তথ্য দেখতে পারবেন।", keywords: "দোকান seller local shop" },
+    { category: "account", question: "অ্যাকাউন্টে প্রবেশ করতে না পারলে কী করব?", answer: "লগইন পেজে দেওয়া নির্দেশনা অনুসরণ করুন। আপনার নিবন্ধিত ফোন বা অ্যাকাউন্টের তথ্য সঠিক আছে কি না যাচাই করুন। সমস্যা থাকলে সাপোর্টে জানান।", keywords: "login লগইন password account" },
+    { category: "account", question: "আমার ব্যক্তিগত তথ্য কীভাবে নিরাপদ রাখব?", answer: "আপনার পাসওয়ার্ড, OTP বা পেমেন্ট PIN কাউকে দেবেন না। অপরিচিত লিংকে লগইন তথ্য দেবেন না এবং নিজের অ্যাকাউন্ট থেকে বের হওয়ার সময় লগআউট করুন।", keywords: "security নিরাপত্তা password otp pin" },
+    { category: "seller", question: "কীভাবে ALLIFY-তে সেলার হিসেবে যুক্ত হব?", answer: "বিক্রেতা হোন পেজে গিয়ে আবেদন ফর্ম পূরণ করুন। প্রয়োজনীয় তথ্য জমা দেওয়ার পর আবেদন যাচাই করা হবে।", keywords: "seller সেলার বিক্রেতা apply আবেদন" },
+    { category: "seller", question: "দোকান খোলার জন্য কি ফি দিতে হবে?", answer: "বর্তমান প্রাথমিক পর্যায়ে ALLIFY-তে বিক্রেতা নিবন্ধন ও দোকান খোলার জন্য কোনো ফি রাখা হয়নি। ভবিষ্যতে কোনো নীতিমালা বদলালে তা জানানো হবে।", keywords: "ফ্রি free fee charge দোকান" },
+    { category: "seller", question: "দোকানে কীভাবে পণ্য যোগ করব?", answer: "সেলার অ্যাকাউন্টে প্রবেশ করে সেলার ড্যাশবোর্ড থেকে পণ্য যোগ করার অপশন ব্যবহার করুন। পণ্যের নাম, ছবি, দাম, স্টক ও বিবরণ সঠিকভাবে দিন।", keywords: "product add upload পণ্য যোগ" },
+  ];
+  const filteredHelpArticles = helpArticles.filter(article =>
+    (helpCategory === "all" || article.category === helpCategory) &&
+    (!helpQuery.trim() || (article.question + " " + article.answer + " " + article.keywords).toLowerCase().includes(helpQuery.trim().toLowerCase()))
+  );
 
   const set = (key: string, value: string) => setForm(v => ({...v, [key]: value}));
   const selectStoreImage = (file:File|null, kind:"logo"|"banner") => {
@@ -1099,18 +1130,45 @@ function MarketplacePage() {
       </div>
     ) : <div className={panel}>এই পৃষ্ঠাটি শুধু অনুমোদিত অ্যাডমিনদের জন্য।</div>);
   } else if (page === "help") {
-    const supportNumber = "8801862054563";
-    const supportMessage = encodeURIComponent("Hello ALLIFY Support, I need assistance.\n\nআমার সমস্যাটি হলো: ");
-    const whatsappUrl = `https://wa.me/${supportNumber}?text=${supportMessage}`;
-    body = shell("হেল্প ও সাপোর্ট", <div className="mx-auto max-w-3xl space-y-4">
-      <section className="rounded-2xl border bg-card p-5 sm:p-7">
-        <div className="flex items-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-[#16834b]"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><path d="M4 12H3a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2v-6Zm16 0h1a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2v-6Z"/><path d="M18 19a6 6 0 0 1-6 3h-1"/></svg></span><div><p className="text-xs font-semibold tracking-wide text-primary">ALLIFY CUSTOMER CARE</p><h2 className="text-xl font-bold">আমরা আপনাকে সাহায্য করতে প্রস্তুত</h2></div></div>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">অর্ডার, পণ্য, ডেলিভারি, অ্যাকাউন্ট বা সেলার-সংক্রান্ত যেকোনো প্রশ্নে আমাদের সঙ্গে যোগাযোগ করুন।</p>
-        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="mt-5 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#16834b] px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-[#116b3d]"> <svg aria-hidden="true" viewBox="0 0 32 32" className="h-5 w-5" fill="currentColor"><path d="M16.02 3.2A12.7 12.7 0 0 0 5.1 22.38L3.4 28.6l6.38-1.67A12.7 12.7 0 1 0 16.02 3.2Zm0 23.1a10.36 10.36 0 0 1-5.28-1.45l-.38-.22-3.79.99 1.01-3.69-.25-.4a10.4 10.4 0 1 1 8.69 4.77Zm5.7-7.78c-.31-.16-1.84-.91-2.13-1.02-.29-.1-.5-.16-.71.16-.21.31-.81 1.02-.99 1.23-.18.21-.36.23-.67.08-.31-.16-1.31-.48-2.49-1.52-.92-.82-1.54-1.83-1.72-2.14-.18-.31-.02-.48.14-.64.14-.14.31-.36.47-.54.16-.18.21-.31.31-.52.1-.21.05-.39-.03-.54-.08-.16-.71-1.7-.97-2.33-.25-.61-.51-.52-.71-.53h-.6c-.21 0-.54.08-.83.39-.29.31-1.09 1.07-1.09 2.61s1.12 3.03 1.28 3.24c.16.21 2.2 3.36 5.33 4.71.74.32 1.32.51 1.77.65.74.24 1.41.21 1.94.13.59-.09 1.84-.75 2.1-1.48.26-.73.26-1.36.18-1.49-.08-.13-.29-.21-.6-.37Z"/></svg> WhatsApp-এ যোগাযোগ করুন ↗</a>
-        <p className="mt-3 text-center text-xs text-muted-foreground">WhatsApp Support: +880 1862-054563</p>
+    body = shell("হেল্প সেন্টার", <div className="mx-auto max-w-5xl space-y-6">
+      <section className="overflow-hidden rounded-2xl border bg-card">
+        <div className="px-5 py-8 sm:px-8 sm:py-10">
+          <p className="text-xs font-bold tracking-[.16em] text-primary">ALLIFY CUSTOMER HELP</p>
+          <h2 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">কীভাবে আপনাকে সাহায্য করতে পারি?</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">প্রশ্ন লিখে খুঁজুন অথবা নিচের বিভাগ থেকে আপনার প্রয়োজনীয় সহায়তা বেছে নিন।</p>
+          <div className="mt-5 flex items-center gap-3 rounded-xl border bg-background px-4 py-3 shadow-sm focus-within:border-primary">
+            <span aria-hidden="true" className="text-lg text-muted-foreground">⌕</span>
+            <input value={helpQuery} onChange={e => setHelpQuery(e.target.value)} placeholder="যেমন: অর্ডার কোথায় দেখব, ডেলিভারি কত দিনে..." aria-label="হেল্প আর্টিকেল খুঁজুন" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
+            {helpQuery && <button type="button" onClick={() => setHelpQuery("")} className="text-xs font-semibold text-primary">মুছুন</button>}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground"><span>জনপ্রিয়:</span><button type="button" onClick={() => setHelpQuery("অর্ডার")} className="rounded-full bg-muted px-3 py-1.5 hover:text-primary">অর্ডার</button><button type="button" onClick={() => setHelpQuery("ডেলিভারি")} className="rounded-full bg-muted px-3 py-1.5 hover:text-primary">ডেলিভারি</button><button type="button" onClick={() => setHelpQuery("সেলার")} className="rounded-full bg-muted px-3 py-1.5 hover:text-primary">সেলার</button></div>
+        </div>
       </section>
-      <section className="rounded-2xl border bg-card p-5"><h3 className="font-bold">কীভাবে দ্রুত সাহায্য পাবেন?</h3><ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted-foreground"><li>অর্ডার-সংক্রান্ত বিষয়ে অর্ডার নম্বর উল্লেখ করুন।</li><li>পণ্যের বিষয়ে জানতে পণ্যের নাম বা লিংক পাঠান।</li><li>সমস্যা বুঝিয়ে লিখুন; প্রয়োজন হলে স্ক্রিনশট দিন।</li></ul></section>
-      <p className="text-center text-xs text-muted-foreground">আপনার অ্যাকাউন্টের পাসওয়ার্ড, OTP বা পেমেন্ট PIN কাউকে দেবেন না।</p>
+
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-end justify-between gap-2"><div><h3 className="text-lg font-bold">বিষয় অনুযায়ী সহায়তা</h3><p className="mt-1 text-xs text-muted-foreground">আপনার সমস্যার সঙ্গে মেলে এমন বিভাগ নির্বাচন করুন।</p></div><button type="button" onClick={() => {setHelpCategory("all");setHelpQuery("");}} className="text-xs font-semibold text-primary">সব বিষয় দেখুন</button></div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {helpCategories.map(category => <button key={category.id} type="button" onClick={() => setHelpCategory(helpCategory === category.id ? "all" : category.id)} aria-pressed={helpCategory === category.id} className={"flex min-h-24 items-start gap-3 rounded-xl border bg-card p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-sm " + (helpCategory === category.id ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "")}>
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-muted text-xl">{category.icon}</span><span className="min-w-0 flex-1"><b className="block text-sm">{category.label}</b><span className="mt-1 block text-xs leading-5 text-muted-foreground">{category.description}</span></span><span className="text-lg text-muted-foreground">›</span>
+          </button>)}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-lg font-bold">{helpQuery ? "খোঁজার ফলাফল" : helpCategory === "all" ? "সাধারণ প্রশ্ন ও উত্তর" : helpCategories.find(c => c.id === helpCategory)?.label}</h3><p className="mt-1 text-xs text-muted-foreground">{filteredHelpArticles.length.toLocaleString("bn-BD")}টি সহায়তা আর্টিকেল পাওয়া গেছে</p></div>{helpCategory !== "all" && <button type="button" onClick={() => setHelpCategory("all")} className="text-xs font-semibold text-primary">বিভাগ সরান</button>}</div>
+        <div className="overflow-hidden rounded-xl border bg-card divide-y">
+          {filteredHelpArticles.length ? filteredHelpArticles.map((article, index) => <details key={article.question} className="group p-4" open={Boolean(helpQuery && index === 0)}>
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold"><span>{article.question}</span><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-base text-muted-foreground transition group-open:rotate-45">＋</span></summary>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">{article.answer}</p>
+          </details>) : <div className="p-8 text-center"><p className="font-semibold">কোনো উত্তর পাওয়া যায়নি</p><p className="mt-1 text-sm text-muted-foreground">অন্য শব্দ দিয়ে খুঁজুন অথবা সব বিভাগ দেখুন।</p><button type="button" onClick={() => {setHelpQuery("");setHelpCategory("all");}} className="mt-3 text-sm font-semibold text-primary">সব প্রশ্ন দেখুন</button></div>}
+        </div>
+      </section>
+
+      <section className="grid gap-3 sm:grid-cols-2">
+        <Link to={"/account" as any} className="flex items-center gap-3 rounded-xl border bg-card p-4 transition hover:border-primary/40"><span className="grid h-10 w-10 place-items-center rounded-lg bg-muted text-xl">📋</span><span className="min-w-0 flex-1"><b className="block text-sm">আমার অর্ডার</b><span className="mt-1 block text-xs text-muted-foreground">নিজের অর্ডার ও তার অবস্থা দেখুন</span></span><span className="text-muted-foreground">›</span></Link>
+        <Link to={"/seller" as any} className="flex items-center gap-3 rounded-xl border bg-card p-4 transition hover:border-primary/40"><span className="grid h-10 w-10 place-items-center rounded-lg bg-muted text-xl">🏪</span><span className="min-w-0 flex-1"><b className="block text-sm">সেলার হতে চান?</b><span className="mt-1 block text-xs text-muted-foreground">দোকান খোলা ও বিক্রেতা হিসেবে যুক্ত হওয়ার নিয়ম</span></span><span className="text-muted-foreground">›</span></Link>
+      </section>
+      <p className="text-center text-xs text-muted-foreground">আপনার নিরাপত্তার জন্য পাসওয়ার্ড, OTP বা পেমেন্ট PIN কারও সঙ্গে শেয়ার করবেন না।</p>
     </div>);
   } else {
     body = shell("পৃষ্ঠাটি পাওয়া যায়নি",<div className={panel}>এই পৃষ্ঠাটি এখনো তৈরি হয়নি। <Link to={"/market" as any} className={linkClass}>বাজারে ফিরে যান</Link></div>);
