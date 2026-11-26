@@ -144,7 +144,6 @@ function Index() {
             <button className="rounded-lg px-4 py-2 text-sm font-semibold text-white" style={{ background: "#123b32" }}>খুঁজুন</button>
           </form>
           <div className="ml-auto flex items-center gap-3 text-sm">
-            <a href="/help" className="inline-flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-bold sm:hidden" style={{ borderColor: "#dce8df", color: "#123b32", background: "#f0f5eb" }}>ⓘ সাহায্য</a>
             <a href="/account" className="hidden sm:inline">অ্যাকাউন্ট</a>
             <a href="/cart" className="hidden sm:inline-flex rounded-lg px-3 py-2 font-semibold" style={{ background: "#f0f5eb", color: "#123b32" }}>🛒 কার্ট ({cartCount.toLocaleString("bn-BD")})</a>
           </div>
@@ -155,7 +154,6 @@ function Index() {
           <a href="#local">স্থানীয় দোকান</a>
           <a href="#products">জনপ্রিয় পণ্য</a>
           <a href="/seller">বিক্রেতা হোন</a>
-          <a href="/help" className="font-bold" style={{ color: "#123b32" }}>ⓘ হেল্প সেন্টার</a>
           <span>📍 চট্টগ্রাম জেলা</span>
         </nav>
       </header>
@@ -243,7 +241,6 @@ function Index() {
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-5">
           <div><b className="text-xl tracking-wider">ALLIFY</b><p className="mt-1 text-xs" style={{ color: "#a9c0b5" }}>Your Local Marketplace</p><p className="mt-2 text-xs" style={{ color: "#a9c0b5" }}>চট্টগ্রামের স্থানীয় ব্যবসার ডিজিটাল ঠিকানা।</p></div>
           <div className="flex flex-col items-start gap-2 text-xs sm:items-end">
-            <a href="/help" className="font-semibold text-white/90 transition hover:text-[#d9f36a]">হেল্প ও সাপোর্ট</a>
             <span style={{ color: "#a9c0b5" }}>© ALLIFY · চট্টগ্রাম জেলা · ক্যাশ অন ডেলিভারি</span>
           </div>
         </div>
