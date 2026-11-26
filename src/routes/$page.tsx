@@ -1013,7 +1013,86 @@ function MarketplacePage() {
     const pendingApplication = role === "admin" ? undefined : applications.find(application => application.status === "pending");
     body = shell("আমার অ্যাকাউন্ট",user?<><div className={panel}><p>{user.email}</p><p className="mt-1 text-sm text-muted-foreground">একই অ্যাকাউন্টে ক্রেতা হিসেবে কেনাকাটা সবসময় করা যাবে। {myStore?(role==="admin"?"অ্যাডমিন ও বিক্রেতা—দুই সুবিধাই চালু আছে।":"বিক্রেতা সুবিধাও চালু আছে।"):role==="admin"?"অ্যাডমিন সুবিধা চালু আছে।":"বিক্রেতা হতে চাইলে এখান থেকেই আবেদন করতে পারবে।"}</p><div className="mt-3 flex flex-wrap gap-2"><Link to={"/market" as any} className={primary}>ক্রেতা হিসেবে কেনাকাটা</Link><Link to={"/wishlist" as any} className={secondary}>পছন্দের তালিকা ({wishlistIds.length.toLocaleString("bn-BD")})</Link>{myStore&&<Link to={"/seller-dashboard" as any} className={secondary}>বিক্রেতা ড্যাশবোর্ড</Link>}{role==="admin"&&<Link to={"/admin" as any} className={secondary}>অ্যাডমিন প্যানেল</Link>}{role!=="seller"&&role!=="admin"&&pendingApplication&&<span className="rounded-lg border px-3 py-2 text-sm">বিক্রেতা আবেদন: পর্যালোচনাধীন</span>}{!myStore&&role!=="admin"&&!pendingApplication&&<Link to={"/seller" as any} className={secondary}>বিক্রেতা হতে আবেদন</Link>}<button className={secondary} onClick={signOut}>লগআউট</button></div>{pendingApplication&&<p className="mt-3 text-sm text-muted-foreground">দোকান: {pendingApplication.store_name} · অ্যাডমিন অনুমোদনের অপেক্ষায়। একই অ্যাকাউন্টই ব্যবহার হবে; নতুন করে রেজিস্ট্রেশন বা Login লাগবে না।</p>}</div><h2 className="mb-3 mt-6 font-bold">আমার অর্ডার</h2>{orders.length?orders.map(o=><div key={o.id} className={panel+" mb-3"}><div className="flex justify-between gap-2"><b>{o.order_no}</b><span className="text-sm">{({pending:"নতুন অর্ডার",confirmed:"নিশ্চিত",shipped:"পাঠানো হয়েছে",delivered:"ডেলিভারি সম্পন্ন",cancelled:"বাতিল"} as Record<string,string>)[o.status]||"অবস্থা অজানা"}</span></div><p className="mt-1 text-sm">মোট: {money(o.total)} · {o.area}</p><p className="mt-1 text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("bn-BD")}</p>{(o.order_items||[]).map((item:any)=><div key={item.id} className="mt-2 flex flex-wrap items-center justify-between gap-3 border-t pt-2 text-xs"><span>{item.title} × {Number(item.quantity).toLocaleString("bn-BD")}</span><span className="flex items-center gap-2">{item.status==="pending"?"নতুন অর্ডার":item.status==="confirmed"?"নিশ্চিত":item.status==="shipped"?"পাঠানো হয়েছে":item.status==="delivered"?"ডেলিভারি সম্পন্ন":"বাতিল"}{item.status==="pending"&&!o.is_demo&&<button type="button" disabled={busy} className={secondary+" px-2 py-1 text-xs"} onClick={()=>cancelBuyerOrderItem(item.id,o.id)}>অর্ডার বাতিল</button>}</span></div>)}</div>):<p className={panel}>এখনো কোনো অর্ডার নেই।</p>}</>:<div className={panel}>অ্যাকাউন্ট দেখতে <Link to={"/login" as any} className={linkClass}>লগইন</Link> করুন।</div>);
   } else if (page === "admin") {
-    body = shell("অ্যাডমিন প্যানেল",role==="admin"?<><div className={panel}><p>বিক্রেতা আবেদন: {applications.length.toLocaleString("bn-BD")}</p><p className="text-xs text-muted-foreground">এই অ্যাকাউন্টে অ্যাডমিন ভূমিকা থাকলে ডাটাবেস নীতিমালা অনুযায়ী তথ্য দেখা যাবে।</p></div><div className="mt-4 space-y-3">{applications.map(a=><div className={panel} key={a.id}><b>{a.store_name}</b>{!a.user_id&&<span className="ml-2 text-xs text-amber-700">নমুনা আবেদন</span>}<p className="text-sm">{a.owner_name} · {a.phone} · {a.area}</p><p className="text-xs text-muted-foreground">স্ট্যাটাস: {a.status}</p>{a.status==="pending"&&<div className="mt-3 flex gap-2">{a.user_id&&<button disabled={busy} className={primary} onClick={()=>reviewApplication(a.id,true)}>অনুমোদন</button>}<button disabled={busy} className={secondary} onClick={()=>reviewApplication(a.id,false)}>বাতিল</button></div>}</div>)}</div><AdminCatalogControls /><div className={panel+" mt-5"}><h2 className="font-bold">পণ্য নিয়ন্ত্রণ</h2>{adminProducts.length?adminProducts.map(p=><div key={p.id} className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3"><div className="min-w-0 flex-1"><b className="text-sm">{p.title_bn}</b>{p.seller_stores?.is_demo&&<span className="ml-2 text-xs text-amber-700">নমুনা পণ্য</span>}<p className="text-xs text-muted-foreground">{p.seller_stores?.name||"দোকান"} · {money(Number(p.price))} · স্টক {Number(p.stock).toLocaleString("bn-BD")}</p></div><span className="text-xs">{p.status}</span><button disabled={busy||p.seller_stores?.is_demo} className={secondary+" text-xs"} onClick={()=>updateAdminProduct(p.id,p.status==="active"?"hidden":"active")}>{p.status==="active"?"লুকান":"প্রকাশ করুন"}</button></div>):<p className="mt-2 text-sm text-muted-foreground">কোনো পণ্য পাওয়া যায়নি।</p>}</div><div className={panel+" mt-5"}><h2 className="font-bold">সাম্প্রতিক অর্ডার</h2>{adminOrders.length?adminOrders.map(o=><div key={o.id} className="mt-3 flex flex-wrap justify-between gap-2 border-t pt-3 text-sm"><div><b>{o.order_no}{o.is_demo&&<span className="ml-2 text-xs text-amber-700">নমুনা অর্ডার</span>}</b><p className="text-xs text-muted-foreground">{o.recipient} · {o.phone} · {o.area}</p></div><div className="text-right"><b>{money(Number(o.total))}</b><p className="text-xs text-muted-foreground">{o.status}</p></div>{(o.order_items||[]).map((item:any)=><div key={item.id} className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t pt-2 text-xs"><span>{item.title} × {Number(item.quantity).toLocaleString("bn-BD")} · {money(Number(item.unit_price)*Number(item.quantity))}</span><select aria-label="অর্ডারের অবস্থা" className="rounded border bg-background p-2" value={item.status} disabled={busy||o.is_demo||["delivered","cancelled"].includes(item.status)} onChange={e=>updateAdminOrderItemStatus(item.id,o.id,e.target.value)}>{(item.status==="pending"?["pending","confirmed","cancelled"]:item.status==="confirmed"?["confirmed","shipped","cancelled"]:item.status==="shipped"?["shipped","delivered"]:[item.status]).map((status:string)=><option key={status} value={status}>{({pending:"নতুন",confirmed:"নিশ্চিত",shipped:"পাঠানো",delivered:"সম্পন্ন",cancelled:"বাতিল"} as Record<string,string>)[status]}</option>)}</select></div>)}</div>):<p className="mt-2 text-sm text-muted-foreground">কোনো অর্ডার পাওয়া যায়নি।</p>}</div></>:<div className={panel}>এই পৃষ্ঠাটি শুধু অনুমোদিত অ্যাডমিনদের জন্য।</div>);
+    body = shell("অ্যাডমিন প্যানেল", role === "admin" ? (
+      <div className="space-y-6">
+        <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+          <div className="bg-gradient-to-r from-[#123b32] to-[#245c4c] px-5 py-6 text-white sm:px-7">
+            <p className="text-xs font-semibold tracking-[0.18em] text-white/70">ALLIFY MANAGEMENT</p>
+            <h2 className="mt-2 text-2xl font-black sm:text-3xl">স্বাগতম, অ্যাডমিন</h2>
+            <p className="mt-1 max-w-xl text-sm text-white/80">দোকান, পণ্য ও অর্ডার—সবকিছু এক জায়গা থেকে সহজে পরিচালনা করুন।</p>
+          </div>
+          <div className="grid grid-cols-1 divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <div className="flex items-center gap-3 p-4 sm:p-5">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-xl text-amber-800">▤</span>
+              <div><p className="text-xs text-muted-foreground">বিক্রেতা আবেদন</p><p className="text-2xl font-bold tabular-nums">{applications.length.toLocaleString("bn-BD")}</p></div>
+            </div>
+            <div className="flex items-center gap-3 p-4 sm:p-5">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-xl text-emerald-800">▦</span>
+              <div><p className="text-xs text-muted-foreground">মোট পণ্য</p><p className="text-2xl font-bold tabular-nums">{adminProducts.length.toLocaleString("bn-BD")}</p></div>
+            </div>
+            <div className="flex items-center gap-3 p-4 sm:p-5">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-100 text-xl text-sky-800">▣</span>
+              <div><p className="text-xs text-muted-foreground">সাম্প্রতিক অর্ডার</p><p className="text-2xl font-bold tabular-nums">{adminOrders.length.toLocaleString("bn-BD")}</p></div>
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div><h2 className="text-lg font-bold">বিক্রেতা আবেদন</h2><p className="text-xs text-muted-foreground">নতুন দোকানের আবেদন যাচাই ও সিদ্ধান্ত নিন</p></div>
+            <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">{applications.filter(a => a.status === "pending").length.toLocaleString("bn-BD")} অপেক্ষমাণ</span>
+          </div>
+          {applications.length ? <div className="grid gap-3 lg:grid-cols-2">{applications.map(a => (
+            <article className="rounded-xl border bg-card p-4 shadow-sm" key={a.id}>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0"><b className="block truncate">{a.store_name}</b><p className="mt-1 text-sm text-muted-foreground">{a.owner_name} · {a.phone}</p><p className="text-xs text-muted-foreground">{a.area}</p></div>
+                <span className={"shrink-0 rounded-full px-2.5 py-1 text-xs font-medium "+(a.status==="pending"?"bg-amber-50 text-amber-800":a.status==="approved"?"bg-emerald-50 text-emerald-800":"bg-muted text-muted-foreground")}>{a.status==="pending"?"অপেক্ষমাণ":a.status==="approved"?"অনুমোদিত":"বাতিল"}</span>
+              </div>
+              {!a.user_id && <p className="mt-2 text-xs text-amber-700">নমুনা আবেদন</p>}
+              {a.status==="pending" && <div className="mt-4 flex flex-wrap gap-2 border-t pt-3">{a.user_id && <button disabled={busy} className={primary} onClick={()=>reviewApplication(a.id,true)}>অনুমোদন করুন</button>}<button disabled={busy} className={secondary} onClick={()=>reviewApplication(a.id,false)}>বাতিল করুন</button></div>}
+            </article>
+          ))}</div> : <div className={panel+" text-center text-sm text-muted-foreground"}>এখনো কোনো বিক্রেতা আবেদন জমা পড়েনি।</div>}
+        </section>
+
+        <section className="space-y-3">
+          <div><h2 className="text-lg font-bold">ক্যাটালগ ও ক্যাটাগরি</h2><p className="text-xs text-muted-foreground">পণ্যের ক্যাটাগরি এবং তালিকা পরিচালনা করুন</p></div>
+          <div className={panel}><AdminCatalogControls /></div>
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex flex-wrap items-end justify-between gap-2"><div><h2 className="text-lg font-bold">পণ্য নিয়ন্ত্রণ</h2><p className="text-xs text-muted-foreground">প্রকাশিত বা লুকানো পণ্যের অবস্থা পরিবর্তন করুন</p></div><span className="text-xs text-muted-foreground">মোট {adminProducts.length.toLocaleString("bn-BD")}টি</span></div>
+          <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+            {adminProducts.length ? adminProducts.map(p => (
+              <div key={p.id} className="flex flex-wrap items-center gap-3 border-b p-4 last:border-b-0">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-lg">▧</div>
+                <div className="min-w-0 flex-1"><b className="block truncate text-sm">{p.title_bn}</b><p className="mt-0.5 text-xs text-muted-foreground">{p.seller_stores?.name||"দোকান"} · {money(Number(p.price))} · স্টক {Number(p.stock).toLocaleString("bn-BD")}</p>{p.seller_stores?.is_demo&&<span className="text-[11px] text-amber-700">নমুনা পণ্য</span>}</div>
+                <span className={"rounded-full px-2.5 py-1 text-xs "+(p.status==="active"?"bg-emerald-50 text-emerald-800":"bg-muted text-muted-foreground")}>{p.status==="active"?"প্রকাশিত":"লুকানো"}</span>
+                <button disabled={busy||p.seller_stores?.is_demo} className={secondary+" text-xs"} onClick={()=>updateAdminProduct(p.id,p.status==="active"?"hidden":"active")}>{p.status==="active"?"লুকান":"প্রকাশ করুন"}</button>
+              </div>
+            )) : <p className="p-5 text-center text-sm text-muted-foreground">কোনো পণ্য পাওয়া যায়নি।</p>}
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex flex-wrap items-end justify-between gap-2"><div><h2 className="text-lg font-bold">সাম্প্রতিক অর্ডার</h2><p className="text-xs text-muted-foreground">অর্ডারের তথ্য দেখুন এবং পণ্যের অগ্রগতি আপডেট করুন</p></div><span className="text-xs text-muted-foreground">মোট {adminOrders.length.toLocaleString("bn-BD")}টি</span></div>
+          {adminOrders.length ? <div className="space-y-3">{adminOrders.map(o => (
+            <article key={o.id} className="rounded-xl border bg-card p-4 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0"><b className="text-sm">{o.order_no}</b>{o.is_demo&&<span className="ml-2 rounded bg-amber-50 px-2 py-0.5 text-[10px] text-amber-800">নমুনা</span>}<p className="mt-1 text-xs text-muted-foreground">{o.recipient} · {o.phone}</p><p className="text-xs text-muted-foreground">{o.area}</p></div>
+                <div className="text-right"><b className="text-sm">{money(Number(o.total))}</b><p className="mt-1 text-xs text-muted-foreground">{o.status}</p></div>
+              </div>
+              <div className="mt-3 space-y-2 border-t pt-3">{(o.order_items||[]).map((item:any) => (
+                <div key={item.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/40 p-3 text-xs">
+                  <span className="min-w-0 flex-1">{item.title} × {Number(item.quantity).toLocaleString("bn-BD")} · {money(Number(item.unit_price)*Number(item.quantity))}</span>
+                  <select aria-label="অর্ডারের অবস্থা" className="max-w-full rounded-lg border bg-background p-2" value={item.status} disabled={busy||o.is_demo||["delivered","cancelled"].includes(item.status)} onChange={e=>updateAdminOrderItemStatus(item.id,o.id,e.target.value)}>{(item.status==="pending"?["pending","confirmed","cancelled"]:item.status==="confirmed"?["confirmed","shipped","cancelled"]:item.status==="shipped"?["shipped","delivered"]:[item.status]).map((status:string)=><option key={status} value={status}>{({pending:"নতুন",confirmed:"নিশ্চিত",shipped:"পাঠানো",delivered:"সম্পন্ন",cancelled:"বাতিল"} as Record<string,string>)[status]}</option>)}</select>
+                </div>
+              ))}</div>
+            </article>
+          ))}</div> : <div className={panel+" text-center text-sm text-muted-foreground"}>এখনো কোনো অর্ডার পাওয়া যায়নি।</div>}
+        </section>
+        <p className="text-center text-[11px] text-muted-foreground">অ্যাডমিন অ্যাক্সেস ও ডেটা প্রদর্শন ডাটাবেসের নিরাপত্তা নীতিমালা অনুযায়ী নিয়ন্ত্রিত।</p>
+      </div>
+    ) : <div className={panel}>এই পৃষ্ঠাটি শুধু অনুমোদিত অ্যাডমিনদের জন্য।</div>);
   } else {
     body = shell("পৃষ্ঠাটি পাওয়া যায়নি",<div className={panel}>এই পৃষ্ঠাটি এখনো তৈরি হয়নি। <Link to={"/market" as any} className={linkClass}>বাজারে ফিরে যান</Link></div>);
   }
