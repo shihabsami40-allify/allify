@@ -1100,17 +1100,50 @@ function MarketplacePage() {
     ) : <div className={panel}>এই পৃষ্ঠাটি শুধু অনুমোদিত অ্যাডমিনদের জন্য।</div>);
   } else if (page === "help") {
     const supportNumber = "8801862054563";
-    const supportMessage = encodeURIComponent("Hello ALLIFY Support, I need assistance.\n\nআমার সমস্যাটি হলো: ");
-    const whatsappUrl = `https://wa.me/${supportNumber}?text=${supportMessage}`;
-    body = shell("হেল্প ও সাপোর্ট", <div className="mx-auto max-w-3xl space-y-4">
-      <section className="rounded-2xl border bg-card p-5 sm:p-7">
-        <div className="flex items-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-[#16834b]"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><path d="M4 12H3a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2v-6Zm16 0h1a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2v-6Z"/><path d="M18 19a6 6 0 0 1-6 3h-1"/></svg></span><div><p className="text-xs font-semibold tracking-wide text-primary">ALLIFY CUSTOMER CARE</p><h2 className="text-xl font-bold">আমরা আপনাকে সাহায্য করতে প্রস্তুত</h2></div></div>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">অর্ডার, পণ্য, ডেলিভারি, অ্যাকাউন্ট বা সেলার-সংক্রান্ত যেকোনো প্রশ্নে আমাদের সঙ্গে যোগাযোগ করুন।</p>
-        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="mt-5 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#16834b] px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-[#116b3d]"> <svg aria-hidden="true" viewBox="0 0 32 32" className="h-5 w-5" fill="currentColor"><path d="M16.02 3.2A12.7 12.7 0 0 0 5.1 22.38L3.4 28.6l6.38-1.67A12.7 12.7 0 1 0 16.02 3.2Zm0 23.1a10.36 10.36 0 0 1-5.28-1.45l-.38-.22-3.79.99 1.01-3.69-.25-.4a10.4 10.4 0 1 1 8.69 4.77Zm5.7-7.78c-.31-.16-1.84-.91-2.13-1.02-.29-.1-.5-.16-.71.16-.21.31-.81 1.02-.99 1.23-.18.21-.36.23-.67.08-.31-.16-1.31-.48-2.49-1.52-.92-.82-1.54-1.83-1.72-2.14-.18-.31-.02-.48.14-.64.14-.14.31-.36.47-.54.16-.18.21-.31.31-.52.1-.21.05-.39-.03-.54-.08-.16-.71-1.7-.97-2.33-.25-.61-.51-.52-.71-.53h-.6c-.21 0-.54.08-.83.39-.29.31-1.09 1.07-1.09 2.61s1.12 3.03 1.28 3.24c.16.21 2.2 3.36 5.33 4.71.74.32 1.32.51 1.77.65.74.24 1.41.21 1.94.13.59-.09 1.84-.75 2.1-1.48.26-.73.26-1.36.18-1.49-.08-.13-.29-.21-.6-.37Z"/></svg> WhatsApp-এ যোগাযোগ করুন ↗</a>
-        <p className="mt-3 text-center text-xs text-muted-foreground">WhatsApp Support: +880 1862-054563</p>
+    const makeSupportUrl = (topic: string) => `https://wa.me/${supportNumber}?text=${encodeURIComponent("Hello ALLIFY Support. বিষয়: " + topic + "\\n\\nআমার সমস্যাটি হলো: ")}`;
+    body = shell("হেল্প সেন্টার", <div className="mx-auto max-w-4xl space-y-6">
+      <section className="rounded-2xl border bg-card px-5 py-7 sm:px-8 sm:py-9">
+        <p className="text-xs font-bold tracking-[.16em] text-primary">ALLIFY HELP CENTER</p>
+        <h2 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">কীভাবে আপনাকে সাহায্য করতে পারি?</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">অর্ডার, পণ্য, ডেলিভারি, অ্যাকাউন্ট অথবা দোকান পরিচালনা—আপনার প্রয়োজনীয় সহায়তা বেছে নিন।</p>
       </section>
-      <section className="rounded-2xl border bg-card p-5"><h3 className="font-bold">কীভাবে দ্রুত সাহায্য পাবেন?</h3><ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted-foreground"><li>অর্ডার-সংক্রান্ত বিষয়ে অর্ডার নম্বর উল্লেখ করুন।</li><li>পণ্যের বিষয়ে জানতে পণ্যের নাম বা লিংক পাঠান।</li><li>সমস্যা বুঝিয়ে লিখুন; প্রয়োজন হলে স্ক্রিনশট দিন।</li></ul></section>
-      <p className="text-center text-xs text-muted-foreground">আপনার অ্যাকাউন্টের পাসওয়ার্ড, OTP বা পেমেন্ট PIN কাউকে দেবেন না।</p>
+
+      <section className="space-y-3">
+        <div><h3 className="text-lg font-bold">সাহায্যের বিষয় বেছে নিন</h3><p className="mt-1 text-xs text-muted-foreground">সঠিক বিভাগে গেলে দ্রুত সমাধান পেতে সুবিধা হবে।</p></div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <a href={makeSupportUrl("অর্ডার ও অর্ডারের অবস্থা")} className="group flex items-start gap-3 rounded-xl border bg-card p-4 transition hover:border-primary/40 hover:bg-muted/40">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted text-xl">📦</span><span className="min-w-0"><b className="block text-sm">অর্ডার ও অর্ডারের অবস্থা</b><span className="mt-1 block text-xs leading-5 text-muted-foreground">অর্ডার নিশ্চিতকরণ, পরিবর্তন বা অর্ডার-সংক্রান্ত প্রশ্ন।</span></span><span className="ml-auto text-muted-foreground">›</span>
+          </a>
+          <a href={makeSupportUrl("ডেলিভারি ও পণ্য গ্রহণ")} className="group flex items-start gap-3 rounded-xl border bg-card p-4 transition hover:border-primary/40 hover:bg-muted/40">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted text-xl">🚚</span><span className="min-w-0"><b className="block text-sm">ডেলিভারি ও পণ্য গ্রহণ</b><span className="mt-1 block text-xs leading-5 text-muted-foreground">ডেলিভারি সময়, ঠিকানা বা পণ্য বুঝে পাওয়া নিয়ে সহায়তা।</span></span><span className="ml-auto text-muted-foreground">›</span>
+          </a>
+          <a href={makeSupportUrl("পণ্য ও স্থানীয় দোকান")} className="group flex items-start gap-3 rounded-xl border bg-card p-4 transition hover:border-primary/40 hover:bg-muted/40">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted text-xl">🛍️</span><span className="min-w-0"><b className="block text-sm">পণ্য ও স্থানীয় দোকান</b><span className="mt-1 block text-xs leading-5 text-muted-foreground">পণ্যের তথ্য, সাইজ, স্টক বা দোকান সম্পর্কে জানতে।</span></span><span className="ml-auto text-muted-foreground">›</span>
+          </a>
+          <a href={makeSupportUrl("অ্যাকাউন্ট ও লগইন")} className="group flex items-start gap-3 rounded-xl border bg-card p-4 transition hover:border-primary/40 hover:bg-muted/40">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted text-xl">👤</span><span className="min-w-0"><b className="block text-sm">অ্যাকাউন্ট ও লগইন</b><span className="mt-1 block text-xs leading-5 text-muted-foreground">অ্যাকাউন্টে প্রবেশ বা প্রোফাইল-সংক্রান্ত সমস্যা।</span></span><span className="ml-auto text-muted-foreground">›</span>
+          </a>
+          <a href={makeSupportUrl("বিক্রেতা ও দোকান পরিচালনা")} className="group flex items-start gap-3 rounded-xl border bg-card p-4 transition hover:border-primary/40 hover:bg-muted/40 sm:col-span-2">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted text-xl">🏪</span><span className="min-w-0"><b className="block text-sm">বিক্রেতা ও দোকান পরিচালনা</b><span className="mt-1 block text-xs leading-5 text-muted-foreground">দোকান খোলা, পণ্য যোগ করা বা বিক্রেতা ড্যাশবোর্ডের সহায়তা।</span></span><span className="ml-auto text-muted-foreground">›</span>
+          </a>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <div><h3 className="text-lg font-bold">সাধারণ জিজ্ঞাসা</h3><p className="mt-1 text-xs text-muted-foreground">ALLIFY ব্যবহার সম্পর্কে কয়েকটি প্রয়োজনীয় উত্তর।</p></div>
+        <div className="overflow-hidden rounded-xl border bg-card divide-y">
+          <details className="group p-4"><summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold">ALLIFY-তে কীভাবে অর্ডার করব?<span className="text-lg text-muted-foreground transition group-open:rotate-45">＋</span></summary><p className="mt-3 text-sm leading-6 text-muted-foreground">পছন্দের পণ্য নির্বাচন করে কার্টে যোগ করুন। এরপর কার্ট থেকে অর্ডার সম্পন্ন করার নির্দেশনা অনুসরণ করুন।</p></details>
+          <details className="group p-4"><summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold">ALLIFY-তে বিক্রেতা হিসেবে কীভাবে যুক্ত হব?<span className="text-lg text-muted-foreground transition group-open:rotate-45">＋</span></summary><p className="mt-3 text-sm leading-6 text-muted-foreground">বিক্রেতা হোন পেজে গিয়ে আবেদন করুন। প্রাথমিক পর্যায়ে বিক্রেতা নিবন্ধন বিনামূল্যে।</p></details>
+          <details className="group p-4"><summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold">ডেলিভারি কোথায় দেওয়া হয়?<span className="text-lg text-muted-foreground transition group-open:rotate-45">＋</span></summary><p className="mt-3 text-sm leading-6 text-muted-foreground">ALLIFY বর্তমানে চট্টগ্রাম জেলার স্থানীয় কেনাকাটার জন্য তৈরি। নির্দিষ্ট পণ্যের ডেলিভারি তথ্য অর্ডারের সময় যাচাই করুন।</p></details>
+          <details className="group p-4"><summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold">কোনো সমস্যা হলে কীভাবে যোগাযোগ করব?<span className="text-lg text-muted-foreground transition group-open:rotate-45">＋</span></summary><p className="mt-3 text-sm leading-6 text-muted-foreground">নিচের WhatsApp সাপোর্ট বাটনে চাপ দিয়ে সমস্যার বিষয়টি লিখে পাঠান। অর্ডার থাকলে অর্ডার নম্বর উল্লেখ করুন।</p></details>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-4 rounded-xl border bg-muted/30 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div><h3 className="font-bold">এখনো সাহায্য প্রয়োজন?</h3><p className="mt-1 text-sm text-muted-foreground">আমাদের সাপোর্ট টিমকে WhatsApp-এ আপনার প্রশ্ন পাঠান।</p><p className="mt-2 text-xs text-muted-foreground">WhatsApp: +880 1862-054563</p></div>
+        <a href={makeSupportUrl("সাধারণ সহায়তা")} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90">WhatsApp-এ যোগাযোগ করুন ↗</a>
+      </section>
+      <p className="text-center text-xs text-muted-foreground">নিরাপত্তার জন্য পাসওয়ার্ড, OTP বা পেমেন্ট PIN কাউকে জানাবেন না।</p>
     </div>);
   } else {
     body = shell("পৃষ্ঠাটি পাওয়া যায়নি",<div className={panel}>এই পৃষ্ঠাটি এখনো তৈরি হয়নি। <Link to={"/market" as any} className={linkClass}>বাজারে ফিরে যান</Link></div>);
