@@ -1149,8 +1149,6 @@ function MarketplacePage() {
           <Link to={"/wishlist" as any} className="group flex min-h-24 items-center gap-3 rounded-xl border bg-card p-3 transition hover:border-primary/50 hover:shadow-sm">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-rose-50 text-xl">♡</span><span className="min-w-0"><b className="block text-sm">উইশলিস্ট</b><span className="mt-1 block text-[11px] text-muted-foreground">{wishlistIds.length.toLocaleString("bn-BD")}টি পছন্দের পণ্য</span></span>
           </Link>
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-sky-50 text-xl">❔</span><span className="min-w-0"><b className="block text-sm">হেল্প সেন্টার</b><span className="mt-1 block text-[11px] text-muted-foreground">সমস্যার সমাধান</span></span>
-          </Link>
           <Link to={"/market" as any} className="group flex min-h-24 items-center gap-3 rounded-xl border bg-card p-3 transition hover:border-primary/50 hover:shadow-sm">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-xl">🛍️</span><span className="min-w-0"><b className="block text-sm">কেনাকাটা</b><span className="mt-1 block text-[11px] text-muted-foreground">সব পণ্য দেখুন</span></span>
           </Link>
