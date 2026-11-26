@@ -22,11 +22,14 @@ Updated: 2026-11-26
 - `src/lib/order-transitions.ts` now checks that a current status is an own key of the transition table before reading it. This prevents inherited object keys from being treated as valid states or causing a runtime TypeError.
 - Regression tests added for `toString`, `constructor`, `__proto__`, and `hasOwnProperty`.
 - Code/test commits: `f99e246649094f166dfff4610e1caffdea9acdc5` and `297ebed6a31f6c3924cf88d402f152d9f663530d`.
-- The first GitHub Actions run `45741518075` failed at ESLint because the existing `src/lib/product-input.ts` had Prettier formatting errors. This was unrelated to the new transition guard. The file was reformatted in commit `b379035c3481132a9c56fa83f6cbedfc51971341`; a fresh CI run is pending.
-- Vercel Preview for the preceding checkpoint head `7b44fff0b891e7232bc16502817ff42fc72f8f3b` is READY: deployment `dpl_7SY8e2TeLj5YLZKPUroDQz9M7Ck7`, https://allify-chattogram-l8hr18ja1-allify.vercel.app. A new Preview is expected for the lint-fix commit.
+- Initial GitHub Actions run #570 / `45741518075` failed at ESLint because the existing `src/lib/product-input.ts` had Prettier formatting errors. This was unrelated to the transition guard. The formatting was corrected in commit `b379035c3481132a9c56fa83f6cbedfc51971341`.
+- GitHub Actions run #571 / `45741610542` passed all steps: dependency installation, ESLint, application build and Vitest.
+- GitHub Actions run #572 / `45741638075` passed for PR #56 head `d73ed9dabab614403ecaf05b63fd5c46bda3151a`.
+- Vercel Preview for that same PR head is READY: deployment `dpl_2FhBLYvbwoQBYWVZV4BDM3ZDwmSg`, https://allify-chattogram-78mqg9dk9-allify.vercel.app. Combined status reports Vercel success.
+- The checkpoint document is being updated in a documentation-only commit after those code/test checks; verify that final documentation commit's checks separately. No Production deployment was initiated.
 
 ## Production and source-of-truth blockers
-- Configured Production Supabase ref remains exactly `htsvvotamlxlkncksssq`; read-only access was retried and denied. The user prompt's extra-v variant was not used as a substitute.
+- Configured Production Supabase ref is `htsvvotamlxlkncksssq`; read-only access was retried and denied. The extra-v variant in the user instruction was not used as a substitute.
 - Do not substitute `onqadpqdontbdvecnvby` or isolated test project `ltwobqpgxmkeylmpkogq` for Production.
 - No verified restorable full Production database backup, separate Storage-object export, or restore rehearsal is available.
 - Lovable published source remains materially different from GitHub main: Lovable checkout is demo-only, while GitHub main uses the authenticated `place_order` RPC. Lovable project is out of credits; no source overwrite or publish was attempted.
@@ -34,7 +37,7 @@ Updated: 2026-11-26
 - No Production database or Storage write/migration, Production deployment/alias change, PR merge, billing change, credential/secret operation, or external customer/vendor contact occurred in this run.
 
 ## Next safe work
-1. Verify the fresh PR #56 CI and Vercel Preview at the latest head; inspect and fix any remaining failure only on this candidate branch.
+1. Verify CI and Vercel Preview for the documentation-only checkpoint commit.
 2. Continue repository-only order lifecycle, checkout, Seller product/image, Admin approval and accessibility/security regression tests.
 3. Reconcile PR #48 against current main without overwriting newer UI work; keep it unmerged until reviewed.
 4. Keep Production blocked until exact project owner-authorized access, verified restorable DB and Storage backups, source reconciliation, security preflight, and signed-in role E2E are available.
