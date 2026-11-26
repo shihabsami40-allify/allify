@@ -62,6 +62,10 @@ function MarketplacePage() {
   const [sellerProducts, setSellerProducts] = useState<any[]>([]);
   const [adminProducts, setAdminProducts] = useState<any[]>([]);
   const [adminOrders, setAdminOrders] = useState<any[]>([]);
+  const [adminStores, setAdminStores] = useState<any[]>([]);
+  const [adminStats, setAdminStats] = useState({ totalOrders: 0, completedOrders: 0, completedSales: 0, totalProducts: 0, activeStores: 0 });
+  const [adminOrderSearch, setAdminOrderSearch] = useState("");
+  const [adminOrderStatus, setAdminOrderStatus] = useState("all");
   const [applications, setApplications] = useState<any[]>([]);
   const [myStore, setMyStore] = useState<any>(null);
   const [storeLogoFile, setStoreLogoFile] = useState<File|null>(null);
@@ -292,7 +296,8 @@ function MarketplacePage() {
           const roles = roleRows.data?.map((row:any) => row.role) ?? [];
           if (needsRole) setRole(roles.includes("admin") ? "admin" : roles.includes("seller") ? "seller" : "customer");
           if (needsStore) setMyStore(storeRow.data);
-          if (needsOrders) setOrders(orderRows.data ?? []);
+          if (needsOrders && !roles.includes("admin")) setOrders(orderRows.data ?? []);
+          else if (needsOrders) setOrders([]);
 
           if (page === "wishlist") {
             if (savedIds.length) {
@@ -310,18 +315,31 @@ function MarketplacePage() {
           }
 
           if (needsAdminData && roles.includes("admin")) {
-            const [adminProductRows, adminOrderRows, appRows] = await Promise.all([
+            const [adminProductRows, adminOrderRows, appRows, storeRows, orderCount, completedCount, productCount, activeStoreCount] = await Promise.all([
               supabase.from("products").select("id,title_bn,price,stock,status,seller_stores(name,is_demo)").order("created_at",{ascending:false}).limit(100),
               supabase.from("orders").select("id,order_no,is_demo,status,total,recipient,phone,area,created_at,order_items(id,title,unit_price,quantity,status)").order("created_at",{ascending:false}).limit(100),
-              supabase.from("seller_applications").select("*").order("created_at",{ascending:false}).limit(100)
+              supabase.from("seller_applications").select("*").order("created_at",{ascending:false}).limit(100),
+              supabase.from("seller_stores").select("id,name,slug,area,status,is_demo,created_at").order("created_at",{ascending:false}).limit(100),
+              supabase.from("orders").select("id",{count:"exact",head:true}),
+              supabase.from("orders").select("id",{count:"exact",head:true}).eq("status","delivered"),
+              supabase.from("products").select("id",{count:"exact",head:true}),
+              supabase.from("seller_stores").select("id",{count:"exact",head:true}).eq("status","active")
             ]);
-            if (adminProductRows.error) throw adminProductRows.error;
-            if (adminOrderRows.error) throw adminOrderRows.error;
-            if (appRows.error) throw appRows.error;
+            for (const result of [adminProductRows,adminOrderRows,appRows,storeRows,orderCount,completedCount,productCount,activeStoreCount]) if (result.error) throw result.error;
+            let completedSales = 0;
+            for (let offset = 0; ; offset += 1000) {
+              const deliveredRows = await supabase.from("orders").select("total").eq("status","delivered").range(offset, offset + 999);
+              if (deliveredRows.error) throw deliveredRows.error;
+              const batch = deliveredRows.data ?? [];
+              completedSales += batch.reduce((sum:number, order:any) => sum + Number(order.total || 0), 0);
+              if (batch.length < 1000) break;
+            }
             if (!alive) return;
             setAdminProducts(adminProductRows.data ?? []);
             setAdminOrders(adminOrderRows.data ?? []);
             setApplications(appRows.data ?? []);
+            setAdminStores(storeRows.data ?? []);
+            setAdminStats({ totalOrders: orderCount.count ?? 0, completedOrders: completedCount.count ?? 0, completedSales, totalProducts: productCount.count ?? 0, activeStores: activeStoreCount.count ?? 0 });
           }
 
           if (page === "seller-dashboard" && storeRow.data) {
