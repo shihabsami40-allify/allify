@@ -158,35 +158,35 @@ function Index() {
         </nav>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 pb-16 pt-5 md:px-6 md:pt-7">
-        <section className="relative isolate grid min-h-[270px] overflow-hidden rounded-[28px] border border-white/10 px-6 py-8 text-white shadow-[0_18px_45px_rgba(18,59,50,0.13)] md:grid-cols-[1.2fr_.8fr] md:items-center md:px-11 md:py-10" style={{ background: "radial-gradient(circle at 92% 8%,rgba(217,243,106,.16),transparent 28%),linear-gradient(118deg,#10382f 0%,#155342 58%,#1d6650 100%)" }}>
+      <main className="mx-auto max-w-6xl px-4 pb-24 pt-5 md:px-6 md:pt-8">
+        <section className="relative isolate grid min-h-[430px] overflow-hidden rounded-[30px] border border-white/10 px-6 py-7 text-white shadow-[0_24px_60px_rgba(18,59,50,0.20)] md:min-h-[390px] md:grid-cols-[1.05fr_.95fr] md:items-center md:px-12 md:py-10" style={{ background: "radial-gradient(circle at 82% 24%,rgba(217,243,106,.20),transparent 26%),radial-gradient(circle at 12% 100%,rgba(255,255,255,.08),transparent 36%),linear-gradient(125deg,#0b3028 0%,#14513f 54%,#1d7057 100%)" }}>
           <div>
-            <p className="inline-flex rounded-full border border-[#d9f36a]/30 bg-white/5 px-3 py-1.5 text-[10px] font-extrabold tracking-[.16em]" style={{ color: "#d9f36a" }}>YOUR CITY · YOUR SHOPS · YOUR MARKETPLACE</p>
-            <h1 className="mt-4 max-w-xl text-[32px] font-extrabold leading-[1.22] tracking-tight md:text-5xl md:leading-tight">চট্টগ্রামের কেনাকাটা, এখন এক ঠিকানায়</h1>
-            <p className="mt-4 max-w-xl text-[14px] leading-7 md:text-base" style={{ color: "#d2e2db" }}>আপনার পরিচিত স্থানীয় দোকান থেকে পছন্দের পণ্য খুঁজুন। সহজ অর্ডার, ক্যাশ অন ডেলিভারি এবং স্থানীয় ব্যবসাকে এগিয়ে নেওয়ার নতুন সুযোগ।</p>
-            <a href="/market" className="mt-6 inline-flex items-center gap-2 rounded-xl px-5 py-3.5 text-sm font-extrabold shadow-[0_8px_22px_rgba(217,243,106,.18)] transition hover:-translate-y-0.5 hover:shadow-lg" style={{ background: "#d9f36a", color: "#1c2b20" }}>কেনাকাটা শুরু করুন <span aria-hidden="true">→</span></a>
+            <p className="inline-flex items-center gap-2 rounded-full border border-[#d9f36a]/35 bg-white/[0.08] px-3.5 py-2 text-[10px] font-extrabold tracking-[.13em] shadow-sm" style={{ color: "#e1f77a" }}><span className="h-1.5 w-1.5 rounded-full bg-[#d9f36a]" /> CHITTAGONG LOCAL MARKETPLACE</p>
+            <h1 className="mt-5 max-w-xl text-[34px] font-black leading-[1.2] tracking-tight md:text-[54px] md:leading-[1.15]">চট্টগ্রামের কেনাকাটা,<br className="hidden md:block" /> <span style={{ color: "#d9f36a" }}>এখন এক ঠিকানায়</span></h1>
+            <p className="mt-4 max-w-xl text-[14px] leading-7 md:text-base md:leading-8" style={{ color: "#d7e8df" }}>চট্টগ্রামের পরিচিত দোকান ও পছন্দের পণ্য—সব এক জায়গায়। সহজে পণ্য খুঁজুন, অর্ডার করুন এবং স্থানীয় ব্যবসার সঙ্গে যুক্ত থাকুন।</p>
+            <div className="mt-6 flex flex-wrap items-center gap-3"><a href="/market" className="inline-flex items-center gap-3 rounded-xl px-5 py-3.5 text-sm font-extrabold shadow-[0_10px_28px_rgba(217,243,106,.22)] transition hover:-translate-y-0.5" style={{ background: "#d9f36a", color: "#1c2b20" }}>কেনাকাটা শুরু করুন <span aria-hidden="true">↗</span></a><a href="/seller" className="inline-flex items-center rounded-xl border border-white/25 bg-white/[0.07] px-4 py-3.5 text-xs font-bold text-white transition hover:bg-white/15">বিক্রেতা হোন</a></div>
           </div>
-          <div className="hidden items-center justify-center md:flex">
-            <div className="relative grid h-56 w-56 place-items-center rounded-full border" style={{ borderColor: "#6d9787" }}>
-              <div className="absolute inset-5 rounded-full border" style={{ borderColor: "#6d9787" }} />
-              <div className="absolute inset-10 rounded-full border" style={{ borderColor: "#6d9787" }} />
-              <div className="z-10 grid h-28 w-28 place-items-center rounded-2xl text-5xl font-black shadow-2xl" style={{ background: "#d9f36a", color: "#123b32" }}>A</div>
-              <span className="absolute -right-4 top-7 rounded-lg bg-white px-3 py-2 text-xs font-bold shadow-lg" style={{ color: "#123b32" }}>স্থানীয় দোকান</span>
-              <span className="absolute -bottom-2 -left-5 rounded-lg bg-white px-3 py-2 text-xs font-bold shadow-lg" style={{ color: "#123b32" }}>সহজ অনলাইন অর্ডার</span>
+          <div className="relative mt-8 flex min-h-[205px] items-center justify-center md:mt-0 md:min-h-[300px]">
+            <div className="relative grid h-56 w-56 place-items-center rounded-full border border-white/20 bg-white/[0.035] shadow-[0_0_70px_rgba(217,243,106,.10)] md:h-64 md:w-64" style={{ borderColor: "rgba(216,239,224,.28)" }}>
+              <div className="absolute inset-5 rounded-full border border-dashed" style={{ borderColor: "rgba(216,239,224,.35)" }} />
+              <div className="absolute inset-10 rounded-full border" style={{ borderColor: "rgba(216,239,224,.25)" }} />
+              <div className="z-10 grid h-28 w-28 place-items-center rounded-[28px] border-4 border-white/20 text-5xl font-black shadow-2xl md:h-32 md:w-32" style={{ background: "linear-gradient(145deg,#e7ff8a,#c5e64f)", color: "#123b32" }}>A</div>
+              <span className="absolute -right-5 top-8 rounded-xl border border-white/60 bg-white px-3.5 py-2.5 text-[11px] font-extrabold shadow-xl" style={{ color: "#123b32" }}>🏬 স্থানীয় দোকান</span>
+              <span className="absolute -bottom-2 -left-6 rounded-xl border border-white/60 bg-white px-3.5 py-2.5 text-[11px] font-extrabold shadow-xl" style={{ color: "#123b32" }}>🛍️ সহজ অনলাইন অর্ডার</span><span className="absolute -left-5 top-1/2 -translate-y-1/2 rounded-xl bg-[#d9f36a] px-3 py-2 text-[11px] font-extrabold shadow-xl" style={{ color: "#123b32" }}>⌚ পছন্দের পণ্য</span>
             </div>
           </div>
         </section>
 
-        <div id="categories" className="mb-4 mt-10 flex items-end justify-between">
+        <div className="mb-4 mt-10 flex items-end justify-between md:mt-14"><div><span className="mb-2 inline-block text-[10px] font-extrabold tracking-[.18em] text-[#6b8b7b]">DISCOVER ALLIFY</span><div id="categories" className="flex items-end justify-between">
           <div><h2 className="text-xl font-extrabold tracking-tight md:text-2xl">ক্যাটাগরি থেকে খুঁজুন</h2><p className="mt-1 text-xs" style={{ color: "#687571" }}>আপনার পছন্দের পণ্য এক জায়গায়</p></div>
           <a href="/market" className="text-xs font-extrabold" style={{ color: "#1b594a" }}>সব দেখুন →</a>
         </div>
-        <section className="grid grid-cols-3 gap-2.5 md:grid-cols-6 md:gap-3">
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 md:gap-4">
           {cats.isLoading && <p className="col-span-full py-5 text-center text-sm" style={{ color: "#687571" }}>ক্যাটাগরি লোড হচ্ছে…</p>}
           {cats.error && <p className="col-span-full py-5 text-center text-sm text-red-600">ক্যাটাগরি লোড করা যায়নি।</p>}
           {categoryList.map((cat) => (
-            <a key={cat.id} href={"/category?category=" + encodeURIComponent(cat.slug)} className="rounded-2xl border bg-white px-2 py-4 text-center shadow-[0_3px_14px_rgba(18,59,50,0.035)] transition hover:-translate-y-1 hover:shadow-lg" style={{ borderColor: "#e5ece7" }}>
-              <span className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-2xl text-2xl shadow-inner" style={{ background: "linear-gradient(145deg,#f2f7ed,#e8f0e3)" }}>{categoryIcons[cat.name_bn] || "🛍️"}</span>
+            <a key={cat.id} href={"/category?category=" + encodeURIComponent(cat.slug)} className="group rounded-[22px] border bg-white px-3 py-5 text-center shadow-[0_5px_22px_rgba(18,59,50,0.055)] transition duration-200 hover:-translate-y-1 hover:border-[#b8cdbf] hover:shadow-[0_14px_30px_rgba(18,59,50,0.10)]" style={{ borderColor: "#e5ece7" }}>
+              <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-[19px] text-[28px] shadow-inner transition group-hover:scale-105" style={{ background: "linear-gradient(145deg,#f4f8ee,#e5efdf)" }}>{categoryIcons[cat.name_bn] || "🛍️"}</span>
               <b className="text-sm">{cat.name_bn}</b>
               <small className="mt-1 block text-[10px]" style={{ color: "#687571" }}>{cat.name_en || "পছন্দের পণ্য"}</small>
             </a>
@@ -194,12 +194,12 @@ function Index() {
           {!cats.isLoading && !cats.error && categoryList.length === 0 && <p className="col-span-full rounded-xl bg-white p-5 text-center text-sm" style={{ color: "#687571" }}>ক্যাটাগরি শিগগিরই যোগ করা হবে।</p>}
         </section>
 
-        <section id="local" className="mt-8 flex items-center justify-between gap-3 rounded-2xl border px-4 py-5 shadow-sm md:px-6" style={{ background: "linear-gradient(110deg,#edf4e8,#f5f8ef)", borderColor: "#e0ead8" }}>
+        <section id="local" className="relative mt-10 flex items-center justify-between gap-4 overflow-hidden rounded-[26px] border px-5 py-6 shadow-[0_12px_32px_rgba(18,59,50,0.07)] md:px-8" style={{ background: "linear-gradient(110deg,#eaf3e6,#f7f9f2)", borderColor: "#dce8d8" }}>
           <div><strong className="text-sm md:text-base" style={{ color: "#123b32" }}>চট্টগ্রামের স্থানীয় ব্যবসাকে সমর্থন করুন</strong><span className="mt-1 block text-xs" style={{ color: "#637269" }}>স্থানীয় বিক্রেতাদের পণ্য আবিষ্কার করুন — এক প্ল্যাটফর্মে।</span></div>
-          <span className="text-2xl">📍</span>
+          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white text-3xl shadow-sm">📍</span>
         </section>
 
-        <div id="products" className="mb-4 mt-10 flex items-end justify-between">
+        <div id="products" className="mb-4 mt-12 flex items-end justify-between">
           <div><h2 className="text-xl font-extrabold tracking-tight md:text-2xl">জনপ্রিয় পণ্য</h2><p className="mt-1 text-xs" style={{ color: "#687571" }}>ALLIFY-তে যা যা খুঁজে পেতে পারেন</p></div>
           <a href="/market" className="text-xs font-extrabold" style={{ color: "#1b594a" }}>সব পণ্য →</a>
         </div>
@@ -207,9 +207,9 @@ function Index() {
         {prods.error && <p className="rounded-xl bg-white p-5 text-sm text-red-600">পণ্য লোড করা যায়নি। অনুগ্রহ করে পরে আবার চেষ্টা করুন।</p>}
         <section className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
           {prods.data?.map((product) => (
-            <article key={product.id} className="overflow-hidden rounded-2xl border bg-white shadow-[0_4px_18px_rgba(18,59,50,0.045)] transition hover:-translate-y-1 hover:shadow-lg" style={{ borderColor: "#e5ece7" }}>
+            <article key={product.id} className="group overflow-hidden rounded-[22px] border bg-white shadow-[0_7px_24px_rgba(18,59,50,0.06)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(18,59,50,0.12)]" style={{ borderColor: "#e5ece7" }}>
               <a href={"/product?slug=" + encodeURIComponent(product.slug)} className="block">
-                <div className="grid aspect-square w-full place-items-center overflow-hidden bg-gradient-to-br from-[#f5f7f4] to-[#e9efea] p-3">
+                <div className="grid aspect-square w-full place-items-center overflow-hidden bg-gradient-to-br from-[#f7f9f5] via-[#f0f4ee] to-[#e5ede5] p-3">
                   {product.product_images?.[0]?.url
                     ? <img src={product.product_images[0].url} alt={product.title_bn} loading="lazy" className="h-full w-full object-contain" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                     : <span className="text-5xl">🛍️</span>}
@@ -224,16 +224,16 @@ function Index() {
                 {product.compare_price ? <s className="mt-0.5 block text-[10px] text-gray-400">{bdt(product.compare_price)}</s> : null}
               </div>
               <div className="px-3 pb-3">
-                <button type="button" disabled={!canPurchaseProduct(product)} onClick={() => addToCart(product)} className="w-full rounded-lg border py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: "#cbd9d0", color: "#123b32" }}>{product.seller_stores?.is_demo ? "নমুনা পণ্য — অর্ডার বন্ধ" : "কার্টে যোগ করুন"}</button>
+                <button type="button" disabled={!canPurchaseProduct(product)} onClick={() => addToCart(product)} className="w-full rounded-xl border py-2.5 text-xs font-extrabold transition hover:bg-[#123b32] hover:text-white disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: "#cbd9d0", color: "#123b32" }}>{product.seller_stores?.is_demo ? "নমুনা পণ্য — অর্ডার বন্ধ" : "কার্টে যোগ করুন"}</button>
               </div>
             </article>
           ))}
           {!prods.isLoading && !prods.error && (prods.data?.length ?? 0) === 0 && <p className="col-span-full rounded-xl border bg-white p-7 text-center text-sm" style={{ borderColor: "#e8eeeb", color: "#687571" }}>জনপ্রিয় পণ্য শিগগিরই এখানে দেখা যাবে।</p>}
         </section>
 
-        <section id="seller" className="mt-10 flex flex-col items-start justify-between gap-4 rounded-[24px] border border-white/10 px-6 py-7 text-white shadow-[0_14px_35px_rgba(18,59,50,0.12)] md:flex-row md:items-center md:px-8" style={{ background: "linear-gradient(115deg,#10382f,#1d6650)" }}>
+        <section id="seller" className="relative mt-12 flex flex-col items-start justify-between gap-5 overflow-hidden rounded-[28px] border border-white/10 px-6 py-8 text-white shadow-[0_20px_48px_rgba(18,59,50,0.18)] md:flex-row md:items-center md:px-9" style={{ background: "radial-gradient(circle at 92% 10%,rgba(217,243,106,.18),transparent 30%),linear-gradient(115deg,#0d332b,#1d6650)" }}>
           <div><h2 className="text-xl font-extrabold">আপনি কি চট্টগ্রামের ব্যবসায়ী?</h2><p className="mt-2 text-xs leading-6" style={{ color: "#d2e2db" }}>ALLIFY-তে আপনার দোকান যুক্ত করুন। প্রাথমিক পর্যায়ে বিক্রেতা নিবন্ধন সম্পূর্ণ ফ্রি।</p></div>
-          <a href="/seller" className="shrink-0 rounded-lg bg-white px-4 py-3 text-xs font-extrabold" style={{ color: "#123b32" }}>বিক্রেতা হিসেবে যুক্ত হোন →</a>
+          <a href="/seller" className="shrink-0 rounded-xl px-5 py-3.5 text-xs font-extrabold shadow-lg transition hover:-translate-y-0.5" style={{ background: "#d9f36a", color: "#123b32" }}>বিক্রেতা হিসেবে যুক্ত হোন →</a>
         </section>
       </main>
 
