@@ -129,26 +129,26 @@ function Index() {
 
   return (
     <div className="min-h-screen" style={{ background: "#f7f9f7", color: "#18211f" }}>
-      <div className="px-3 py-2 text-center text-xs" style={{ background: "#123b32", color: "#e9f2ed" }}>
+      <div className="px-3 py-2 text-center text-[11px] font-medium tracking-wide" style={{ background: "#10382f", color: "#e9f2ed" }}>
         চট্টগ্রামের ব্যবসা, চট্টগ্রামের মানুষের জন্য — স্থানীয় কেনাকাটার নতুন ঠিকানা
       </div>
 
-      <header className="sticky top-0 z-20 border-b bg-white/95 backdrop-blur" style={{ borderColor: "#e8eeeb" }}>
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 md:gap-6 md:px-6">
-          <a href="/" className="shrink-0 font-black tracking-wide" style={{ color: "#123b32", fontSize: 25 }}>
+      <header className="sticky top-0 z-20 border-b bg-white/95 shadow-[0_5px_22px_rgba(18,59,50,0.045)] backdrop-blur" style={{ borderColor: "#e8eeeb" }}>
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3.5 md:gap-6 md:px-6">
+          <a href="/" className="shrink-0 font-black tracking-[.06em]" style={{ color: "#123b32", fontSize: 26 }}>
             ALLI<span style={{ color: "#9bbd31" }}>F</span>Y
             <span className="block -mt-1 text-[9px] font-medium tracking-[.18em]" style={{ color: "#687571" }}>YOUR LOCAL MARKETPLACE</span>
           </a>
-          <form action="/search" className="order-3 flex w-full flex-1 rounded-xl border p-1 md:order-none md:min-w-0" style={{ background: "#f2f5f3", borderColor: "#e9efeb" }}>
-            <input name="q" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="পণ্য খুঁজুন" placeholder="পণ্য, দোকান বা ক্যাটাগরি খুঁজুন..." className="min-w-0 flex-1 bg-transparent px-2 text-sm outline-none" />
-            <button className="rounded-lg px-4 py-2 text-sm font-semibold text-white" style={{ background: "#123b32" }}>খুঁজুন</button>
+          <form action="/search" className="order-3 flex w-full flex-1 rounded-2xl border p-1.5 shadow-sm md:order-none md:min-w-0" style={{ background: "#f6f8f6", borderColor: "#e5ece7" }}>
+            <input name="q" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="পণ্য খুঁজুন" placeholder="পণ্য, দোকান বা ক্যাটাগরি খুঁজুন..." className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-[#89948e]" />
+            <button className="rounded-xl px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:brightness-110" style={{ background: "#123b32" }}>খুঁজুন</button>
           </form>
           <div className="ml-auto flex items-center gap-3 text-sm">
             <a href="/account" className="hidden sm:inline">অ্যাকাউন্ট</a>
             <a href="/cart" className="hidden sm:inline-flex rounded-lg px-3 py-2 font-semibold" style={{ background: "#f0f5eb", color: "#123b32" }}>🛒 কার্ট ({cartCount.toLocaleString("bn-BD")})</a>
           </div>
         </div>
-        <nav className="mx-auto flex max-w-6xl gap-5 overflow-x-auto whitespace-nowrap px-4 pb-3 text-xs md:px-6" style={{ color: "#52615b" }}>
+        <nav className="mx-auto flex max-w-6xl gap-6 overflow-x-auto whitespace-nowrap px-4 pb-3.5 text-xs font-semibold md:px-6" style={{ color: "#52615b" }}>
           <a href="/market">সব পণ্য</a>
           <a href="#categories">ক্যাটাগরি</a>
           <a href="#local">স্থানীয় দোকান</a>
@@ -158,13 +158,13 @@ function Index() {
         </nav>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 pb-14 pt-5 md:px-6">
-        <section className="grid min-h-[260px] overflow-hidden rounded-[22px] px-6 py-8 text-white md:grid-cols-[1.2fr_.8fr] md:items-center md:px-11 md:py-10" style={{ background: "linear-gradient(115deg,#123b32,#1d6650)" }}>
+      <main className="mx-auto max-w-6xl px-4 pb-16 pt-5 md:px-6 md:pt-7">
+        <section className="relative isolate grid min-h-[270px] overflow-hidden rounded-[28px] border border-white/10 px-6 py-8 text-white shadow-[0_18px_45px_rgba(18,59,50,0.13)] md:grid-cols-[1.2fr_.8fr] md:items-center md:px-11 md:py-10" style={{ background: "radial-gradient(circle at 92% 8%,rgba(217,243,106,.16),transparent 28%),linear-gradient(118deg,#10382f 0%,#155342 58%,#1d6650 100%)" }}>
           <div>
-            <p className="text-xs font-bold tracking-widest" style={{ color: "#d9f36a" }}>YOUR CITY. YOUR SHOPS. YOUR MARKETPLACE.</p>
-            <h1 className="mt-3 max-w-xl text-3xl font-extrabold leading-tight md:text-5xl">চট্টগ্রামের কেনাকাটা, এখন এক ঠিকানায়</h1>
-            <p className="mt-3 max-w-xl text-sm leading-7" style={{ color: "#d2e2db" }}>আপনার পরিচিত স্থানীয় দোকান থেকে পছন্দের পণ্য খুঁজুন। সহজ অর্ডার, ক্যাশ অন ডেলিভারি এবং স্থানীয় ব্যবসাকে এগিয়ে নেওয়ার নতুন সুযোগ।</p>
-            <a href="/market" className="mt-4 inline-flex rounded-lg px-5 py-3 text-sm font-extrabold" style={{ background: "#d9f36a", color: "#1c2b20" }}>কেনাকাটা শুরু করুন →</a>
+            <p className="inline-flex rounded-full border border-[#d9f36a]/30 bg-white/5 px-3 py-1.5 text-[10px] font-extrabold tracking-[.16em]" style={{ color: "#d9f36a" }}>YOUR CITY · YOUR SHOPS · YOUR MARKETPLACE</p>
+            <h1 className="mt-4 max-w-xl text-[32px] font-extrabold leading-[1.22] tracking-tight md:text-5xl md:leading-tight">চট্টগ্রামের কেনাকাটা, এখন এক ঠিকানায়</h1>
+            <p className="mt-4 max-w-xl text-[14px] leading-7 md:text-base" style={{ color: "#d2e2db" }}>আপনার পরিচিত স্থানীয় দোকান থেকে পছন্দের পণ্য খুঁজুন। সহজ অর্ডার, ক্যাশ অন ডেলিভারি এবং স্থানীয় ব্যবসাকে এগিয়ে নেওয়ার নতুন সুযোগ।</p>
+            <a href="/market" className="mt-6 inline-flex items-center gap-2 rounded-xl px-5 py-3.5 text-sm font-extrabold shadow-[0_8px_22px_rgba(217,243,106,.18)] transition hover:-translate-y-0.5 hover:shadow-lg" style={{ background: "#d9f36a", color: "#1c2b20" }}>কেনাকাটা শুরু করুন <span aria-hidden="true">→</span></a>
           </div>
           <div className="hidden items-center justify-center md:flex">
             <div className="relative grid h-56 w-56 place-items-center rounded-full border" style={{ borderColor: "#6d9787" }}>
@@ -177,16 +177,16 @@ function Index() {
           </div>
         </section>
 
-        <div id="categories" className="mb-4 mt-9 flex items-end justify-between">
-          <div><h2 className="text-xl font-bold">ক্যাটাগরি থেকে খুঁজুন</h2><p className="mt-1 text-xs" style={{ color: "#687571" }}>আপনার পছন্দের পণ্য এক জায়গায়</p></div>
+        <div id="categories" className="mb-4 mt-10 flex items-end justify-between">
+          <div><h2 className="text-xl font-extrabold tracking-tight md:text-2xl">ক্যাটাগরি থেকে খুঁজুন</h2><p className="mt-1 text-xs" style={{ color: "#687571" }}>আপনার পছন্দের পণ্য এক জায়গায়</p></div>
           <a href="/market" className="text-xs font-extrabold" style={{ color: "#1b594a" }}>সব দেখুন →</a>
         </div>
         <section className="grid grid-cols-3 gap-2.5 md:grid-cols-6 md:gap-3">
           {cats.isLoading && <p className="col-span-full py-5 text-center text-sm" style={{ color: "#687571" }}>ক্যাটাগরি লোড হচ্ছে…</p>}
           {cats.error && <p className="col-span-full py-5 text-center text-sm text-red-600">ক্যাটাগরি লোড করা যায়নি।</p>}
           {categoryList.map((cat) => (
-            <a key={cat.id} href={"/category?category=" + encodeURIComponent(cat.slug)} className="rounded-2xl border bg-white px-2 py-4 text-center transition hover:-translate-y-1 hover:shadow-lg" style={{ borderColor: "#e8eeeb" }}>
-              <span className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-2xl text-2xl" style={{ background: "#eff5e9" }}>{categoryIcons[cat.name_bn] || "🛍️"}</span>
+            <a key={cat.id} href={"/category?category=" + encodeURIComponent(cat.slug)} className="rounded-2xl border bg-white px-2 py-4 text-center shadow-[0_3px_14px_rgba(18,59,50,0.035)] transition hover:-translate-y-1 hover:shadow-lg" style={{ borderColor: "#e5ece7" }}>
+              <span className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-2xl text-2xl shadow-inner" style={{ background: "linear-gradient(145deg,#f2f7ed,#e8f0e3)" }}>{categoryIcons[cat.name_bn] || "🛍️"}</span>
               <b className="text-sm">{cat.name_bn}</b>
               <small className="mt-1 block text-[10px]" style={{ color: "#687571" }}>{cat.name_en || "পছন্দের পণ্য"}</small>
             </a>
@@ -194,22 +194,22 @@ function Index() {
           {!cats.isLoading && !cats.error && categoryList.length === 0 && <p className="col-span-full rounded-xl bg-white p-5 text-center text-sm" style={{ color: "#687571" }}>ক্যাটাগরি শিগগিরই যোগ করা হবে।</p>}
         </section>
 
-        <section id="local" className="mt-7 flex items-center justify-between gap-3 rounded-2xl border px-4 py-4 md:px-5" style={{ background: "#edf4e8", borderColor: "#e0ead8" }}>
+        <section id="local" className="mt-8 flex items-center justify-between gap-3 rounded-2xl border px-4 py-5 shadow-sm md:px-6" style={{ background: "linear-gradient(110deg,#edf4e8,#f5f8ef)", borderColor: "#e0ead8" }}>
           <div><strong className="text-sm md:text-base" style={{ color: "#123b32" }}>চট্টগ্রামের স্থানীয় ব্যবসাকে সমর্থন করুন</strong><span className="mt-1 block text-xs" style={{ color: "#637269" }}>স্থানীয় বিক্রেতাদের পণ্য আবিষ্কার করুন — এক প্ল্যাটফর্মে।</span></div>
           <span className="text-2xl">📍</span>
         </section>
 
-        <div id="products" className="mb-4 mt-9 flex items-end justify-between">
-          <div><h2 className="text-xl font-bold">জনপ্রিয় পণ্য</h2><p className="mt-1 text-xs" style={{ color: "#687571" }}>ALLIFY-তে যা যা খুঁজে পেতে পারেন</p></div>
+        <div id="products" className="mb-4 mt-10 flex items-end justify-between">
+          <div><h2 className="text-xl font-extrabold tracking-tight md:text-2xl">জনপ্রিয় পণ্য</h2><p className="mt-1 text-xs" style={{ color: "#687571" }}>ALLIFY-তে যা যা খুঁজে পেতে পারেন</p></div>
           <a href="/market" className="text-xs font-extrabold" style={{ color: "#1b594a" }}>সব পণ্য →</a>
         </div>
         {prods.isLoading && <p className="py-6 text-center text-sm" style={{ color: "#687571" }}>পণ্য লোড হচ্ছে…</p>}
         {prods.error && <p className="rounded-xl bg-white p-5 text-sm text-red-600">পণ্য লোড করা যায়নি। অনুগ্রহ করে পরে আবার চেষ্টা করুন।</p>}
         <section className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
           {prods.data?.map((product) => (
-            <article key={product.id} className="overflow-hidden rounded-2xl border bg-white transition hover:-translate-y-1 hover:shadow-lg" style={{ borderColor: "#e8eeeb" }}>
+            <article key={product.id} className="overflow-hidden rounded-2xl border bg-white shadow-[0_4px_18px_rgba(18,59,50,0.045)] transition hover:-translate-y-1 hover:shadow-lg" style={{ borderColor: "#e5ece7" }}>
               <a href={"/product?slug=" + encodeURIComponent(product.slug)} className="block">
-                <div className="grid aspect-square w-full place-items-center overflow-hidden bg-gradient-to-br from-[#f0f3ef] to-[#e6ece7] p-3">
+                <div className="grid aspect-square w-full place-items-center overflow-hidden bg-gradient-to-br from-[#f5f7f4] to-[#e9efea] p-3">
                   {product.product_images?.[0]?.url
                     ? <img src={product.product_images[0].url} alt={product.title_bn} loading="lazy" className="h-full w-full object-contain" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                     : <span className="text-5xl">🛍️</span>}
@@ -231,13 +231,13 @@ function Index() {
           {!prods.isLoading && !prods.error && (prods.data?.length ?? 0) === 0 && <p className="col-span-full rounded-xl border bg-white p-7 text-center text-sm" style={{ borderColor: "#e8eeeb", color: "#687571" }}>জনপ্রিয় পণ্য শিগগিরই এখানে দেখা যাবে।</p>}
         </section>
 
-        <section id="seller" className="mt-9 flex flex-col items-start justify-between gap-4 rounded-2xl px-6 py-6 text-white md:flex-row md:items-center md:px-7" style={{ background: "#123b32" }}>
+        <section id="seller" className="mt-10 flex flex-col items-start justify-between gap-4 rounded-[24px] border border-white/10 px-6 py-7 text-white shadow-[0_14px_35px_rgba(18,59,50,0.12)] md:flex-row md:items-center md:px-8" style={{ background: "linear-gradient(115deg,#10382f,#1d6650)" }}>
           <div><h2 className="text-xl font-extrabold">আপনি কি চট্টগ্রামের ব্যবসায়ী?</h2><p className="mt-2 text-xs leading-6" style={{ color: "#d2e2db" }}>ALLIFY-তে আপনার দোকান যুক্ত করুন। প্রাথমিক পর্যায়ে বিক্রেতা নিবন্ধন সম্পূর্ণ ফ্রি।</p></div>
           <a href="/seller" className="shrink-0 rounded-lg bg-white px-4 py-3 text-xs font-extrabold" style={{ color: "#123b32" }}>বিক্রেতা হিসেবে যুক্ত হোন →</a>
         </section>
       </main>
 
-      <footer className="px-5 py-8 text-white" style={{ background: "#0e2e27" }}>
+      <footer className="px-5 py-9 text-white" style={{ background: "#0b2923" }}>
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-5">
           <div><b className="text-xl tracking-wider">ALLIFY</b><p className="mt-1 text-xs" style={{ color: "#a9c0b5" }}>Your Local Marketplace</p><p className="mt-2 text-xs" style={{ color: "#a9c0b5" }}>চট্টগ্রামের স্থানীয় ব্যবসার ডিজিটাল ঠিকানা।</p></div>
           <div className="flex flex-col items-start gap-2 text-xs sm:items-end">
