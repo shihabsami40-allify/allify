@@ -238,9 +238,12 @@ function Index() {
       </main>
 
       <footer className="px-5 py-8 text-white" style={{ background: "#0e2e27" }}>
-        <div className="mx-auto flex max-w-6xl flex-wrap items-start justify-between gap-5">
-          <div><b className="text-xl tracking-wider">ALLIFY</b><p className="mt-1 text-xs" style={{ color: "#a9c0b5" }}>Your Local Marketplace</p></div>
-          <div className="text-xs leading-6" style={{ color: "#a9c0b5" }}>চট্টগ্রামের স্থানীয় ব্যবসার ডিজিটাল ঠিকানা।<br />© ALLIFY · চট্টগ্রাম জেলা · ক্যাশ অন ডেলিভারি</div>
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-5">
+          <div><b className="text-xl tracking-wider">ALLIFY</b><p className="mt-1 text-xs" style={{ color: "#a9c0b5" }}>Your Local Marketplace</p><p className="mt-2 text-xs" style={{ color: "#a9c0b5" }}>চট্টগ্রামের স্থানীয় ব্যবসার ডিজিটাল ঠিকানা।</p></div>
+          <div className="flex flex-col items-start gap-2 text-xs sm:items-end">
+            <a href="/help" className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 font-semibold text-white transition hover:bg-white/10"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><path d="M4 12H3a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2v-6Zm16 0h1a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2v-6Z"/><path d="M18 19a6 6 0 0 1-6 3h-1"/></svg>হেল্প ও সাপোর্ট</a>
+            <span style={{ color: "#a9c0b5" }}>© ALLIFY · চট্টগ্রাম জেলা · ক্যাশ অন ডেলিভারি</span>
+          </div>
         </div>
       </footer>
 
@@ -250,6 +253,10 @@ function Index() {
         <a href="/cart" className="flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px]" style={{ color: "#687571" }}><span aria-hidden="true" className="text-lg leading-5">🛒</span><span>কার্ট ({cartCount.toLocaleString("bn-BD")})</span></a>
         <a href="/account" className="flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px]" style={{ color: "#687571" }}><span aria-hidden="true" className="text-lg leading-5">♙</span><span>অ্যাকাউন্ট</span></a>
       </nav>
+      <a href="https://wa.me/8801862054563?text=Hello%20ALLIFY%20Support%2C%20I%20need%20assistance." target="_blank" rel="noopener noreferrer" aria-label="WhatsApp-এ ALLIFY সাপোর্টে যোগাযোগ করুন" title="WhatsApp Support" className="fixed bottom-[5.25rem] right-4 z-30 inline-flex items-center gap-2 rounded-full bg-[#16834b] py-3 pl-3 pr-4 text-sm font-bold text-white shadow-[0_8px_24px_rgba(0,0,0,0.22)] ring-2 ring-white transition hover:-translate-y-0.5 hover:bg-[#116b3d] sm:bottom-6 sm:right-6">
+        <svg aria-hidden="true" viewBox="0 0 32 32" className="h-6 w-6" fill="currentColor"><path d="M16.02 3.2A12.7 12.7 0 0 0 5.1 22.38L3.4 28.6l6.38-1.67A12.7 12.7 0 1 0 16.02 3.2Zm0 23.1a10.36 10.36 0 0 1-5.28-1.45l-.38-.22-3.79.99 1.01-3.69-.25-.4a10.4 10.4 0 1 1 8.69 4.77Zm5.7-7.78c-.31-.16-1.84-.91-2.13-1.02-.29-.1-.5-.16-.71.16-.21.31-.81 1.02-.99 1.23-.18.21-.36.23-.67.08-.31-.16-1.31-.48-2.49-1.52-.92-.82-1.54-1.83-1.72-2.14-.18-.31-.02-.48.14-.64.14-.14.31-.36.47-.54.16-.18.21-.31.31-.52.1-.21.05-.39-.03-.54-.08-.16-.71-1.7-.97-2.33-.25-.61-.51-.52-.71-.53h-.6c-.21 0-.54.08-.83.39-.29.31-1.09 1.07-1.09 2.61s1.12 3.03 1.28 3.24c.16.21 2.2 3.36 5.33 4.71.74.32 1.32.51 1.77.65.74.24 1.41.21 1.94.13.59-.09 1.84-.75 2.1-1.48.26-.73.26-1.36.18-1.49-.08-.13-.29-.21-.6-.37Z"/></svg>
+        <span>সাহায্য লাগবে?</span>
+      </a>
       {toast && <div role="status" className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-xl px-5 py-3 text-sm text-white shadow-xl" style={{ background: "#0e2e27" }}>{toast}</div>}
     </div>
   );
