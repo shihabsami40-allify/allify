@@ -180,7 +180,7 @@ function Index() {
         <div className="mb-4 mt-10 flex items-end justify-between md:mt-14"><div><span className="mb-2 inline-block text-[10px] font-extrabold tracking-[.18em] text-[#6b8b7b]">DISCOVER ALLIFY</span><div id="categories" className="flex items-end justify-between">
           <div><h2 className="text-xl font-extrabold tracking-tight md:text-2xl">ক্যাটাগরি থেকে খুঁজুন</h2><p className="mt-1 text-xs" style={{ color: "#687571" }}>আপনার পছন্দের পণ্য এক জায়গায়</p></div>
           <a href="/market" className="text-xs font-extrabold" style={{ color: "#1b594a" }}>সব দেখুন →</a>
-        </div>
+        </div></div>
         <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 md:gap-4">
           {cats.isLoading && <p className="col-span-full py-5 text-center text-sm" style={{ color: "#687571" }}>ক্যাটাগরি লোড হচ্ছে…</p>}
           {cats.error && <p className="col-span-full py-5 text-center text-sm text-red-600">ক্যাটাগরি লোড করা যায়নি।</p>}
