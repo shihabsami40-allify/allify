@@ -1144,18 +1144,18 @@ function MarketplacePage() {
     body = shell(role === "admin" ? "অ্যাডমিন অ্যাকাউন্ট" : "আমার অ্যাকাউন্ট", user ? role === "admin" ? <div className="mx-auto max-w-4xl space-y-5">
       <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
         <div className="bg-[#123b32] px-5 py-6 text-white sm:px-7">
-          <p className="text-xs font-semibold tracking-[.18em] text-white/65">ALLIFY ADMIN</p>
+          <p className="text-xs font-semibold tracking-[.18em] text-white/65">ALLIFY ACCOUNT</p>
           <h2 className="mt-2 text-2xl font-extrabold">স্বাগতম, {user.user_metadata?.full_name || "অ্যাডমিন"}</h2>
-          <p className="mt-1 text-sm text-white/75">এখান থেকে পুরো মার্কেটপ্লেস পরিচালনা করুন।</p>
+          <p className="mt-1 text-sm text-white/75">{myStore ? "তুমি এই অ্যাকাউন্টে অ্যাডমিন ও দোকানের মালিক—দুই ভূমিকাতেই আছো।" : "এখান থেকে মার্কেটপ্লেস পরিচালনা করো।"}</p>
+          <div className="mt-3 flex flex-wrap gap-2"><span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold">অ্যাডমিন</span>{myStore && <span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold">সেলার · {myStore.name}</span>}</div>
         </div>
-        <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3">
-          <Link to={"/admin" as any} className="rounded-xl border p-4 hover:border-primary/50"><span className="text-2xl">📊</span><b className="mt-2 block text-sm">অ্যাডমিন ড্যাশবোর্ড</b><span className="mt-1 block text-xs text-muted-foreground">বিক্রি, অর্ডার ও সার্বিক হিসাব</span></Link>
-          <Link to={"/admin" as any} className="rounded-xl border p-4 hover:border-primary/50"><span className="text-2xl">🏪</span><b className="mt-2 block text-sm">দোকান ও বিক্রেতা</b><span className="mt-1 block text-xs text-muted-foreground">দোকান ও আবেদন পরিচালনা</span></Link>
-          <Link to={"/admin" as any} className="rounded-xl border p-4 hover:border-primary/50"><span className="text-2xl">📦</span><b className="mt-2 block text-sm">সব অর্ডার</b><span className="mt-1 block text-xs text-muted-foreground">মার্কেটপ্লেসের অর্ডার দেখুন</span></Link>
-          <Link to={"/admin" as any} className="rounded-xl border p-4 hover:border-primary/50"><span className="text-2xl">🛍️</span><b className="mt-2 block text-sm">পণ্য নিয়ন্ত্রণ</b><span className="mt-1 block text-xs text-muted-foreground">পণ্য ও ক্যাটাগরি</span></Link>
-          <Link to={"/help" as any} className="rounded-xl border p-4 hover:border-primary/50"><span className="text-2xl">❔</span><b className="mt-2 block text-sm">হেল্প সেন্টার</b><span className="mt-1 block text-xs text-muted-foreground">সহায়তা ও নির্দেশনা</span></Link>
-          <button type="button" onClick={signOut} className="rounded-xl border p-4 text-left hover:border-destructive/50"><span className="text-2xl">↪</span><b className="mt-2 block text-sm">লগআউট</b><span className="mt-1 block text-xs text-muted-foreground">অ্যাডমিন অ্যাকাউন্ট থেকে বের হন</span></button>
+        <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-2">
+          <Link to={"/admin" as any} className="rounded-xl border p-4 transition hover:border-primary/50 hover:bg-muted/30"><span className="text-2xl">📊</span><b className="mt-2 block text-sm">অ্যাডমিন ড্যাশবোর্ড</b><span className="mt-1 block text-xs text-muted-foreground">মার্কেটপ্লেসের অর্ডার, বিক্রি ও দোকান পরিচালনা</span></Link>
+          {myStore ? <Link to={"/seller-dashboard" as any} className="rounded-xl border p-4 transition hover:border-primary/50 hover:bg-muted/30"><div className="flex items-center gap-2">{myStore.logo_url ? <img src={myStore.logo_url} alt="" className="h-9 w-9 rounded-full border object-cover"/> : <span className="text-2xl">🏪</span>}<span className="min-w-0"><b className="block truncate text-sm">{myStore.name}</b><span className="text-[11px] text-muted-foreground">আমার দোকান</span></span></div><span className="mt-2 block text-xs text-muted-foreground">নিজের পণ্য, স্টক ও দোকানের অর্ডার পরিচালনা</span></Link> : <Link to={"/seller" as any} className="rounded-xl border p-4 transition hover:border-primary/50 hover:bg-muted/30"><span className="text-2xl">🏪</span><b className="mt-2 block text-sm">সেলার হিসেবে যুক্ত হোন</b><span className="mt-1 block text-xs text-muted-foreground">নিজের দোকান খুলুন</span></Link>}
+          {myStore?.slug && <Link to={"/store" as any} search={{slug:myStore.slug} as any} className="rounded-xl border p-4 transition hover:border-primary/50 hover:bg-muted/30"><span className="text-2xl">🌐</span><b className="mt-2 block text-sm">দোকানের পাবলিক পেজ</b><span className="mt-1 block text-xs text-muted-foreground">ক্রেতারা যেভাবে দোকানটি দেখেন</span></Link>}
+          <Link to={"/market" as any} className="rounded-xl border p-4 transition hover:border-primary/50 hover:bg-muted/30"><span className="text-2xl">🛍️</span><b className="mt-2 block text-sm">মার্কেটপ্লেস</b><span className="mt-1 block text-xs text-muted-foreground">পণ্য দেখুন ও কেনাকাটা করুন</span></Link>
         </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t p-4"><div className="min-w-0"><b className="block text-sm">লগইন করা অ্যাকাউন্ট</b><span className="mt-0.5 block break-all text-xs text-muted-foreground">{user.email}</span></div><button type="button" onClick={signOut} className="rounded-lg border px-4 py-2 text-xs font-semibold hover:bg-muted">লগআউট</button></div>
       </section>
     </div> : <div className="mx-auto max-w-5xl space-y-5">
       <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
