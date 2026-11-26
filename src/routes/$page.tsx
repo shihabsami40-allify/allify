@@ -214,15 +214,30 @@ function MarketplacePage() {
 
   useEffect(() => {
     setLoading(true);
+    setError("");
     refreshCart();
     if (page === "checkout" && localStorage.getItem("allify-buy-now-mode") === "yes") setBuyNowMode(true);
+
     let alive = true;
+    const needsProducts = ["market", "search", "category"].includes(page);
+    const needsCategories = ["market", "search", "category", "seller-dashboard"].includes(page);
+    const needsAreas = ["checkout", "seller"].includes(page);
+    const needsWishlist = ["market", "search", "category", "product", "store", "wishlist", "account"].includes(page);
+    const needsRole = ["account", "admin", "seller-dashboard"].includes(page);
+    const needsStore = ["account", "seller", "seller-dashboard"].includes(page);
+    const needsOrders = ["account", "product"].includes(page);
+    const needsAdminData = page === "admin";
+
+    // Never leave a route on a blank/loading screen indefinitely if a network request stalls.
+    const loadTimeout = window.setTimeout(() => {
+      if (alive) {
+        setError("তথ্য আনতে বেশি সময় লাগছে। ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।");
+        setLoading(false);
+      }
+    }, 15000);
+
     (async () => {
       try {
-        // Fetch only what this page needs. Avoid four database round-trips on every route.
-        const needsProducts = ["market", "search", "category", "product"].includes(page);
-        const needsCategories = ["market", "search", "category", "seller", "seller-dashboard"].includes(page);
-        const needsAreas = ["checkout", "seller"].includes(page);
         const [session, cats, productRows, areaRows] = await Promise.all([
           supabase.auth.getSession(),
           needsCategories
@@ -236,52 +251,92 @@ function MarketplacePage() {
             : Promise.resolve({ data: [] as any[] })
         ]);
         if (!alive) return;
-        setUser(session.data.session?.user ?? null);
+
+        const currentUser = session.data.session?.user ?? null;
+        setUser(currentUser);
         setCategories(cats.data ?? []);
         setProducts((productRows.data ?? []) as Product[]);
         setAreas((areaRows.data ?? []) as Area[]);
-        if (session.data.session?.user) {
-          const uid = session.data.session.user.id;
-          const wishlistRows = await supabase.from("wishlist_items").select("product_id").eq("user_id",uid).order("created_at",{ascending:false});
-          if (wishlistRows.error) throw wishlistRows.error;
-          const savedIds = (wishlistRows.data ?? []).map(row=>row.product_id);
-          setWishlistIds(savedIds);
-          if (page === "wishlist" && savedIds.length) {
-            const savedProducts = await supabase.from("products").select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area,logo_url,banner_url,is_demo)").in("id",savedIds).eq("status","active");
-            if (savedProducts.error) throw savedProducts.error;
-            const order = new Map(savedIds.map((id,index)=>[id,index]));
-            setWishlistProducts(((savedProducts.data ?? []) as Product[]).sort((a,b)=>(order.get(a.id)??0)-(order.get(b.id)??0)));
-          } else if (page === "wishlist") setWishlistProducts([]);
-          const roleRows = await supabase.from("user_roles").select("role").eq("user_id",uid);
-          const roles = roleRows.data?.map(x => x.role) ?? [];
-          setRole(roles.includes("admin") ? "admin" : roles.includes("seller") ? "seller" : "customer");
-          const [storeRow, orderRows] = await Promise.all([
-            supabase.from("seller_stores").select("*").eq("owner_id",uid).maybeSingle(),
-            supabase.from("orders").select("*,order_items(*)").eq("customer_id",uid).order("created_at",{ascending:false}).limit(30)
+
+        if (!currentUser) {
+          if (needsRole) setRole("customer");
+          if (needsStore) setMyStore(null);
+          if (needsOrders) setOrders([]);
+          if (needsWishlist) setWishlistIds([]);
+          if (page === "wishlist") setWishlistProducts([]);
+          if (page === "seller" || page === "account" || page === "admin") setApplications([]);
+        } else {
+          const uid = currentUser.id;
+          const [wishlistRows, roleRows, storeRow, orderRows] = await Promise.all([
+            needsWishlist
+              ? supabase.from("wishlist_items").select("product_id").eq("user_id",uid).order("created_at",{ascending:false})
+              : Promise.resolve({ data: [] as any[] }),
+            needsRole
+              ? supabase.from("user_roles").select("role").eq("user_id",uid)
+              : Promise.resolve({ data: [] as any[] }),
+            needsStore
+              ? supabase.from("seller_stores").select("*").eq("owner_id",uid).maybeSingle()
+              : Promise.resolve({ data: null as any }),
+            needsOrders
+              ? supabase.from("orders").select("*,order_items(*)").eq("customer_id",uid).order("created_at",{ascending:false}).limit(30)
+              : Promise.resolve({ data: [] as any[] })
           ]);
-          if (roles.includes("admin")) {
-            const [productRows, allOrderRows] = await Promise.all([
-              supabase.from("products").select("id,title_bn,price,stock,status,seller_stores(name,is_demo)").order("created_at",{ascending:false}).limit(100),
-              supabase.from("orders").select("id,order_no,is_demo,status,total,recipient,phone,area,created_at,order_items(id,title,unit_price,quantity,status)").order("created_at",{ascending:false}).limit(100)
-            ]);
-            setAdminProducts(productRows.data ?? []);
-            setAdminOrders(allOrderRows.data ?? []);
+          if (!alive) return;
+          if (wishlistRows.error) throw wishlistRows.error;
+          if (roleRows.error) throw roleRows.error;
+          if (storeRow.error) throw storeRow.error;
+          if (orderRows.error) throw orderRows.error;
+
+          const savedIds = (wishlistRows.data ?? []).map((row:any) => row.product_id);
+          if (needsWishlist) setWishlistIds(savedIds);
+          const roles = roleRows.data?.map((row:any) => row.role) ?? [];
+          if (needsRole) setRole(roles.includes("admin") ? "admin" : roles.includes("seller") ? "seller" : "customer");
+          if (needsStore) setMyStore(storeRow.data);
+          if (needsOrders) setOrders(orderRows.data ?? []);
+
+          if (page === "wishlist") {
+            if (savedIds.length) {
+              const savedProducts = await supabase.from("products").select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area,logo_url,banner_url,is_demo)").in("id",savedIds).eq("status","active");
+              if (savedProducts.error) throw savedProducts.error;
+              const order = new Map(savedIds.map((id:string,index:number)=>[id,index]));
+              setWishlistProducts(((savedProducts.data ?? []) as Product[]).sort((a,b)=>(order.get(a.id)??0)-(order.get(b.id)??0)));
+            } else setWishlistProducts([]);
           }
-          const appRows = roles.includes("admin")
-            ? await supabase.from("seller_applications").select("*").order("created_at",{ascending:false}).limit(100)
-            : await supabase.from("seller_applications").select("*").eq("user_id",uid).order("created_at",{ascending:false}).limit(10);
-          setMyStore(storeRow.data);
-          setOrders(orderRows.data ?? []);
-          if (storeRow.data) {
+
+          if (page === "seller" || (page === "account" && !roles.includes("admin"))) {
+            const appRows = await supabase.from("seller_applications").select("*").eq("user_id",uid).order("created_at",{ascending:false}).limit(10);
+            if (appRows.error) throw appRows.error;
+            if (alive) setApplications(appRows.data ?? []);
+          }
+
+          if (needsAdminData && roles.includes("admin")) {
+            const [adminProductRows, adminOrderRows, appRows] = await Promise.all([
+              supabase.from("products").select("id,title_bn,price,stock,status,seller_stores(name,is_demo)").order("created_at",{ascending:false}).limit(100),
+              supabase.from("orders").select("id,order_no,is_demo,status,total,recipient,phone,area,created_at,order_items(id,title,unit_price,quantity,status)").order("created_at",{ascending:false}).limit(100),
+              supabase.from("seller_applications").select("*").order("created_at",{ascending:false}).limit(100)
+            ]);
+            if (adminProductRows.error) throw adminProductRows.error;
+            if (adminOrderRows.error) throw adminOrderRows.error;
+            if (appRows.error) throw appRows.error;
+            if (!alive) return;
+            setAdminProducts(adminProductRows.data ?? []);
+            setAdminOrders(adminOrderRows.data ?? []);
+            setApplications(appRows.data ?? []);
+          }
+
+          if (page === "seller-dashboard" && storeRow.data) {
             const [sellerProductRows, sellerOrderRows] = await Promise.all([
               supabase.from("products").select("id,slug,title_bn,title_en,description,price,compare_price,stock,status,category_id,product_images(id,url,sort_order)").eq("store_id",storeRow.data.id).order("created_at",{ascending:false}),
               supabase.from("order_items").select("id,order_id,product_id,title,unit_price,quantity,status,courier_shipments(id,provider,status,tracking_id,consignment_id),orders(order_no,created_at,recipient,phone,area,address_line,note,total,payment_method)").eq("store_id",storeRow.data.id).limit(100)
             ]);
+            if (sellerProductRows.error) throw sellerProductRows.error;
+            if (sellerOrderRows.error) throw sellerOrderRows.error;
+            if (!alive) return;
             setSellerProducts(sellerProductRows.data ?? []);
             setSellerOrders(sellerOrderRows.data ?? []);
           }
-          setApplications(appRows.data ?? []);
         }
+
         const slug = queryValue("slug", searchStr);
         if (page === "product" && slug) {
           setDetailProduct(null);
@@ -289,30 +344,37 @@ function MarketplacePage() {
             .select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area,logo_url,banner_url,is_demo)")
             .eq("slug", slug).eq("status", "active").maybeSingle();
           if (found.error) throw found.error;
+          if (!alive) return;
           setDetailProduct(found.data as Product | null);
           setDetailImageIndex(0);
           if (found.data) {
             const {data:reviewRows,error:reviewError}=await supabase.from("product_reviews").select("id,rating,review_text,created_at").eq("product_id",found.data.id).eq("status","approved").order("created_at",{ascending:false}).limit(30);
             if (reviewError) throw reviewError;
+            if (!alive) return;
             setProductReviews(reviewRows||[]);
-            if (session.data.session?.user) {
-              const {data:ownRows,error:ownError}=await supabase.from("product_reviews").select("order_item_id").eq("product_id",found.data.id).eq("user_id",session.data.session.user.id);
+            if (currentUser) {
+              const {data:ownRows,error:ownError}=await supabase.from("product_reviews").select("order_item_id").eq("product_id",found.data.id).eq("user_id",currentUser.id);
               if (ownError) throw ownError;
+              if (!alive) return;
               setReviewedOrderItemIds((ownRows||[]).map(row=>row.order_item_id));
             } else setReviewedOrderItemIds([]);
           } else { setProductReviews([]); setReviewedOrderItemIds([]); }
         } else if (page === "store" && slug) {
           const found = await supabase.from("seller_stores").select("*,products(id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(id,url,sort_order),seller_stores(id,name,slug,area,logo_url,banner_url,is_demo))").eq("slug",slug).maybeSingle();
           if (found.error) throw found.error;
+          if (!alive) return;
           setStore(found.data);
         }
       } catch (e:any) {
         if (alive) setError(e.message || "তথ্য লোড করা যায়নি।");
-      } finally { if (alive) setLoading(false); }
+      } finally {
+        window.clearTimeout(loadTimeout);
+        if (alive) setLoading(false);
+      }
     })();
+
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      // Auth events can arrive after getSession() has completed. Keep the role in sync.
       if (!session?.user) {
         setRole("customer");
         setAdminProducts([]);
@@ -320,22 +382,25 @@ function MarketplacePage() {
         setApplications([]);
         return;
       }
+      if (!needsRole) return;
       window.setTimeout(() => {
         void (async () => {
           const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id);
           if (error) {
-            setError("অ্যাকাউন্টের অনুমতি যাচাই করা যায়নি। পৃষ্ঠাটি রিফ্রেশ করুন।");
+            if (alive) setError("অ্যাকাউন্টের অনুমতি যাচাই করা যায়নি। পৃষ্ঠাটি রিফ্রেশ করুন।");
             return;
           }
+          if (!alive) return;
           const roles = data?.map((row) => row.role) ?? [];
           const isAdmin = roles.includes("admin");
           setRole(isAdmin ? "admin" : roles.includes("seller") ? "seller" : "customer");
-          if (isAdmin) {
+          if (isAdmin && page === "admin") {
             const [productResult, orderResult, applicationResult] = await Promise.all([
               supabase.from("products").select("id,title_bn,price,stock,status,seller_stores(name,is_demo)").order("created_at", { ascending: false }).limit(100),
               supabase.from("orders").select("id,order_no,is_demo,status,total,recipient,phone,area,created_at,order_items(id,title,unit_price,quantity,status)").order("created_at", { ascending: false }).limit(100),
               supabase.from("seller_applications").select("*").order("created_at", { ascending: false }).limit(100)
             ]);
+            if (!alive) return;
             setAdminProducts(productResult.data ?? []);
             setAdminOrders(orderResult.data ?? []);
             setApplications(applicationResult.data ?? []);
@@ -343,7 +408,11 @@ function MarketplacePage() {
         })();
       }, 0);
     });
-    return () => { alive = false; listener.subscription.unsubscribe(); };
+    return () => {
+      alive = false;
+      window.clearTimeout(loadTimeout);
+      listener.subscription.unsubscribe();
+    };
   }, [page, searchStr]);
 
   useEffect(() => {
