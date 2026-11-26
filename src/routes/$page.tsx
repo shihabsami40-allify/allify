@@ -1141,7 +1141,23 @@ function MarketplacePage() {
     const activeOrdersCount = orders.filter(order => (order.order_items || []).some((item:any) => ["confirmed","shipped"].includes(item.status))).length;
     const completedOrdersCount = orders.filter(order => (order.order_items || []).length > 0 && (order.order_items || []).every((item:any) => item.status === "delivered")).length;
     const orderStatusLabel = (status:string) => ({pending:"নতুন অর্ডার",confirmed:"নিশ্চিত",shipped:"পাঠানো হয়েছে",delivered:"ডেলিভারি সম্পন্ন",cancelled:"বাতিল"} as Record<string,string>)[status] || "অবস্থা অজানা";
-    body = shell("আমার অ্যাকাউন্ট", user ? <div className="mx-auto max-w-5xl space-y-5">
+    body = shell(role === "admin" ? "অ্যাডমিন অ্যাকাউন্ট" : "আমার অ্যাকাউন্ট", user ? role === "admin" ? <div className="mx-auto max-w-4xl space-y-5">
+      <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="bg-[#123b32] px-5 py-6 text-white sm:px-7">
+          <p className="text-xs font-semibold tracking-[.18em] text-white/65">ALLIFY ADMIN</p>
+          <h2 className="mt-2 text-2xl font-extrabold">স্বাগতম, {user.user_metadata?.full_name || "অ্যাডমিন"}</h2>
+          <p className="mt-1 text-sm text-white/75">এখান থেকে পুরো মার্কেটপ্লেস পরিচালনা করুন।</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3">
+          <Link to={"/admin" as any} className="rounded-xl border p-4 hover:border-primary/50"><span className="text-2xl">📊</span><b className="mt-2 block text-sm">অ্যাডমিন ড্যাশবোর্ড</b><span className="mt-1 block text-xs text-muted-foreground">বিক্রি, অর্ডার ও সার্বিক হিসাব</span></Link>
+          <Link to={"/admin" as any} className="rounded-xl border p-4 hover:border-primary/50"><span className="text-2xl">🏪</span><b className="mt-2 block text-sm">দোকান ও বিক্রেতা</b><span className="mt-1 block text-xs text-muted-foreground">দোকান ও আবেদন পরিচালনা</span></Link>
+          <Link to={"/admin" as any} className="rounded-xl border p-4 hover:border-primary/50"><span className="text-2xl">📦</span><b className="mt-2 block text-sm">সব অর্ডার</b><span className="mt-1 block text-xs text-muted-foreground">মার্কেটপ্লেসের অর্ডার দেখুন</span></Link>
+          <Link to={"/admin" as any} className="rounded-xl border p-4 hover:border-primary/50"><span className="text-2xl">🛍️</span><b className="mt-2 block text-sm">পণ্য নিয়ন্ত্রণ</b><span className="mt-1 block text-xs text-muted-foreground">পণ্য ও ক্যাটাগরি</span></Link>
+          <Link to={"/help" as any} className="rounded-xl border p-4 hover:border-primary/50"><span className="text-2xl">❔</span><b className="mt-2 block text-sm">হেল্প সেন্টার</b><span className="mt-1 block text-xs text-muted-foreground">সহায়তা ও নির্দেশনা</span></Link>
+          <button type="button" onClick={signOut} className="rounded-xl border p-4 text-left hover:border-destructive/50"><span className="text-2xl">↪</span><b className="mt-2 block text-sm">লগআউট</b><span className="mt-1 block text-xs text-muted-foreground">অ্যাডমিন অ্যাকাউন্ট থেকে বের হন</span></button>
+        </div>
+      </section>
+    </div> : <div className="mx-auto max-w-5xl space-y-5">
       <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
         <div className="bg-[#123b32] px-4 py-5 text-white sm:px-6">
           <div className="flex items-center gap-4">
