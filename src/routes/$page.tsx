@@ -1067,24 +1067,28 @@ function MarketplacePage() {
             <span className="shrink-0 rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-semibold">{role === "admin" ? "অ্যাডমিন" : myStore ? "সেলার ও ক্রেতা" : role === "seller" ? "সেলার" : "ক্রেতা"}</span>
           </div>
         </div>
-        <div className="grid grid-cols-3 divide-x">
-          <div className="px-2 py-4 text-center"><p className="text-xl font-extrabold tabular-nums">{orders.length.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">মোট অর্ডার</p></div>
-          <div className="px-2 py-4 text-center"><p className="text-xl font-extrabold tabular-nums">{activeOrdersCount.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">চলমান</p></div>
-          <div className="px-2 py-4 text-center"><p className="text-xl font-extrabold tabular-nums">{completedOrdersCount.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">সম্পন্ন</p></div>
+        <div className="grid grid-cols-2 divide-x divide-y sm:grid-cols-4 sm:divide-y-0">
+          <div className="px-2 py-3 text-center"><p className="text-xl font-extrabold tabular-nums">{orders.length.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">মোট অর্ডার</p></div>
+          <div className="px-2 py-3 text-center"><p className="text-xl font-extrabold tabular-nums">{pendingOrdersCount.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">নতুন</p></div>
+          <div className="px-2 py-3 text-center"><p className="text-xl font-extrabold tabular-nums">{activeOrdersCount.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">চলমান</p></div>
+          <div className="px-2 py-3 text-center"><p className="text-xl font-extrabold tabular-nums">{completedOrdersCount.toLocaleString("bn-BD")}</p><p className="mt-1 text-[11px] text-muted-foreground">সম্পন্ন</p></div>
         </div>
       </section>
 
       <section className="space-y-3">
-        <div><h2 className="text-base font-bold">আমার কেনাকাটা</h2><p className="mt-1 text-xs text-muted-foreground">অর্ডার ও পছন্দের পণ্য এক জায়গা থেকে দেখুন।</p></div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <a href="#my-orders" className="flex min-h-24 items-center gap-3 rounded-xl border bg-card p-3 transition hover:border-primary/50 hover:shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-2"><div><h2 className="text-base font-bold">দ্রুত অ্যাক্সেস</h2><p className="mt-1 text-xs text-muted-foreground">প্রয়োজনীয় কাজগুলো এক ট্যাপেই খুলুন।</p></div><span className="text-[11px] text-muted-foreground">MY ACCOUNT</span></div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <a href="#my-orders" className="group flex min-h-24 items-center gap-3 rounded-xl border bg-card p-3 transition hover:border-primary/50 hover:shadow-sm">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-xl">📦</span><span className="min-w-0"><b className="block text-sm">আমার অর্ডার</b><span className="mt-1 block text-[11px] text-muted-foreground">{orders.length.toLocaleString("bn-BD")}টি অর্ডার</span></span>
           </a>
-          <Link to={"/wishlist" as any} className="flex min-h-24 items-center gap-3 rounded-xl border bg-card p-3 transition hover:border-primary/50 hover:shadow-sm">
+          <Link to={"/wishlist" as any} className="group flex min-h-24 items-center gap-3 rounded-xl border bg-card p-3 transition hover:border-primary/50 hover:shadow-sm">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-rose-50 text-xl">♡</span><span className="min-w-0"><b className="block text-sm">উইশলিস্ট</b><span className="mt-1 block text-[11px] text-muted-foreground">{wishlistIds.length.toLocaleString("bn-BD")}টি পছন্দের পণ্য</span></span>
           </Link>
-          <Link to={"/market" as any} className="flex min-h-24 items-center gap-3 rounded-xl border bg-card p-3 transition hover:border-primary/50 hover:shadow-sm">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-xl">🛍️</span><span className="min-w-0"><b className="block text-sm">কেনাকাটা করুন</b><span className="mt-1 block text-[11px] text-muted-foreground">সব পণ্য দেখুন</span></span>
+          <Link to={"/help" as any} className="group flex min-h-24 items-center gap-3 rounded-xl border bg-card p-3 transition hover:border-primary/50 hover:shadow-sm">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-sky-50 text-xl">❔</span><span className="min-w-0"><b className="block text-sm">হেল্প সেন্টার</b><span className="mt-1 block text-[11px] text-muted-foreground">সমস্যার সমাধান</span></span>
+          </Link>
+          <Link to={"/market" as any} className="group flex min-h-24 items-center gap-3 rounded-xl border bg-card p-3 transition hover:border-primary/50 hover:shadow-sm">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-xl">🛍️</span><span className="min-w-0"><b className="block text-sm">কেনাকাটা</b><span className="mt-1 block text-[11px] text-muted-foreground">সব পণ্য দেখুন</span></span>
           </Link>
         </div>
       </section>
