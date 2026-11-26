@@ -1145,6 +1145,7 @@ function MarketplacePage() {
         </div>
       </section>
 
+      {helpCategory === "all" && !helpQuery.trim() && (
       <section className="space-y-3">
         <div><h3 className="text-lg font-bold">দ্রুত নিজের কাজ সম্পন্ন করুন</h3><p className="mt-1 text-xs text-muted-foreground">সাধারণ কাজের জন্য সরাসরি সংশ্লিষ্ট পেজে যান।</p></div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -1154,7 +1155,9 @@ function MarketplacePage() {
           <Link to={"/seller" as any} className="rounded-xl border bg-card p-4 transition hover:border-primary/50 hover:shadow-sm"><span className="text-2xl">🏪</span><b className="mt-2 block text-sm">সেলার সহায়তা</b><span className="mt-1 block text-xs leading-5 text-muted-foreground">দোকান খোলা ও আবেদন করুন</span></Link>
         </div>
       </section>
+      )}
 
+      {helpCategory === "all" && !helpQuery.trim() && (
       <section className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-2"><div><h3 className="text-lg font-bold">বিষয় অনুযায়ী সহায়তা</h3><p className="mt-1 text-xs text-muted-foreground">আপনার সমস্যার সঙ্গে মেলে এমন বিভাগ নির্বাচন করুন।</p></div><button type="button" onClick={() => {setHelpCategory("all");setHelpQuery("");}} className="text-xs font-semibold text-primary">সব বিষয় দেখুন</button></div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -1163,11 +1166,12 @@ function MarketplacePage() {
           </button>)}
         </div>
       </section>
+      )}
 
       <section className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-lg font-bold">{helpQuery ? "খোঁজার ফলাফল" : helpCategory === "all" ? "সাধারণ প্রশ্ন ও উত্তর" : helpCategories.find(c => c.id === helpCategory)?.label}</h3><p className="mt-1 text-xs text-muted-foreground">{filteredHelpArticles.length.toLocaleString("bn-BD")}টি সহায়তা আর্টিকেল পাওয়া গেছে</p></div>{helpCategory !== "all" && <button type="button" onClick={() => setHelpCategory("all")} className="text-xs font-semibold text-primary">বিভাগ সরান</button>}</div>
+        <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-lg font-bold">{helpQuery ? "খোঁজার ফলাফল" : helpCategory === "all" ? "সাধারণ প্রশ্ন ও উত্তর" : helpCategories.find(c => c.id === helpCategory)?.label}</h3><p className="mt-1 text-xs text-muted-foreground">{filteredHelpArticles.length.toLocaleString("bn-BD")}টি সহায়তা আর্টিকেল পাওয়া গেছে</p></div>{(helpCategory !== "all" || helpQuery.trim()) && <button type="button" onClick={() => {setHelpCategory("all");setHelpQuery("");}} className="text-xs font-semibold text-primary">সব বিভাগ দেখুন</button>}</div>
         <div className="overflow-hidden rounded-xl border bg-card divide-y">
-          {filteredHelpArticles.length ? filteredHelpArticles.map((article, index) => <details key={article.question} className="group p-4" open={Boolean(helpQuery && index === 0)}>
+          {filteredHelpArticles.length ? filteredHelpArticles.map((article, index) => <details key={article.question} className="group p-4" open={Boolean(index === 0 && (helpQuery.trim() || helpCategory !== "all"))}>
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold"><span>{article.question}</span><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-base text-muted-foreground transition group-open:rotate-45">＋</span></summary>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">{article.answer}</p>
           </details>) : <div className="p-8 text-center"><p className="font-semibold">কোনো উত্তর পাওয়া যায়নি</p><p className="mt-1 text-sm text-muted-foreground">অন্য শব্দ দিয়ে খুঁজুন অথবা সব বিভাগ দেখুন।</p><button type="button" onClick={() => {setHelpQuery("");setHelpCategory("all");}} className="mt-3 text-sm font-semibold text-primary">সব প্রশ্ন দেখুন</button></div>}
