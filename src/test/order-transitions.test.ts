@@ -27,6 +27,10 @@ describe("canTransitionOrderItemStatus", () => {
     ["cancelled", "pending"],
     ["cancelled", "confirmed"],
     ["unknown", "pending"],
+    ["toString", "pending"],
+    ["constructor", "pending"],
+    ["__proto__", "pending"],
+    ["hasOwnProperty", "pending"],
   ])("rejects %s -> %s", (current, next) => {
     expect(canTransitionOrderItemStatus(current, next)).toBe(false);
   });
