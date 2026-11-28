@@ -57,13 +57,16 @@ Deno.serve(async (req: Request) => {
 
     const publishableKeys = envKeySet("SUPABASE_PUBLISHABLE_KEYS");
     const secretKeys = envKeySet("SUPABASE_SECRET_KEYS");
-    // Support current singular API-key env names and legacy Supabase env names.
+    // The plural Supabase variables contain actual API key values as JSON,
+    // not names of other environment variables.
     const publishableKey =
-      (publishableKeys.default ? Deno.env.get(publishableKeys.default) : undefined) ??
+      publishableKeys.default ??
+      Object.values(publishableKeys)[0] ??
       Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ??
       Deno.env.get("SUPABASE_ANON_KEY");
     const secretKey =
-      (secretKeys.default ? Deno.env.get(secretKeys.default) : undefined) ??
+      secretKeys.default ??
+      Object.values(secretKeys)[0] ??
       Deno.env.get("SUPABASE_SECRET_KEY") ??
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
