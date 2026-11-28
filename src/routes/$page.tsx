@@ -1284,108 +1284,117 @@ function MarketplacePage() {
 
   let body:any;
   if (page === "category") {
-    // Daraz Bangladesh's 12 top-level categories; legacy ALLIFY categories remain
-    // in the database and are mapped beneath the closest matching group.
+    // Daraz-inspired category navigation: plain text subcategory links,
+    // with the selected subcategory's products rendered immediately below.
     const darazCategories = [
-      { slug: "women-girls-fashion", name_bn: "নারী ও মেয়েদের ফ্যাশন", name_en: "Women's & Girls' Fashion", icon: "👗", legacy: ["clothing", "shoes"] },
-      { slug: "health-beauty", name_bn: "স্বাস্থ্য ও সৌন্দর্য", name_en: "Health & Beauty", icon: "💄", legacy: ["beauty"] },
-      { slug: "watches-bags-jewellery", name_bn: "ঘড়ি, ব্যাগ ও জুয়েলারি", name_en: "Watches, Bags & Jewellery", icon: "⌚", legacy: ["watches", "bags"] },
-      { slug: "men-boys-fashion", name_bn: "পুরুষ ও ছেলেদের ফ্যাশন", name_en: "Men's & Boys' Fashion", icon: "👔", legacy: ["clothing", "shoes"] },
-      { slug: "mother-baby", name_bn: "মা ও শিশু", name_en: "Mother & Baby", icon: "🧸", legacy: [] },
-      { slug: "electronics-device", name_bn: "ইলেকট্রনিক ডিভাইস", name_en: "Electronics Device", icon: "📱", legacy: ["electronics"] },
-      { slug: "tv-home-appliances", name_bn: "টিভি ও হোম অ্যাপ্লায়েন্স", name_en: "TV & Home Appliances", icon: "📺", legacy: ["electronics-tv", "electronics-appliances"] },
-      { slug: "electronic-accessories", name_bn: "ইলেকট্রনিক অ্যাকসেসরিজ", name_en: "Electronic Accessories", icon: "🎧", legacy: ["electronics-audio", "mobile"] },
-      { slug: "groceries-pets", name_bn: "গ্রোসারি ও পোষা প্রাণী", name_en: "Groceries & Pets", icon: "🛒", legacy: ["daily", "food-drinks"] },
-      { slug: "home-lifestyle", name_bn: "হোম ও লাইফস্টাইল", name_en: "Home & Lifestyle", icon: "🏠", legacy: ["home"] },
-      { slug: "sports-outdoors", name_bn: "স্পোর্টস ও আউটডোর", name_en: "Sports & Outdoors", icon: "⚽", legacy: [] },
-      { slug: "automotive-motorbike", name_bn: "অটোমোটিভ ও মোটরবাইক", name_en: "Automotive & Motorbike", icon: "🚗", legacy: [] },
+      { slug: "women-girls-fashion", name_bn: "নারী ও মেয়েদের ফ্যাশন", name_en: "Women's & Girls' Fashion", legacy: ["clothing", "shoes"] },
+      { slug: "health-beauty", name_bn: "স্বাস্থ্য ও সৌন্দর্য", name_en: "Health & Beauty", legacy: ["beauty"] },
+      { slug: "watches-bags-jewellery", name_bn: "ঘড়ি, ব্যাগ ও জুয়েলারি", name_en: "Watches, Bags & Jewellery", legacy: ["watches", "bags"] },
+      { slug: "men-boys-fashion", name_bn: "পুরুষ ও ছেলেদের ফ্যাশন", name_en: "Men's & Boys' Fashion", legacy: ["clothing", "shoes"] },
+      { slug: "mother-baby", name_bn: "মা ও শিশু", name_en: "Mother & Baby", legacy: [] },
+      { slug: "electronics-device", name_bn: "ইলেকট্রনিক ডিভাইস", name_en: "Electronics Device", legacy: ["electronics"] },
+      { slug: "tv-home-appliances", name_bn: "টিভি ও হোম অ্যাপ্লায়েন্স", name_en: "TV & Home Appliances", legacy: ["electronics-tv", "electronics-appliances"] },
+      { slug: "electronic-accessories", name_bn: "ইলেকট্রনিক অ্যাকসেসরিজ", name_en: "Electronic Accessories", legacy: ["electronics-audio", "mobile"] },
+      { slug: "groceries-pets", name_bn: "গ্রোসারি ও পোষা প্রাণী", name_en: "Groceries & Pets", legacy: ["daily", "food-drinks"] },
+      { slug: "home-lifestyle", name_bn: "হোম ও লাইফস্টাইল", name_en: "Home & Lifestyle", legacy: ["home"] },
+      { slug: "sports-outdoors", name_bn: "স্পোর্টস ও আউটডোর", name_en: "Sports & Outdoors", legacy: [] },
+      { slug: "automotive-motorbike", name_bn: "অটোমোটিভ ও মোটরবাইক", name_en: "Automotive & Motorbike", legacy: [] },
     ];
-    const requestedLegacy = categories.find((category) => category.slug === queryValue("category", searchStr));
+    const requestedCategory = categories.find((category) => category.slug === queryValue("category", searchStr));
+    const requestedParent = requestedCategory?.parent_id
+      ? categories.find((category) => category.id === requestedCategory.parent_id)
+      : requestedCategory;
     const requestedGroup = queryValue("darazCategory", searchStr);
     const activeGroup = darazCategories.find((category) => category.slug === requestedGroup)
-      ?? darazCategories.find((group) => requestedLegacy && group.legacy.includes(requestedLegacy.slug))
+      ?? darazCategories.find((group) =>
+        group.legacy.includes(requestedCategory?.slug || "") ||
+        group.legacy.includes(requestedParent?.slug || "")
+      )
       ?? darazCategories[0];
     const mappedRoots = categories.filter((category) => activeGroup.legacy.includes(category.slug));
     const mappedIds = mappedRoots.map((category) => category.id);
-    const childCategories = categories.filter((category) =>
-      activeGroup.legacy.includes(category.slug) || mappedIds.includes(category.parent_id || "")
-    );
-    const collectCategoryTree = (ids: string[]): string[] => {
-      const children = categories.filter((category) => ids.includes(category.parent_id || ""));
-      const childIds = children.map((category) => category.id);
-      return [...ids, ...childIds, ...collectCategoryTree(childIds)];
+    const collectCategoryTree = (ids: string[], seen = new Set<string>()): string[] => {
+      const freshIds = ids.filter((id) => !seen.has(id));
+      freshIds.forEach((id) => seen.add(id));
+      const children = categories.filter((category) => freshIds.includes(category.parent_id || ""));
+      return [...freshIds, ...collectCategoryTree(children.map((category) => category.id), seen)];
     };
-    const visibleProductCategoryIds = collectCategoryTree(mappedIds);
-    const categoryProducts = products.filter((product) => visibleProductCategoryIds.includes(product.category_id || ""));
-    const categoryTile = (category: typeof categories[number]) => (
-      <Link key={category.id} to={"/category" as any} search={{ category: category.slug } as any}
-        className="group flex min-h-28 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border bg-white px-2 py-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-[#b8cdbf] hover:shadow-md"
-        style={{ borderColor: "#e5ece7" }}>
-        <span className="grid h-14 w-14 place-items-center rounded-2xl text-3xl" style={{ background: "linear-gradient(145deg,#f4f8ee,#e5efdf)" }}>🛍️</span>
-        <span className="line-clamp-2 text-xs font-bold leading-5 text-[#24352e]">{category.name_bn}</span>
-        {category.name_en && <span className="line-clamp-1 text-[10px] text-muted-foreground">{category.name_en}</span>}
-      </Link>
+    const mappedTreeIds = new Set(collectCategoryTree(mappedIds));
+    const childCategories = mappedRoots.flatMap((root) =>
+      categories.filter((category) => category.parent_id === root.id)
     );
-
+    const visibleSubcategories = childCategories.length ? childCategories : mappedRoots;
+    const selectedSubcategory = requestedCategory && mappedTreeIds.has(requestedCategory.id)
+      ? requestedCategory
+      : null;
+    const selectedTreeIds = selectedSubcategory
+      ? new Set(collectCategoryTree([selectedSubcategory.id]))
+      : new Set<string>();
+    const categoryProducts = selectedSubcategory
+      ? products.filter((product) => selectedTreeIds.has(product.category_id || ""))
+      : [];
+    const categoryLinkClass = "inline-flex min-h-9 items-center border-b border-transparent px-1 py-1 text-sm font-medium text-[#36564a] transition hover:border-[#9bbd31] hover:text-[#123b32]";
     body = shell("ক্যাটাগরি", <>
       <div className="mb-4 rounded-xl border px-4 py-3" style={{ borderColor: "#e2ebe4", background: "linear-gradient(115deg,#f2f7ed,#ffffff 72%)" }}>
         <p className="text-[10px] font-extrabold tracking-[.16em]" style={{ color: "#6d8a72" }}>ALLIFY SHOPPING</p>
         <h2 className="mt-1 text-lg font-black tracking-tight sm:text-xl" style={{ color: "#123b32" }}>ক্যাটাগরি ব্রাউজ করুন</h2>
-        <p className="mt-1 text-xs text-muted-foreground">বাম পাশ থেকে বিভাগ বেছে নিন, ডান পাশে উপ-বিভাগ দেখুন</p>
+        <p className="mt-1 text-xs text-muted-foreground">একটি উপ-বিভাগের নাম নির্বাচন করুন; পণ্য ঠিক নিচে দেখাবে।</p>
       </div>
-      <div className="grid min-h-[520px] grid-cols-[112px_minmax(0,1fr)] overflow-hidden rounded-xl border bg-white shadow-sm sm:grid-cols-[220px_minmax(0,1fr)] md:grid-cols-[250px_minmax(0,1fr)]" style={{ borderColor: "#e5ece7" }}>
-        <aside aria-label="মূল ক্যাটাগরি" className="border-r" style={{ borderColor: "#e5ece7", background: "#f5f7f4" }}>
+      <div className="grid min-h-[420px] grid-cols-[112px_minmax(0,1fr)] overflow-hidden rounded-xl border bg-white sm:grid-cols-[200px_minmax(0,1fr)] md:grid-cols-[230px_minmax(0,1fr)]" style={{ borderColor: "#e5ece7" }}>
+        <aside aria-label="মূল ক্যাটাগরি" className="border-r" style={{ borderColor: "#e5ece7", background: "#f7f9f7" }}>
           <div className="border-b px-2 py-3 text-[10px] font-extrabold sm:px-4 sm:text-xs" style={{ borderColor: "#e5ece7", color: "#52615b" }}>সব ক্যাটাগরি</div>
           <nav className="max-h-[70vh] overflow-y-auto">
             {darazCategories.map((category) => {
               const active = activeGroup.slug === category.slug;
               return <Link key={category.slug} to={"/category" as any} search={{ darazCategory: category.slug } as any}
                 aria-current={active ? "page" : undefined}
-                className={"relative flex min-h-[68px] items-center gap-2 border-b px-2 py-3 text-left transition sm:gap-3 sm:px-4 " + (active ? "bg-white font-extrabold" : "font-medium hover:bg-white/70")}
+                className={"relative flex min-h-14 items-center border-b px-2 py-3 text-left text-[10px] leading-4 transition sm:px-4 sm:text-sm " + (active ? "bg-white font-extrabold" : "font-medium hover:bg-white/70")}
                 style={{ borderColor: "#e9eee9", color: active ? "#123b32" : "#52615b" }}>
                 {active && <span className="absolute inset-y-2 left-0 w-1 rounded-r-full" style={{ background: "#9bbd31" }} />}
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-lg sm:h-10 sm:w-10 sm:text-2xl" style={{ background: active ? "#edf4e8" : "#ffffff" }}>{category.icon}</span>
-                <span className="min-w-0 text-[10px] leading-4 sm:text-sm sm:leading-5">{category.name_bn}</span>
+                <span className="pl-1">{category.name_bn}</span>
               </Link>;
             })}
           </nav>
         </aside>
         <section className="min-w-0 p-3 sm:p-5">
-          <div className="mb-4 flex items-center justify-between gap-2 border-b pb-3" style={{ borderColor: "#edf1ed" }}>
-            <div className="min-w-0"><p className="text-[10px] font-bold tracking-wide" style={{ color: "#789080" }}>নির্বাচিত বিভাগ</p><h3 className="mt-1 truncate text-sm font-black sm:text-lg" style={{ color: "#123b32" }}>{activeGroup.name_bn}</h3></div>
-            <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold sm:text-xs" style={{ background: "#edf4e8", color: "#356b50" }}>{childCategories.length.toLocaleString("bn-BD")}টি উপ-বিভাগ</span>
+          <div className="mb-3 border-b pb-3" style={{ borderColor: "#edf1ed" }}>
+            <p className="text-[10px] font-bold tracking-wide" style={{ color: "#789080" }}>নির্বাচিত বিভাগ</p>
+            <h3 className="mt-1 text-sm font-black sm:text-lg" style={{ color: "#123b32" }}>{activeGroup.name_bn}</h3>
           </div>
-          {childCategories.length ? <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">{childCategories.map(categoryTile)}</div>
-            : <div className="rounded-xl border p-4 text-center text-xs text-muted-foreground" style={{ borderColor: "#e5ece7", background: "#fbfcfa" }}>এই বিভাগের উপ-বিভাগ এখনো যোগ করা হয়নি।</div>}
-          <div className="mb-3 mt-6 flex items-end justify-between gap-2"><div><h3 className="text-sm font-extrabold sm:text-base" style={{ color: "#123b32" }}>এই বিভাগের পণ্য</h3><p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">আপনার পছন্দের পণ্য বেছে নিন</p></div><span className="shrink-0 text-[10px] text-muted-foreground sm:text-xs">{categoryProducts.length.toLocaleString("bn-BD")}টি পণ্য</span></div>
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">{categoryProducts.map(productCard)}</div>
-          {!categoryProducts.length && <p className={panel}>এই ক্যাটাগরিতে এখনো কোনো পণ্য যোগ করা হয়নি।</p>}
+          {visibleSubcategories.length ? (
+            <nav aria-label="উপ-বিভাগ" className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              {visibleSubcategories.map((category) => {
+                const active = selectedSubcategory?.id === category.id;
+                return <Link key={category.id} to={"/category" as any}
+                  search={{ darazCategory: activeGroup.slug, category: category.slug } as any}
+                  aria-current={active ? "page" : undefined}
+                  className={categoryLinkClass + (active ? " border-[#9bbd31] font-extrabold text-[#123b32]" : "")}>
+                  {category.name_bn}
+                </Link>;
+              })}
+            </nav>
+          ) : (
+            <p className="py-3 text-xs text-muted-foreground">এই বিভাগের উপ-বিভাগ এখনো যোগ করা হয়নি।</p>
+          )}
+          <div className="mb-3 mt-5 flex items-end justify-between gap-2 border-t pt-4" style={{ borderColor: "#edf1ed" }}>
+            <div>
+              <h3 className="text-sm font-extrabold sm:text-base" style={{ color: "#123b32" }}>
+                {selectedSubcategory ? selectedSubcategory.name_bn + " — পণ্য" : "পণ্য দেখতে উপ-বিভাগ নির্বাচন করুন"}
+              </h3>
+              {selectedSubcategory && <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">নির্বাচিত উপ-বিভাগের পণ্য</p>}
+            </div>
+            {selectedSubcategory && <span className="shrink-0 text-[10px] text-muted-foreground sm:text-xs">{categoryProducts.length.toLocaleString("bn-BD")}টি পণ্য</span>}
+          </div>
+          {selectedSubcategory ? (
+            <>
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">{categoryProducts.map(productCard)}</div>
+              {!categoryProducts.length && <p className={panel}>এই উপ-বিভাগে এখনো কোনো পণ্য যোগ করা হয়নি।</p>}
+            </>
+          ) : (
+            <p className="rounded-lg py-4 text-xs text-muted-foreground">উপরের তালিকা থেকে শুধু একটি উপ-বিভাগের নাম চাপুন। তার পণ্য এখানেই দেখাবে।</p>
+          )}
         </section>
       </div>
-    </>);
-  } else if (page === "search" || page === "market") {
-    const title = page === "search" ? "পণ্য খুঁজুন" : "সব পণ্য";
-    body = shell(title, <>
-      <form className="mb-5 flex gap-2" onSubmit={e=>{e.preventDefault();navigate({to: "/search" as any,search:{q:form.q||""} as any});}}>
-        <input className={field} placeholder="পণ্যের নাম লিখুন…" value={form.q??queryValue("q", searchStr)} onChange={e=>set("q",e.target.value)}/>
-        <button className={primary}>খুঁজুন</button>
-      </form>
-      {page === "search" && !queryValue("q", searchStr).trim() && (
-        <div className="mb-5 flex flex-wrap gap-2">
-          {categories.filter(c=>!c.parent_id).map(c=>(
-            <div key={c.id} className="flex min-w-40 flex-col items-start gap-2 rounded-xl border p-3">
-              <Link to={"/category" as any} search={{category:c.slug} as any} className={secondary+" font-semibold"}>{c.name_bn}</Link>
-              <div className="flex w-full flex-col gap-2">
-                {categories.filter(child=>child.parent_id===c.id).map(child=>(
-                  <Link key={child.id} to={"/category" as any} search={{category:child.slug} as any} className={secondary+" text-xs"}>{child.name_bn}</Link>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{filtered.map(productCard)}</div>
-      {!filtered.length&&<p className={panel}>এই অনুসন্ধানে কোনো পণ্য পাওয়া যায়নি।</p>}
     </>);
   } else if (page === "product") {
     const p = selected;
