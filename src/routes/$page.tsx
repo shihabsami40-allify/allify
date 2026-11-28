@@ -1297,9 +1297,14 @@ function MarketplacePage() {
       }
       return current;
     };
+    // On first visit, open a root category that actually has subcategories.
+    // The first database row is often an empty top-level category, which made the page look unchanged/blank.
+    const defaultRoot = rootCategories.find((category) =>
+      categories.some((child) => child.parent_id === category.id)
+    ) ?? rootCategories[0];
     const activeRoot = rootCategories.find((category) => category.slug === requestedRoot)
       ?? findRoot(requestedCategory)
-      ?? rootCategories[0];
+      ?? defaultRoot;
     const activeCategory = requestedCategory && findRoot(requestedCategory)?.id === activeRoot?.id
       ? requestedCategory
       : activeRoot;
