@@ -1,1 +1,4 @@
 project_id = "onqadpqdontbdvecnvby"
+
+[functions.admin-remove-seller-store]
+verify_jwt = true
