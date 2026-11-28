@@ -284,7 +284,7 @@ function MarketplacePage() {
 
           if (needsAdminData && roles.includes("admin")) {
             const [adminProductRows, adminOrderRows, appRows, storeRows, orderCount, completedCount, productCount, activeStoreCount] = await Promise.all([
-              supabase.from("products").select("id,title_bn,price,stock,status,seller_stores(id,name,is_demo,is_removed)").order("created_at",{ascending:false}).limit(100),
+              supabase.from("products").select("id,title_bn,price,stock,status,seller_stores!inner(id,name,is_demo,is_removed)").eq("seller_stores.is_removed",false).order("created_at",{ascending:false}).limit(100),
               supabase.from("orders").select("id,order_no,is_demo,status,total,recipient,phone,area,created_at,order_items(id,title,unit_price,quantity,status)").order("created_at",{ascending:false}).limit(100),
               supabase.from("seller_applications").select("*").order("created_at",{ascending:false}).limit(100),
               supabase.from("seller_stores").select("id,name,slug,area,status,is_demo,is_removed,created_at").eq("is_removed",false).order("created_at",{ascending:false}).limit(100),
