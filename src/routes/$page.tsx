@@ -528,7 +528,7 @@ function MarketplacePage() {
     setBusy(true); setError(""); setMessage("");
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: "https://allify-chattogram.vercel.app/account",
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
       setMessage("যদি এই ইমেইলে ALLIFY অ্যাকাউন্ট থাকে, তাহলে পাসওয়ার্ড পরিবর্তনের লিংক পাঠানো হয়েছে। ইনবক্স ও Spam ফোল্ডার দেখুন।");
