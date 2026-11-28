@@ -78,6 +78,7 @@ function MarketplacePage() {
   const [productImagePreviews, setProductImagePreviews] = useState<string[]>([]);
   const productImageInputRef = useRef<HTMLInputElement>(null);
   const checkoutRequestRef = useRef<{fingerprint:string;id:string}|null>(null);
+  const sellerApplicationSyncRef = useRef(new Set<string>());
   const set = (key: string, value: string) => setForm(v => ({...v, [key]: value}));
   const selectStoreImage = (file:File|null, kind:"logo"|"banner") => {
     if (!file) return;
@@ -424,32 +425,38 @@ function MarketplacePage() {
 
   const syncPendingSellerApplication = async (authUser: any) => {
     const draft = authUser?.user_metadata?.pending_seller_application;
-    if (!draft || typeof draft !== "object") return false;
-    const { data: existing, error: lookupError } = await supabase
-      .from("seller_applications")
-      .select("id")
-      .eq("user_id", authUser.id)
-      .eq("status", "pending")
-      .maybeSingle();
-    if (lookupError) throw lookupError;
-    if (!existing) {
-      const { error } = await supabase.from("seller_applications").insert({
-        user_id: authUser.id,
-        store_name: draft.store_name,
-        owner_name: draft.owner_name,
-        phone: draft.phone,
-        area: draft.store_location,
-        address: draft.store_location,
-        category_hint: draft.category_hint || null,
-        description: draft.description || null,
+    const userId = authUser?.id;
+    if (!draft || typeof draft !== "object" || !userId || sellerApplicationSyncRef.current.has(userId)) return false;
+    sellerApplicationSyncRef.current.add(userId);
+    try {
+      const { data: existing, error: lookupError } = await supabase
+        .from("seller_applications")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("status", "pending")
+        .maybeSingle();
+      if (lookupError) throw lookupError;
+      if (!existing) {
+        const { error } = await supabase.from("seller_applications").insert({
+          user_id: userId,
+          store_name: draft.store_name,
+          owner_name: draft.owner_name,
+          phone: draft.phone,
+          area: draft.store_location,
+          address: draft.store_location,
+          category_hint: draft.category_hint || null,
+          description: draft.description || null,
+        });
+        if (error) throw error;
+      }
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: { pending_seller_application: null },
       });
-      if (error) throw error;
+      if (metadataError) throw metadataError;
+      return true;
+    } finally {
+      sellerApplicationSyncRef.current.delete(userId);
     }
-    const { error: metadataError } = await supabase.auth.updateUser({
-      data: { pending_seller_application: null },
-    });
-    if (metadataError) throw metadataError;
-    return true;
   };
 
   const submitAuth = async (e: FormEvent, mode: "login"|"register") => {
@@ -480,8 +487,7 @@ function MarketplacePage() {
         if (pendingSellerApplication) {
           sessionStorage.removeItem("allify-pending-seller-application");
           if (data.session?.user) {
-            await syncPendingSellerApplication(data.session.user);
-            setMessage("অ্যাকাউন্ট তৈরি ও বিক্রেতা আবেদন জমা হয়েছে।");
+            setMessage("অ্যাকাউন্ট তৈরি হয়েছে। বিক্রেতা আবেদন জমা হচ্ছে…");
             navigate({ to: "/account" as any });
           } else {
             setMessage("অ্যাকাউন্ট তৈরি হয়েছে। ইমেইল যাচাই সম্পন্ন হলে আপনার বিক্রেতা আবেদন স্বয়ংক্রিয়ভাবে জমা হবে।");
