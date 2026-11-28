@@ -1286,67 +1286,37 @@ function MarketplacePage() {
   if (page === "category") {
     // Daraz-inspired category navigation: plain text subcategory links,
     // with the selected subcategory's products rendered immediately below.
-    const darazCategories = [
-      { slug: "women-girls-fashion", name_bn: "নারী ও মেয়েদের ফ্যাশন", name_en: "Women's & Girls' Fashion", legacy: ["clothing", "shoes"] },
-      { slug: "health-beauty", name_bn: "স্বাস্থ্য ও সৌন্দর্য", name_en: "Health & Beauty", legacy: ["beauty"] },
-      { slug: "watches-bags-jewellery", name_bn: "ঘড়ি, ব্যাগ ও জুয়েলারি", name_en: "Watches, Bags & Jewellery", legacy: ["watches", "bags"] },
-      { slug: "men-boys-fashion", name_bn: "পুরুষ ও ছেলেদের ফ্যাশন", name_en: "Men's & Boys' Fashion", legacy: ["clothing", "shoes"] },
-      { slug: "mother-baby", name_bn: "মা ও শিশু", name_en: "Mother & Baby", legacy: [] },
-      { slug: "electronics-device", name_bn: "ইলেকট্রনিক ডিভাইস", name_en: "Electronics Device", legacy: ["electronics"] },
-      { slug: "tv-home-appliances", name_bn: "টিভি ও হোম অ্যাপ্লায়েন্স", name_en: "TV & Home Appliances", legacy: ["electronics-tv", "electronics-appliances"] },
-      { slug: "electronic-accessories", name_bn: "ইলেকট্রনিক অ্যাকসেসরিজ", name_en: "Electronic Accessories", legacy: ["electronics-audio", "mobile"] },
-      { slug: "groceries-pets", name_bn: "গ্রোসারি ও পোষা প্রাণী", name_en: "Groceries & Pets", legacy: ["daily", "food-drinks"] },
-      { slug: "home-lifestyle", name_bn: "হোম ও লাইফস্টাইল", name_en: "Home & Lifestyle", legacy: ["home"] },
-      { slug: "sports-outdoors", name_bn: "স্পোর্টস ও আউটডোর", name_en: "Sports & Outdoors", legacy: [] },
-      { slug: "automotive-motorbike", name_bn: "অটোমোটিভ ও মোটরবাইক", name_en: "Automotive & Motorbike", legacy: [] },
-    ];
+    const rootCategories = categories.filter((category) => !category.parent_id);
     const requestedCategory = categories.find((category) => category.slug === queryValue("category", searchStr));
     const requestedParent = requestedCategory?.parent_id
       ? categories.find((category) => category.id === requestedCategory.parent_id)
       : requestedCategory;
-    const requestedGroup = queryValue("darazCategory", searchStr);
-    const activeGroup = darazCategories.find((category) => category.slug === requestedGroup)
-      ?? darazCategories.find((group) =>
-        group.legacy.includes(requestedCategory?.slug || "") ||
-        group.legacy.includes(requestedParent?.slug || "")
-      )
-      ?? darazCategories[0];
-    const mappedRoots = categories.filter((category) => activeGroup.legacy.includes(category.slug));
-    const mappedIds = mappedRoots.map((category) => category.id);
+    const requestedRoot = queryValue("rootCategory", searchStr);
+    const activeGroup = rootCategories.find((category) => category.slug === requestedRoot)
+      ?? rootCategories.find((category) => category.id === requestedParent?.id)
+      ?? rootCategories[0];
+    const mappedRoots = activeGroup ? [activeGroup] : [];
     const collectCategoryTree = (ids: string[], seen = new Set<string>()): string[] => {
       const freshIds = ids.filter((id) => !seen.has(id));
       freshIds.forEach((id) => seen.add(id));
       const children = categories.filter((category) => freshIds.includes(category.parent_id || ""));
       return [...freshIds, ...collectCategoryTree(children.map((category) => category.id), seen)];
     };
-    const mappedTreeIds = new Set(collectCategoryTree(mappedIds));
-    const childCategories = mappedRoots.flatMap((root) =>
-      categories.filter((category) => category.parent_id === root.id)
-    );
+    const mappedTreeIds = new Set(collectCategoryTree(mappedRoots.map((category) => category.id)));
+    const childCategories = mappedRoots.flatMap((root) => categories.filter((category) => category.parent_id === root.id));
     const visibleSubcategories = childCategories.length ? childCategories : mappedRoots;
-    const selectedSubcategory = requestedCategory && mappedTreeIds.has(requestedCategory.id)
-      ? requestedCategory
-      : null;
-    const selectedTreeIds = selectedSubcategory
-      ? new Set(collectCategoryTree([selectedSubcategory.id]))
-      : new Set<string>();
-    const categoryProducts = selectedSubcategory
-      ? products.filter((product) => selectedTreeIds.has(product.category_id || ""))
-      : [];
+    const selectedSubcategory = requestedCategory && mappedTreeIds.has(requestedCategory.id) ? requestedCategory : null;
+    const selectedTreeIds = selectedSubcategory ? new Set(collectCategoryTree([selectedSubcategory.id])) : new Set<string>();
+    const categoryProducts = selectedSubcategory ? products.filter((product) => selectedTreeIds.has(product.category_id || "")) : [];
     const categoryLinkClass = "inline-flex min-h-9 items-center border-b border-transparent px-1 py-1 text-sm font-medium text-[#36564a] transition hover:border-[#9bbd31] hover:text-[#123b32]";
     body = shell("ক্যাটাগরি", <>
-      <div className="mb-4 rounded-xl border px-4 py-3" style={{ borderColor: "#e2ebe4", background: "linear-gradient(115deg,#f2f7ed,#ffffff 72%)" }}>
-        <p className="text-[10px] font-extrabold tracking-[.16em]" style={{ color: "#6d8a72" }}>ALLIFY SHOPPING</p>
-        <h2 className="mt-1 text-lg font-black tracking-tight sm:text-xl" style={{ color: "#123b32" }}>ক্যাটাগরি ব্রাউজ করুন</h2>
-        <p className="mt-1 text-xs text-muted-foreground">একটি উপ-বিভাগের নাম নির্বাচন করুন; পণ্য ঠিক নিচে দেখাবে।</p>
-      </div>
       <div className="grid min-h-[420px] grid-cols-[112px_minmax(0,1fr)] overflow-hidden rounded-xl border bg-white sm:grid-cols-[200px_minmax(0,1fr)] md:grid-cols-[230px_minmax(0,1fr)]" style={{ borderColor: "#e5ece7" }}>
         <aside aria-label="মূল ক্যাটাগরি" className="border-r" style={{ borderColor: "#e5ece7", background: "#f7f9f7" }}>
           <div className="border-b px-2 py-3 text-[10px] font-extrabold sm:px-4 sm:text-xs" style={{ borderColor: "#e5ece7", color: "#52615b" }}>সব ক্যাটাগরি</div>
           <nav className="max-h-[70vh] overflow-y-auto">
-            {darazCategories.map((category) => {
-              const active = activeGroup.slug === category.slug;
-              return <Link key={category.slug} to={"/category" as any} search={{ darazCategory: category.slug } as any}
+            {rootCategories.map((category) => {
+              const active = activeGroup?.id === category.id;
+              return <Link key={category.slug} to={"/category" as any} search={{ rootCategory: category.slug } as any}
                 aria-current={active ? "page" : undefined}
                 className={"relative flex min-h-14 items-center border-b px-2 py-3 text-left text-[10px] leading-4 transition sm:px-4 sm:text-sm " + (active ? "bg-white font-extrabold" : "font-medium hover:bg-white/70")}
                 style={{ borderColor: "#e9eee9", color: active ? "#123b32" : "#52615b" }}>
@@ -1358,15 +1328,15 @@ function MarketplacePage() {
         </aside>
         <section className="min-w-0 p-3 sm:p-5">
           <div className="mb-3 border-b pb-3" style={{ borderColor: "#edf1ed" }}>
-            <p className="text-[10px] font-bold tracking-wide" style={{ color: "#789080" }}>নির্বাচিত বিভাগ</p>
-            <h3 className="mt-1 text-sm font-black sm:text-lg" style={{ color: "#123b32" }}>{activeGroup.name_bn}</h3>
+            <p className="text-[10px] font-bold tracking-wide" style={{ color: "#789080" }}>ক্যাটাগরি</p>
+            <h3 className="mt-1 text-sm font-black sm:text-lg" style={{ color: "#123b32" }}>{activeGroup?.name_bn || "ক্যাটাগরি"}</h3>
           </div>
           {visibleSubcategories.length ? (
             <nav aria-label="উপ-বিভাগ" className="flex flex-wrap items-center gap-x-4 gap-y-1">
               {visibleSubcategories.map((category) => {
                 const active = selectedSubcategory?.id === category.id;
                 return <Link key={category.id} to={"/category" as any}
-                  search={{ darazCategory: activeGroup.slug, category: category.slug } as any}
+                  search={{ rootCategory: activeGroup?.slug, category: category.slug } as any}
                   aria-current={active ? "page" : undefined}
                   className={categoryLinkClass + (active ? " border-[#9bbd31] font-extrabold text-[#123b32]" : "")}>
                   {category.name_bn}
