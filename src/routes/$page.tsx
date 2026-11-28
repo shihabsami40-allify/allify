@@ -284,7 +284,7 @@ function MarketplacePage() {
 
           if (needsAdminData && roles.includes("admin")) {
             const [adminProductRows, adminOrderRows, appRows, storeRows, orderCount, completedCount, productCount, activeStoreCount] = await Promise.all([
-              supabase.from("products").select("id,title_bn,price,stock,status,seller_stores(name,is_demo,is_removed)").order("created_at",{ascending:false}).limit(100),
+              supabase.from("products").select("id,title_bn,price,stock,status,seller_stores(id,name,is_demo,is_removed)").order("created_at",{ascending:false}).limit(100),
               supabase.from("orders").select("id,order_no,is_demo,status,total,recipient,phone,area,created_at,order_items(id,title,unit_price,quantity,status)").order("created_at",{ascending:false}).limit(100),
               supabase.from("seller_applications").select("*").order("created_at",{ascending:false}).limit(100),
               supabase.from("seller_stores").select("id,name,slug,area,status,is_demo,is_removed,created_at").eq("is_removed",false).order("created_at",{ascending:false}).limit(100),
@@ -916,7 +916,7 @@ function MarketplacePage() {
       if (error) throw error;
       if (!data) throw new Error("দোকানটি পাওয়া যায়নি বা রিমুভ করার অনুমতি নেই।");
       setAdminStores(rows=>rows.filter(store=>store.id!==id));
-      setAdminProducts(rows=>rows.filter(product=>product.seller_stores?.name!==target.name));
+      setAdminProducts(rows=>rows.filter(product=>product.seller_stores?.id!==id));
       setAdminStats(stats=>({...stats,activeStores:Math.max(0,stats.activeStores-(target.status==="active"?1:0))}));
       setProducts(rows=>rows.filter(product=>product.seller_stores?.id!==id));
       setWishlistProducts(rows=>rows.filter(product=>product.seller_stores?.id!==id));
