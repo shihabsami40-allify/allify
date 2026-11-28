@@ -284,10 +284,10 @@ function MarketplacePage() {
 
           if (needsAdminData && roles.includes("admin")) {
             const [adminProductRows, adminOrderRows, appRows, storeRows, orderCount, completedCount, productCount, activeStoreCount] = await Promise.all([
-              supabase.from("products").select("id,title_bn,price,stock,status,seller_stores!inner(id,name,is_demo,is_removed)").eq("seller_stores.is_removed",false).order("created_at",{ascending:false}).limit(100),
+              supabase.from("products").select("id,title_bn,price,stock,status,seller_stores!inner(id,name,is_demo)").order("created_at",{ascending:false}).limit(100),
               supabase.from("orders").select("id,order_no,is_demo,status,total,recipient,phone,area,created_at,order_items(id,title,unit_price,quantity,status)").order("created_at",{ascending:false}).limit(100),
               supabase.from("seller_applications").select("*").order("created_at",{ascending:false}).limit(100),
-              supabase.from("seller_stores").select("id,name,slug,area,status,is_demo,is_removed,created_at").eq("is_removed",false).order("created_at",{ascending:false}).limit(100),
+              supabase.from("seller_stores").select("id,name,slug,area,status,is_demo,created_at").order("created_at",{ascending:false}).limit(100),
               supabase.from("orders").select("id",{count:"exact",head:true}),
               supabase.from("orders").select("id",{count:"exact",head:true}).eq("status","delivered"),
               supabase.from("products").select("id",{count:"exact",head:true}),
@@ -909,22 +909,27 @@ function MarketplacePage() {
     const target = adminStores.find(store => store.id === id);
     if (!target) return;
     if (target.is_demo) { setError("নমুনা দোকান রিমুভ করা যাবে না।"); return; }
-    if (!window.confirm("“" + target.name + "” দোকানটি ALLIFY থেকে স্থায়ীভাবে সরাতে চান? দোকান ও পণ্য ক্রেতাদের কাছে আর দেখা যাবে না। পুরোনো অর্ডারের হিসাব সংরক্ষিত থাকবে।")) return;
+    const confirmation = window.confirm("“" + target.name + "” দোকানটি সম্পূর্ণ রিমুভ করবেন? দোকান, পণ্য, আবেদন এবং সেলারের লগইন অ্যাকাউন্ট স্থায়ীভাবে মুছে যাবে। পুরোনো অর্ডার ও কুরিয়ার ইতিহাস থাকবে। এই কাজ ফেরত নেওয়া যাবে না।");
+    if (!confirmation) return;
     setBusy(true); setError(""); setMessage("");
     try {
-      const {data,error} = await supabase.from("seller_stores").update({status:"suspended",is_removed:true}).eq("id",id).eq("is_removed",false).select("id").maybeSingle();
+      const {data,error} = await supabase.functions.invoke("admin-remove-seller-store",{body:{storeId:id}});
       if (error) throw error;
-      if (!data) throw new Error("দোকানটি পাওয়া যায়নি বা রিমুভ করার অনুমতি নেই।");
+      if (!data?.success) throw new Error(data?.error || "দোকানটি সম্পূর্ণ রিমুভ করা যায়নি।");
+      const removedOwnerId = data.ownerId as string;
       setAdminStores(rows=>rows.filter(store=>store.id!==id));
       setAdminProducts(rows=>rows.filter(product=>product.seller_stores?.id!==id));
+      setApplications(rows=>rows.filter(app=>app.user_id!==removedOwnerId));
       setAdminStats(stats=>({...stats,activeStores:Math.max(0,stats.activeStores-(target.status==="active"?1:0))}));
       setProducts(rows=>rows.filter(product=>product.seller_stores?.id!==id));
       setWishlistProducts(rows=>rows.filter(product=>product.seller_stores?.id!==id));
       setDetailProduct(product=>product?.seller_stores?.id===id?null:product);
       setStore(current=>current?.id===id?null:current);
       setCart(rows=>{ const next=rows.filter(line=>line.product.seller_stores?.id!==id); try { localStorage.setItem("allify-cart",JSON.stringify(next)); } catch {} return next; });
-      setMessage("দোকানটি ALLIFY থেকে সরানো হয়েছে। দোকান ও পণ্য আর ক্রেতাদের কাছে দেখা যাবে না; পুরোনো অর্ডারের তথ্য সংরক্ষিত আছে।");
-    } catch(e:any) { setError(e.message || "দোকানটি রিমুভ করা যায়নি।"); }
+      setMessage(data.storageCleanupPending
+        ? "দোকান, পণ্য, আবেদন ও সেলার অ্যাকাউন্ট রিমুভ হয়েছে। অর্ডার ও কুরিয়ার ইতিহাস সংরক্ষিত আছে; কিছু পুরোনো ছবি পরিষ্কারের কাজ বাকি আছে।"
+        : "দোকান, পণ্য, আবেদন ও সেলার অ্যাকাউন্ট সম্পূর্ণ রিমুভ হয়েছে। পুরোনো অর্ডার ও কুরিয়ার ইতিহাস সংরক্ষিত আছে।");
+    } catch(e:any) { setError(e.message || "দোকানটি সম্পূর্ণ রিমুভ করা যায়নি।"); }
     finally { setBusy(false); }
   };
 
