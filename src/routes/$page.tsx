@@ -49,6 +49,7 @@ function MarketplacePage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const [form, setForm] = useState<Record<string,string>>({});
   const [store, setStore] = useState<any>(null);
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
@@ -358,7 +359,11 @@ function MarketplacePage() {
       }
     })();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsPasswordRecovery(true);
+        navigate({ to: "/reset-password" as any });
+      } else if (event === "SIGNED_OUT") setIsPasswordRecovery(false);
       setUser(session?.user ?? null);
       if (!session?.user) {
         setRole("customer");
@@ -514,6 +519,52 @@ function MarketplacePage() {
       setMessage("ভেরিফিকেশন ইমেইল পাঠানোর অনুরোধ করা হয়েছে। ইনবক্স ও Spam ফোল্ডার দেখুন।");
     } catch (e: any) { setError(e.message || "ইমেইল পাঠানো যায়নি। কিছুক্ষণ পর আবার চেষ্টা করুন।"); }
     finally { setBusy(false); }
+  };
+
+  const requestPasswordReset = async (e: FormEvent) => {
+    e.preventDefault();
+    const email = (form.email || "").trim().toLowerCase();
+    if (!email) { setError("আগে আপনার ইমেইল ঠিকানাটি লিখুন।"); return; }
+    setBusy(true); setError(""); setMessage("");
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      setMessage("যদি এই ইমেইলে ALLIFY অ্যাকাউন্ট থাকে, তাহলে পাসওয়ার্ড পরিবর্তনের লিংক পাঠানো হয়েছে। ইনবক্স ও Spam ফোল্ডার দেখুন।");
+    } catch (e: any) {
+      setError(e.message || "রিসেট ইমেইল পাঠানো যায়নি। কিছুক্ষণ পর আবার চেষ্টা করুন।");
+    } finally { setBusy(false); }
+  };
+
+  const submitNewPassword = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(""); setMessage("");
+    const password = form.new_password || "";
+    if (!isPasswordRecovery || !user) {
+      setError("পাসওয়ার্ড পরিবর্তনের লিংকটি মেয়াদোত্তীর্ণ বা অবৈধ। নতুন রিসেট লিংক নিন।");
+      return;
+    }
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}/.test(password)) {
+      setError("কমপক্ষে ৮ অক্ষর এবং ইংরেজি বড় হাতের, ছোট হাতের অক্ষর, সংখ্যা ও চিহ্ন ব্যবহার করুন।");
+      return;
+    }
+    if (password !== (form.confirm_new_password || "")) {
+      setError("দুটি পাসওয়ার্ড মিলছে না। আবার যাচাই করুন।");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+      setIsPasswordRecovery(false);
+      await supabase.auth.signOut();
+      setForm({});
+      setMessage("পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে। নতুন পাসওয়ার্ড দিয়ে লগইন করুন।");
+      navigate({ to: "/login" as any });
+    } catch (e: any) {
+      setError(e.message || "পাসওয়ার্ড পরিবর্তন করা যায়নি। রিসেট লিংকটি আবার ব্যবহার করুন।");
+    } finally { setBusy(false); }
   };
 
   const submitSeller = async (e: FormEvent) => {
@@ -1212,7 +1263,11 @@ function MarketplacePage() {
     body = shell("চেকআউট",<>{buyNowMode&&<div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/30 bg-muted/40 p-3 text-sm"><span>তুমি একটি পণ্য সরাসরি অর্ডার করছো।</span><button type="button" className={secondary+" text-xs"} onClick={restorePreviousCart}>আগের কার্ট ফিরিয়ে আনুন</button></div>}{!cart.length?<p className={panel}>কার্ট খালি। <Link to={"/market" as any} className={linkClass}>পণ্য দেখুন</Link></p>:<form onSubmit={checkout} className={panel+" max-w-2xl space-y-3"}><p className="font-semibold">ডেলিভারির তথ্য</p><input required minLength={2} maxLength={100} className={field} placeholder="গ্রাহকের নাম" aria-label="গ্রাহকের নাম" value={form.recipient||""} onChange={e=>set("recipient",e.target.value)}/><input required pattern="01[3-9][0-9]{8}" maxLength={11} inputMode="numeric" className={field} placeholder="মোবাইল নম্বর (01XXXXXXXXX)" aria-label="মোবাইল নম্বর" value={form.phone||""} onChange={e=>set("phone",e.target.value)}/><select required className={field} aria-label="ডেলিভারির এলাকা" value={form.area||""} onChange={e=>set("area",e.target.value)}><option value="">এলাকা নির্বাচন করুন</option>{areas.map(a=><option key={a.name_en} value={a.name_en}>{a.name_bn}</option>)}</select><textarea required minLength={5} maxLength={300} className={field} placeholder="সম্পূর্ণ ঠিকানা" aria-label="সম্পূর্ণ ডেলিভারি ঠিকানা" value={form.address||""} onChange={e=>set("address",e.target.value)}/><textarea maxLength={500} className={field} placeholder="অতিরিক্ত নির্দেশনা (ঐচ্ছিক)" aria-label="অতিরিক্ত নির্দেশনা (ঐচ্ছিক)" value={form.note||""} onChange={e=>set("note",e.target.value)}/><label className="flex gap-2 text-sm"><input type="checkbox" aria-label="ঠিকানাটি সংরক্ষণ করুন" checked={form.save_address==="yes"} onChange={e=>set("save_address",e.target.checked?"yes":"no")}/> ঠিকানাটি সংরক্ষণ করুন</label><div className="border-t pt-3 text-sm"><p>পণ্যের মোট: {money(subtotal)}</p><p className="mt-2 text-lg font-bold">সর্বমোট পণ্যমূল্য: {money(subtotal)}</p><p className="mt-2 text-xs text-muted-foreground">ডেলিভারি চার্জ ALLIFY-তে যোগ হয় না। কুরিয়ার মার্চেন্ট প্যানেলে বুকিংয়ের সময় নির্ধারিত হবে।</p></div><p className="text-xs text-muted-foreground">পেমেন্ট পদ্ধতি: ক্যাশ অন ডেলিভারি (COD)।</p><button disabled={busy || cart.some(x => x.product.seller_stores?.is_demo)} className={primary+" w-full"}>{cart.some(x => x.product.seller_stores?.is_demo)?"নমুনা পণ্য সরান":busy?"অপেক্ষা করুন…":"অর্ডার নিশ্চিত করুন"}</button></form>}</>);
   } else if (page === "login" || page === "register") {
     const reg = page==="register";
-    body = shell(reg?"নতুন অ্যাকাউন্ট":"লগইন",<form onSubmit={e=>submitAuth(e,reg?"register":"login")} className={panel+" max-w-md space-y-3"}>{reg&&<input required className={field} placeholder="তোমার নাম" value={form.name||""} onChange={e=>set("name",e.target.value)}/>}<input required type="email" className={field} placeholder="ইমেইল" value={form.email||""} onChange={e=>set("email",e.target.value)}/><input required minLength={reg?8:1} pattern={reg?"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}":undefined} title={reg?"কমপক্ষে ৮ অক্ষর এবং ইংরেজি বড় হাতের, ছোট হাতের অক্ষর, সংখ্যা ও চিহ্ন ব্যবহার করুন।":undefined} type="password" autoComplete={reg?"new-password":"current-password"} className={field} placeholder={reg?"পাসওয়ার্ড (৮+ অক্ষর; বড়-ছোট অক্ষর, সংখ্যা ও চিহ্ন)":"পাসওয়ার্ড"} value={form.password||""} onChange={e=>set("password",e.target.value)}/><button disabled={busy} className={primary+" w-full"}>{busy?"অপেক্ষা করুন…":reg?"অ্যাকাউন্ট তৈরি করুন":"লগইন"}</button>{reg&&<button type="button" disabled={busy} onClick={resendVerification} className={secondary+" w-full"}>ভেরিফিকেশন ইমেইল আবার পাঠান</button>}<p className="text-sm text-muted-foreground">{reg?"আগে অ্যাকাউন্ট আছে? ":"অ্যাকাউন্ট নেই? "}<Link className={linkClass} to={(reg?"/login":"/register") as any}>{reg?"লগইন করুন":"রেজিস্ট্রেশন করুন"}</Link></p></form>);
+    body = shell(reg?"নতুন অ্যাকাউন্ট":"লগইন",<form onSubmit={e=>submitAuth(e,reg?"register":"login")} className={panel+" max-w-md space-y-3"}>{reg&&<input required className={field} placeholder="তোমার নাম" value={form.name||""} onChange={e=>set("name",e.target.value)}/>}<input required type="email" className={field} placeholder="ইমেইল" value={form.email||""} onChange={e=>set("email",e.target.value)}/><input required minLength={reg?8:1} pattern={reg?"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}":undefined} title={reg?"কমপক্ষে ৮ অক্ষর এবং ইংরেজি বড় হাতের, ছোট হাতের অক্ষর, সংখ্যা ও চিহ্ন ব্যবহার করুন।":undefined} type="password" autoComplete={reg?"new-password":"current-password"} className={field} placeholder={reg?"পাসওয়ার্ড (৮+ অক্ষর; বড়-ছোট অক্ষর, সংখ্যা ও চিহ্ন)":"পাসওয়ার্ড"} value={form.password||""} onChange={e=>set("password",e.target.value)}/><button disabled={busy} className={primary+" w-full"}>{busy?"অপেক্ষা করুন…":reg?"অ্যাকাউন্ট তৈরি করুন":"লগইন"}</button>{!reg&&<p className="text-sm text-right"><Link className={linkClass} to={"/forgot-password" as any}>পাসওয়ার্ড ভুলে গেছেন?</Link></p>}{reg&&<button type="button" disabled={busy} onClick={resendVerification} className={secondary+" w-full"}>ভেরিফিকেশন ইমেইল আবার পাঠান</button>}<p className="text-sm text-muted-foreground">{reg?"আগে অ্যাকাউন্ট আছে? ":"অ্যাকাউন্ট নেই? "}<Link className={linkClass} to={(reg?"/login":"/register") as any}>{reg?"লগইন করুন":"রেজিস্ট্রেশন করুন"}</Link></p></form>);
+  } else if (page === "forgot-password") {
+    body = shell("পাসওয়ার্ড রিসেট",<form onSubmit={requestPasswordReset} className={panel+" max-w-md space-y-3"}><p className="text-sm text-muted-foreground">আপনার ALLIFY অ্যাকাউন্টে ব্যবহৃত ইমেইল ঠিকানাটি লিখুন। পাসওয়ার্ড পরিবর্তনের নিরাপদ লিংক পাঠানো হবে।</p><input required type="email" autoComplete="email" className={field} placeholder="ইমেইল ঠিকানা" value={form.email||""} onChange={e=>set("email",e.target.value)}/><button disabled={busy} className={primary+" w-full"}>{busy?"পাঠানো হচ্ছে…":"রিসেট লিংক পাঠান"}</button><p className="text-sm"><Link className={linkClass} to={"/login" as any}>লগইনে ফিরে যান</Link></p></form>);
+  } else if (page === "reset-password") {
+    body = shell("নতুন পাসওয়ার্ড তৈরি করুন",isPasswordRecovery&&user?<form onSubmit={submitNewPassword} className={panel+" max-w-md space-y-3"}><p className="text-sm text-muted-foreground">আপনার ALLIFY অ্যাকাউন্টের জন্য নতুন পাসওয়ার্ড দিন। কমপক্ষে ৮ অক্ষর, বড়-ছোট ইংরেজি অক্ষর, সংখ্যা ও চিহ্ন ব্যবহার করুন।</p><input required minLength={8} type="password" autoComplete="new-password" className={field} placeholder="নতুন পাসওয়ার্ড" value={form.new_password||""} onChange={e=>set("new_password",e.target.value)}/><input required minLength={8} type="password" autoComplete="new-password" className={field} placeholder="নতুন পাসওয়ার্ড আবার লিখুন" value={form.confirm_new_password||""} onChange={e=>set("confirm_new_password",e.target.value)}/><button disabled={busy} className={primary+" w-full"}>{busy?"পরিবর্তন হচ্ছে…":"নতুন পাসওয়ার্ড সংরক্ষণ করুন"}</button></form>:<div className={panel+" max-w-md space-y-3"}><p className="text-sm text-muted-foreground">এই পেজটি ব্যবহার করতে আপনার ইমেইলে পাঠানো বৈধ ও মেয়াদ থাকা রিসেট লিংক দিয়ে আসুন।</p><Link className={primary+" inline-block"} to={"/forgot-password" as any}>নতুন রিসেট লিংক নিন</Link></div>);
   } else if (page === "seller") {
     const pendingApplication = applications.find(application=>application.status==="pending");
     body = shell("বিক্রেতা হোন",myStore?<div className={panel}>তোমার দোকান চালু আছে: <b>{myStore.name}</b> <Link to={"/seller-dashboard" as any} className={linkClass}>ড্যাশবোর্ড খুলুন</Link></div>:pendingApplication?<div className={panel+" max-w-2xl space-y-2"}><b>তোমার বিক্রেতা আবেদন পর্যালোচনার অপেক্ষায় আছে।</b><p className="text-sm text-muted-foreground">দোকান: {pendingApplication.store_name}</p><p className="text-sm text-muted-foreground">আবেদনের অবস্থা: {pendingApplication.status==="pending"?"পর্যালোচনাধীন":pendingApplication.status}</p><p className="text-sm">অ্যাডমিন সিদ্ধান্ত না দেওয়া পর্যন্ত নতুন আবেদন জমা দেওয়ার প্রয়োজন নেই।</p></div>:<form onSubmit={submitSeller} className={panel+" max-w-2xl space-y-3"}><p className="text-sm text-muted-foreground">চট্টগ্রামের দোকানদাররা বিনামূল্যে আবেদন করতে পারবেন। অনুমোদনের পর দোকান ও পণ্য যোগ করা যাবে।</p><input required minLength={2} maxLength={80} className={field} placeholder="দোকানের নাম" value={form.store_name||""} onChange={e=>set("store_name",e.target.value)}/><input required minLength={2} maxLength={100} className={field} placeholder="মালিকের নাম" value={form.owner_name||""} onChange={e=>set("owner_name",e.target.value)}/><input required type="tel" inputMode="numeric" minLength={11} maxLength={11} pattern="01[3-9][0-9]{8}" className={field} placeholder="মোবাইল নম্বর" value={form.phone||""} onChange={e=>set("phone",e.target.value)}/><input required minLength={5} maxLength={300} className={field} placeholder="দোকানের লোকেশন / ঠিকানা (যেমন: চকবাজার, চট্টগ্রাম)" value={form.store_location||""} onChange={e=>set("store_location",e.target.value)}/><input maxLength={100} className={field} placeholder="পণ্যের ধরন" value={form.category_hint||""} onChange={e=>set("category_hint",e.target.value)}/><textarea maxLength={1000} className={field} placeholder="দোকান সম্পর্কে" value={form.description||""} onChange={e=>set("description",e.target.value)}/><button disabled={busy} className={primary}>{busy?"জমা হচ্ছে…":"বিনামূল্যে আবেদন জমা দিন"}</button>{!user&&<p className="text-xs text-muted-foreground">প্রথমবার আবেদন করলে Submit চাপার পর অ্যাকাউন্ট তৈরি করতে পারবেন। আগে অ্যাকাউন্ট থাকলে <Link to={"/login" as any} className={linkClass}>লগইন</Link> করুন।</p>}</form>);
