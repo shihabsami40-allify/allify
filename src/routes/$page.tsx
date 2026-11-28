@@ -47,7 +47,6 @@ function MarketplacePage() {
   const [areas, setAreas] = useState<Area[]>([]);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [buyNowMode, setBuyNowMode] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -183,7 +182,6 @@ function MarketplacePage() {
   const subtotal = cart.reduce((n,x) => n + Number(x.product.price)*x.quantity, 0);
 
   useEffect(() => {
-    setLoading(true);
     setError("");
     refreshCart();
     if (page === "checkout" && localStorage.getItem("allify-buy-now-mode") === "yes") setBuyNowMode(true);
@@ -199,13 +197,6 @@ function MarketplacePage() {
     const needsAdminData = page === "admin";
 
     // Never leave a route on a blank/loading screen indefinitely if a network request stalls.
-    const loadTimeout = window.setTimeout(() => {
-      if (alive) {
-        setError("তথ্য আনতে বেশি সময় লাগছে। ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।");
-        setLoading(false);
-      }
-    }, 15000);
-
     (async () => {
       try {
         const [session, cats, productRows, areaRows] = await Promise.all([
@@ -361,8 +352,6 @@ function MarketplacePage() {
       } catch (e:any) {
         if (alive) setError(e.message || "তথ্য লোড করা যায়নি।");
       } finally {
-        window.clearTimeout(loadTimeout);
-        if (alive) setLoading(false);
       }
     })();
 
@@ -409,7 +398,6 @@ function MarketplacePage() {
     });
     return () => {
       alive = false;
-      window.clearTimeout(loadTimeout);
       listener.subscription.unsubscribe();
     };
   }, [page, searchStr]);
@@ -1280,8 +1268,6 @@ function MarketplacePage() {
 
   const shell = (title:string, children:any) => <div className={"mx-auto "+(title==="অ্যাডমিন প্যানেল"?"w-full max-w-[1600px] px-3 sm:px-5 lg:px-8":"max-w-6xl px-4")+" py-7"}><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs text-muted-foreground"><Link to="/" className="font-black tracking-wide" style={{color:"#123b32"}}>ALLI<span style={{color:"#9bbd31"}}>F</span>Y</Link> / {title}</p><h1 className="mt-1 text-2xl font-bold">{title}</h1></div><Link to={"/cart" as any} className={secondary}>কার্ট ({cart.reduce((n,x)=>n+x.quantity,0).toLocaleString("bn-BD")})</Link></div>{message&&<p role="status" aria-live="polite" className="mb-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{message}</p>}{error&&<p role="alert" aria-live="assertive" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}{children}</div>;
 
-  if (loading) return <div role="status" aria-live="polite" className="mx-auto max-w-6xl p-8 text-center text-muted-foreground">ALLIFY লোড হচ্ছে…</div>;
-
   let body:any;
   if (page === "category") {
     // Daraz-inspired mobile category browser: fixed left category rail and visual subcategory tiles.
@@ -1297,14 +1283,9 @@ function MarketplacePage() {
       }
       return current;
     };
-    // On first visit, open a root category that actually has subcategories.
-    // The first database row is often an empty top-level category, which made the page look unchanged/blank.
-    const defaultRoot = rootCategories.find((category) =>
-      categories.some((child) => child.parent_id === category.id)
-    ) ?? rootCategories[0];
     const activeRoot = rootCategories.find((category) => category.slug === requestedRoot)
       ?? findRoot(requestedCategory)
-      ?? defaultRoot;
+      ?? rootCategories[0];
     const activeCategory = requestedCategory && findRoot(requestedCategory)?.id === activeRoot?.id
       ? requestedCategory
       : activeRoot;
