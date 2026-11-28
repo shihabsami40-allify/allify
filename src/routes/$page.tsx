@@ -1300,6 +1300,7 @@ function MarketplacePage() {
     };
     const activeRoot = rootCategories.find((category) => category.slug === requestedRoot)
       ?? findRoot(requestedCategory)
+      ?? rootCategories.find((root) => categories.some((category) => category.parent_id === root.id))
       ?? rootCategories[0];
     const activeCategory = requestedCategory && findRoot(requestedCategory)?.id === activeRoot?.id
       ? requestedCategory
@@ -1318,6 +1319,16 @@ function MarketplacePage() {
       ? categories.filter((category) => category.parent_id === activeCategory.id)
       : [];
     const categoryItemClass = "flex min-h-[54px] w-full items-center justify-between gap-2 px-3 py-3 text-left text-xs leading-snug transition";
+    const categoryIcon = (slug: string) => ({
+      clothing: "👕", shoes: "👟", watches: "⌚", bags: "👜", daily: "🛒",
+      electronics: "🎧", beauty: "✨", home: "🏠", mobile: "📱", "food-drinks": "🍱",
+      "electronics-audio": "🎧", "electronics-headphones": "🎧", "electronics-speakers": "🔊",
+      "electronics-computers": "💻", "electronics-tv": "📺", "electronics-cameras": "📷",
+      "electronics-appliances": "🔌", "mobile-smartphones": "📱", "mobile-feature-phones": "☎️",
+      "mobile-chargers-cables": "🔋", "mobile-covers-protectors": "📱", "mobile-power-banks": "🔋",
+      "mobile-memory-cards": "💾", "mobile-other-accessories": "🎒", "food-grocery": "🛍️",
+      "food-bakery": "🍰", "food-homemade": "🍲", "food-snacks": "🥤",
+    } as Record<string, string>)[slug] || "🛍️";
     body = shell("ক্যাটাগরি", <>
       <div className="overflow-hidden rounded-xl border bg-white" style={{ borderColor: "#e5ece7" }}>
         <div className="grid min-h-[68vh] grid-cols-[112px_minmax(0,1fr)] sm:grid-cols-[190px_minmax(0,1fr)]">
@@ -1362,7 +1373,10 @@ function MarketplacePage() {
                   <Link key={category.id} to={"/category" as any}
                     search={{ rootCategory: activeRoot?.slug, category: category.slug } as any}
                     className="flex min-h-[76px] items-center justify-between gap-2 rounded-lg border border-[#e8eee9] bg-white px-2.5 py-3 text-xs font-semibold leading-snug text-[#36564a] transition hover:border-[#b7cb8b] hover:bg-[#f8faf5] active:scale-[0.98] sm:min-h-[88px] sm:px-3 sm:text-sm">
-                    <span>{category.name_bn}</span>
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <span aria-hidden="true" className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#f1f6eb] text-xl">{categoryIcon(category.slug)}</span>
+                      <span>{category.name_bn}</span>
+                    </span>
                     <span aria-hidden="true" className="shrink-0 text-base text-[#9bbd31]">›</span>
                   </Link>
                 ))}
