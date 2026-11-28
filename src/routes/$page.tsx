@@ -1284,18 +1284,26 @@ function MarketplacePage() {
 
   let body:any;
   if (page === "category") {
-    // Plain-text category names first; products immediately follow the selected category.
-    // Child categories are shown only after the product list.
+    // Mobile-first category browser: root categories in a left rail,
+    // then child categories or products in the right content pane.
     const rootCategories = categories.filter((category) => !category.parent_id);
     const requestedCategory = categories.find((category) => category.slug === queryValue("category", searchStr));
     const requestedRoot = queryValue("rootCategory", searchStr);
+    const findRoot = (item: any) => {
+      let current = item;
+      const seen = new Set<string>();
+      while (current?.parent_id && !seen.has(current.id)) {
+        seen.add(current.id);
+        current = categories.find((category) => category.id === current.parent_id);
+      }
+      return current;
+    };
     const activeRoot = rootCategories.find((category) => category.slug === requestedRoot)
-      ?? rootCategories.find((category) => category.id === (requestedCategory?.parent_id || requestedCategory?.id))
+      ?? findRoot(requestedCategory)
       ?? rootCategories[0];
-    const activeCategory = requestedCategory && (
-      requestedCategory.id === activeRoot?.id ||
-      categories.some((category) => category.id === requestedCategory.parent_id && category.id === activeRoot?.id)
-    ) ? requestedCategory : activeRoot;
+    const activeCategory = requestedCategory && findRoot(requestedCategory)?.id === activeRoot?.id
+      ? requestedCategory
+      : activeRoot;
     const collectCategoryTree = (ids: string[], seen = new Set<string>()): string[] => {
       const freshIds = ids.filter((id) => !seen.has(id));
       freshIds.forEach((id) => seen.add(id));
@@ -1309,55 +1317,67 @@ function MarketplacePage() {
     const childCategories = activeCategory
       ? categories.filter((category) => category.parent_id === activeCategory.id)
       : [];
-    const categoryNameClass = "inline-flex min-h-10 items-center border-b-2 border-transparent px-2 py-2 text-sm font-medium text-[#36564a] transition hover:border-[#9bbd31] hover:text-[#123b32]";
+    const categoryItemClass = "flex min-h-[54px] w-full items-center justify-between gap-2 px-3 py-3 text-left text-xs leading-snug transition";
     body = shell("ক্যাটাগরি", <>
-      <div className="rounded-xl border bg-white p-3 sm:p-5" style={{ borderColor: "#e5ece7" }}>
-        <nav aria-label="ক্যাটাগরি" className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          {rootCategories.map((category) => {
-            const active = activeRoot?.id === category.id;
-            return <Link key={category.id} to={"/category" as any}
-              search={{ rootCategory: category.slug } as any}
-              aria-current={active ? "page" : undefined}
-              className={categoryNameClass + (active ? " border-[#9bbd31] font-extrabold text-[#123b32]" : "")}>
-              {category.name_bn}
-            </Link>;
-          })}
-        </nav>
+      <div className="overflow-hidden rounded-xl border bg-white" style={{ borderColor: "#e5ece7" }}>
+        <div className="grid min-h-[68vh] grid-cols-[112px_minmax(0,1fr)] sm:grid-cols-[190px_minmax(0,1fr)]">
+          <nav aria-label="মূল ক্যাটাগরি" className="border-r bg-[#f5f7f5]" style={{ borderColor: "#e5ece7" }}>
+            {rootCategories.map((category) => {
+              const active = activeRoot?.id === category.id;
+              return <Link key={category.id} to={"/category" as any}
+                search={{ rootCategory: category.slug } as any}
+                aria-current={active ? "page" : undefined}
+                className={categoryItemClass + (active
+                  ? " border-l-[3px] border-[#9bbd31] bg-white font-extrabold text-[#123b32]"
+                  : " border-l-[3px] border-transparent text-[#52615b] hover:bg-white")}>
+                <span>{category.name_bn}</span>
+                {active && <span aria-hidden="true" className="text-[#8eae29]">›</span>}
+              </Link>;
+            })}
+          </nav>
 
-        <section className="mt-4 border-t pt-4" style={{ borderColor: "#edf1ed" }}>
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h3 className="text-sm font-extrabold sm:text-base" style={{ color: "#123b32" }}>
-              {activeCategory?.name_bn || "পণ্য"}
-            </h3>
-            <span className="shrink-0 text-[10px] text-muted-foreground sm:text-xs">
-              {categoryProducts.length.toLocaleString("bn-BD")}টি পণ্য
-            </span>
-          </div>
-          {categoryProducts.length ? (
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">
-              {categoryProducts.map(productCard)}
+          <section className="min-w-0 p-3 sm:p-5">
+            <div className="mb-3 flex items-center justify-between gap-2 border-b pb-3" style={{ borderColor: "#edf1ed" }}>
+              <div className="min-w-0">
+                {activeCategory?.id !== activeRoot?.id && (
+                  <Link to={"/category" as any} search={{ rootCategory: activeRoot?.slug } as any}
+                    className="mb-1 inline-flex items-center gap-1 text-[11px] font-semibold text-[#68816f]">
+                    <span aria-hidden="true">‹</span> {activeRoot?.name_bn}
+                  </Link>
+                )}
+                <h2 className="truncate text-sm font-extrabold text-[#123b32] sm:text-base">
+                  {activeCategory?.name_bn || "ক্যাটাগরি"}
+                </h2>
+              </div>
+              {childCategories.length === 0 && (
+                <span className="shrink-0 text-[10px] text-muted-foreground sm:text-xs">
+                  {categoryProducts.length.toLocaleString("bn-BD")}টি পণ্য
+                </span>
+              )}
             </div>
-          ) : (
-            <p className="rounded-lg bg-[#f7f9f7] px-3 py-4 text-xs text-muted-foreground">
-              এই ক্যাটাগরিতে এখনো কোনো পণ্য যোগ করা হয়নি।
-            </p>
-          )}
-        </section>
 
-        {childCategories.length > 0 && (
-          <section className="mt-5 border-t pt-4" style={{ borderColor: "#edf1ed" }}>
-            <h3 className="mb-2 text-xs font-bold" style={{ color: "#52615b" }}>সাব ক্যাটাগরি</h3>
-            <nav aria-label="সাব ক্যাটাগরি" className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              {childCategories.map((category) => (
-                <Link key={category.id} to={"/category" as any}
-                  search={{ rootCategory: activeRoot?.slug, category: category.slug } as any}
-                  className={categoryNameClass + (activeCategory?.id === category.id ? " border-[#9bbd31] font-extrabold text-[#123b32]" : "")}>
-                  {category.name_bn}
-                </Link>
-              ))}
-            </nav>
+            {childCategories.length > 0 ? (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                {childCategories.map((category) => (
+                  <Link key={category.id} to={"/category" as any}
+                    search={{ rootCategory: activeRoot?.slug, category: category.slug } as any}
+                    className="flex min-h-[76px] items-center justify-between gap-2 rounded-lg border border-[#e8eee9] bg-white px-2.5 py-3 text-xs font-semibold leading-snug text-[#36564a] transition hover:border-[#b7cb8b] hover:bg-[#f8faf5] active:scale-[0.98] sm:min-h-[88px] sm:px-3 sm:text-sm">
+                    <span>{category.name_bn}</span>
+                    <span aria-hidden="true" className="shrink-0 text-base text-[#9bbd31]">›</span>
+                  </Link>
+                ))}
+              </div>
+            ) : categoryProducts.length ? (
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">
+                {categoryProducts.map(productCard)}
+              </div>
+            ) : (
+              <p className="rounded-lg bg-[#f7f9f7] px-3 py-5 text-center text-xs leading-relaxed text-muted-foreground">
+                এই ক্যাটাগরিতে এখনো কোনো পণ্য যোগ করা হয়নি।
+              </p>
+            )}
           </section>
-        )}
+        </div>
       </div>
     </>);
   } else if (page === "product") {
