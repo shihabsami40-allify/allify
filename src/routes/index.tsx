@@ -52,18 +52,21 @@ function Index() {
       if (error) throw error;
       return data ?? [];
     },
-    staleTime: 60_000,
+    staleTime: 0,
     gcTime: 300_000,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
     retry: 1,
   });
 
   const prods = useQuery({
-    queryKey: ["popular"],
+    queryKey: ["popular-active-store-products-v2"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id,slug,title_bn,price,compare_price,stock,category_id,product_images(url,sort_order),seller_stores(id,name,slug,logo_url,is_demo)")
+        .select("id,slug,title_bn,price,compare_price,stock,category_id,product_images(url,sort_order),seller_stores!inner(id,name,slug,logo_url,is_demo,status)")
         .eq("status", "active")
+        .eq("seller_stores.status", "active")
         .order("sort_order", { referencedTable: "product_images", ascending: true })
         .order("sold_count", { ascending: false })
         .limit(12);
