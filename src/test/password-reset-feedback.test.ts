@@ -8,7 +8,10 @@ import {
 const outcomes: Array<[string, unknown]> = [
   ["accepted request", undefined],
   ["unknown account", { code: "user_not_found", message: "User not found" }],
-  ["email rate limit", { status: 429, code: "over_email_send_rate_limit", message: "Too many emails" }],
+  [
+    "email rate limit",
+    { status: 429, code: "over_email_send_rate_limit", message: "Too many emails" },
+  ],
   ["provider failure", { status: 500, message: "SMTP provider internal detail" }],
   ["network failure", new Error("private network diagnostic")],
 ];
