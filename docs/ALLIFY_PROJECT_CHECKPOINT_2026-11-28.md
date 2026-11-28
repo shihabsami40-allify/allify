@@ -7,6 +7,7 @@ Updated: 2026-11-28 (Bangladesh time)
 - Repository: https://github.com/shihabsami40-allify/allify
 - Default branch: `main`.
 - Latest verified main head: `4d007351798e83d28b83e3dc05a6aa47dce419da` — `fix: read Supabase API keys from JSON values`.
+- GitHub branch metadata reports `main` is currently **not protected** (`protected: false`). No repository ruleset or branch-protection change was made in this run; owner review should consider requiring successful CI checks and review before future merges.
 - PR #3 is MERGED (merge commit `ca62b4efc4bcd6552ea35c7c04494f9384db7e9c`). Its historical body has stale status text; live PR metadata is authoritative.
 - PR #79 is MERGED (merge commit `7595c5a8c04c2b5adbf0c4a1e0588a11f758fb36`); it introduced the current forgot-password and reset-password UI on main.
 - PR #77 remains OPEN but is based on an older main and duplicates the password-reset flow already present on main; do not merge it as a separate feature.
