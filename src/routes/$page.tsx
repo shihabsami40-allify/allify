@@ -28,6 +28,21 @@ type CartLine = { product: Product; quantity: number };
 
 const money = (n: number) => "৳" + Number(n || 0).toLocaleString("bn-BD");
 const queryValue = (key: string, searchStr: string) => new URLSearchParams(searchStr).get(key) || "";
+
+// Supports the current JSON-array format and older single-category values.
+const parseSellerCategorySelection = (value: string): string[] => {
+  const raw = String(value || "").trim();
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return [...new Set(parsed.filter((item): item is string => typeof item === "string" && item.trim().length > 0))];
+    }
+  } catch {
+    // Older applications stored one plain category name.
+  }
+  return [raw];
+};
 const panel = "rounded-2xl border bg-card p-4 shadow-sm";
 const field = "w-full rounded-lg border bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary";
 const primary = "rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50";
