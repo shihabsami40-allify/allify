@@ -210,7 +210,7 @@ function MarketplacePage() {
             ? supabase.from("categories").select("id,slug,name_bn,name_en,sort_order,parent_id").order("sort_order")
             : Promise.resolve({ data: [] as any[] }),
           needsProducts
-            ? supabase.from("products").select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(id,url,sort_order),seller_stores(id,name,slug,area,logo_url,banner_url,is_demo)").eq("status","active").order("sold_count",{ascending:false}).limit(48)
+            ? supabase.from("products").select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(id,url,sort_order),seller_stores!inner(id,name,slug,area,logo_url,banner_url,is_demo,status)").eq("status","active").eq("seller_stores.status","active").order("sold_count",{ascending:false}).limit(48)
             : Promise.resolve({ data: [] as any[] }),
           needsAreas
             ? supabase.from("delivery_areas").select("name_bn,name_en").eq("active",true).order("sort_order")
@@ -263,7 +263,7 @@ function MarketplacePage() {
 
           if (page === "wishlist") {
             if (savedIds.length) {
-              const savedProducts = await supabase.from("products").select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area,logo_url,banner_url,is_demo)").in("id",savedIds).eq("status","active");
+              const savedProducts = await supabase.from("products").select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores!inner(id,name,slug,area,logo_url,banner_url,is_demo,status)").in("id",savedIds).eq("status","active").eq("seller_stores.status","active");
               if (savedProducts.error) throw savedProducts.error;
               const order = new Map(savedIds.map((id:string,index:number)=>[id,index]));
               setWishlistProducts(((savedProducts.data ?? []) as Product[]).sort((a,b)=>(order.get(a.id)??0)-(order.get(b.id)??0)));
@@ -321,8 +321,8 @@ function MarketplacePage() {
         if (page === "product" && slug) {
           setDetailProduct(null);
           const found = await supabase.from("products")
-            .select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores(id,name,slug,area,logo_url,banner_url,is_demo)")
-            .eq("slug", slug).eq("status", "active").maybeSingle();
+            .select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(url),seller_stores!inner(id,name,slug,area,logo_url,banner_url,is_demo,status)")
+            .eq("slug", slug).eq("status", "active").eq("seller_stores.status","active").maybeSingle();
           if (found.error) throw found.error;
           if (!alive) return;
           setDetailProduct(found.data as Product | null);
@@ -340,7 +340,7 @@ function MarketplacePage() {
             } else setReviewedOrderItemIds([]);
           } else { setProductReviews([]); setReviewedOrderItemIds([]); }
         } else if (page === "store" && slug) {
-          const found = await supabase.from("seller_stores").select("*,products(id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(id,url,sort_order),seller_stores(id,name,slug,area,logo_url,banner_url,is_demo))").eq("slug",slug).maybeSingle();
+          const found = await supabase.from("seller_stores").select("*,products(id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(id,url,sort_order),seller_stores(id,name,slug,area,logo_url,banner_url,is_demo))").eq("slug",slug).eq("status","active").maybeSingle();
           if (found.error) throw found.error;
           if (!alive) return;
           setStore(found.data);
