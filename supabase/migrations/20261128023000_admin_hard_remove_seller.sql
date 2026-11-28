@@ -52,18 +52,17 @@ begin
   ) then
     raise exception 'Admin accounts cannot be removed as sellers';
   end if;
-  if not exists (select 1 from auth.users where id = v_owner_id) then
-    raise exception 'Seller auth account not found';
-  end if;
-
   -- Keep orders, order items, and courier records. Their store/product
   -- references become NULL through the FK rules; order snapshots remain.
   delete from public.seller_applications where user_id = v_owner_id;
   delete from public.carts where user_id = v_owner_id;
+  delete from public.wishlist_items where user_id = v_owner_id;
+  delete from public.addresses where user_id = v_owner_id;
+  delete from public.product_reviews where user_id = v_owner_id;
+  delete from public.legacy_stores where owner_id = v_owner_id;
   delete from public.user_roles where user_id = v_owner_id;
   delete from public.profiles where id = v_owner_id;
   delete from public.seller_stores where id = p_store_id;
-  delete from auth.users where id = v_owner_id;
 
   return jsonb_build_object(
     'success', true,
