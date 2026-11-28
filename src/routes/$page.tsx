@@ -1283,9 +1283,110 @@ function MarketplacePage() {
   if (loading) return <div role="status" aria-live="polite" className="mx-auto max-w-6xl p-8 text-center text-muted-foreground">ALLIFY লোড হচ্ছে…</div>;
 
   let body:any;
-  if (page === "search" || page === "category" || page === "market") {
-    const title = page==="search" ? "পণ্য খুঁজুন" : page==="category" ? "ক্যাটাগরি অনুযায়ী পণ্য" : "সব পণ্য";
-    body = shell(title,<><form className="mb-5 flex gap-2" onSubmit={e=>{e.preventDefault();navigate({to: "/search" as any,search:{q:form.q||""} as any});}}><input className={field} placeholder="পণ্যের নাম লিখুন…" value={form.q??queryValue("q", searchStr)} onChange={e=>set("q",e.target.value)}/><button className={primary}>খুঁজুন</button></form>{page === "search" && !queryValue("q", searchStr).trim() && (<div className="mb-5 flex flex-wrap gap-2">{categories.filter(c=>!c.parent_id).map(c=><div key={c.id} className="flex min-w-40 flex-col items-start gap-2 rounded-xl border p-3"><Link to={"/category" as any} search={{category:c.slug} as any} className={secondary+" font-semibold"}>{c.name_bn}</Link><div className="flex w-full flex-col gap-2">{categories.filter(child=>child.parent_id===c.id).map(child=><div key={child.id} className="flex flex-col items-start gap-1"><Link to={"/category" as any} search={{category:child.slug} as any} className={secondary+" text-xs"}>{child.name_bn}</Link><div className="flex flex-wrap gap-2 pl-3">{categories.filter(grand=>grand.parent_id===child.id).map(grand=><Link key={grand.id} to={"/category" as any} search={{category:grand.slug} as any} className={secondary+" text-xs"}>{grand.name_bn}</Link>)}</div></div>)}</div></div>)}</div>)}<div className="grid grid-cols-2 gap-3 md:grid-cols-4">{filtered.map(productCard)}</div>{!filtered.length&&<p className={panel}>এই অনুসন্ধানে কোনো পণ্য পাওয়া যায়নি।</p>}</>);
+  if (page === "category") {
+    // Daraz Bangladesh's 12 top-level categories; legacy ALLIFY categories remain
+    // in the database and are mapped beneath the closest matching group.
+    const darazCategories = [
+      { slug: "women-girls-fashion", name_bn: "নারী ও মেয়েদের ফ্যাশন", name_en: "Women's & Girls' Fashion", icon: "👗", legacy: ["clothing", "shoes"] },
+      { slug: "health-beauty", name_bn: "স্বাস্থ্য ও সৌন্দর্য", name_en: "Health & Beauty", icon: "💄", legacy: ["beauty"] },
+      { slug: "watches-bags-jewellery", name_bn: "ঘড়ি, ব্যাগ ও জুয়েলারি", name_en: "Watches, Bags & Jewellery", icon: "⌚", legacy: ["watches", "bags"] },
+      { slug: "men-boys-fashion", name_bn: "পুরুষ ও ছেলেদের ফ্যাশন", name_en: "Men's & Boys' Fashion", icon: "👔", legacy: ["clothing", "shoes"] },
+      { slug: "mother-baby", name_bn: "মা ও শিশু", name_en: "Mother & Baby", icon: "🧸", legacy: [] },
+      { slug: "electronics-device", name_bn: "ইলেকট্রনিক ডিভাইস", name_en: "Electronics Device", icon: "📱", legacy: ["electronics"] },
+      { slug: "tv-home-appliances", name_bn: "টিভি ও হোম অ্যাপ্লায়েন্স", name_en: "TV & Home Appliances", icon: "📺", legacy: ["electronics-tv", "electronics-appliances"] },
+      { slug: "electronic-accessories", name_bn: "ইলেকট্রনিক অ্যাকসেসরিজ", name_en: "Electronic Accessories", icon: "🎧", legacy: ["electronics-audio", "mobile"] },
+      { slug: "groceries-pets", name_bn: "গ্রোসারি ও পোষা প্রাণী", name_en: "Groceries & Pets", icon: "🛒", legacy: ["daily", "food-drinks"] },
+      { slug: "home-lifestyle", name_bn: "হোম ও লাইফস্টাইল", name_en: "Home & Lifestyle", icon: "🏠", legacy: ["home"] },
+      { slug: "sports-outdoors", name_bn: "স্পোর্টস ও আউটডোর", name_en: "Sports & Outdoors", icon: "⚽", legacy: [] },
+      { slug: "automotive-motorbike", name_bn: "অটোমোটিভ ও মোটরবাইক", name_en: "Automotive & Motorbike", icon: "🚗", legacy: [] },
+    ];
+    const requestedLegacy = categories.find((category) => category.slug === queryValue("category", searchStr));
+    const requestedGroup = queryValue("darazCategory", searchStr);
+    const activeGroup = darazCategories.find((category) => category.slug === requestedGroup)
+      ?? darazCategories.find((group) => requestedLegacy && group.legacy.includes(requestedLegacy.slug))
+      ?? darazCategories[0];
+    const mappedRoots = categories.filter((category) => activeGroup.legacy.includes(category.slug));
+    const mappedIds = mappedRoots.map((category) => category.id);
+    const childCategories = categories.filter((category) =>
+      activeGroup.legacy.includes(category.slug) || mappedIds.includes(category.parent_id || "")
+    );
+    const collectCategoryTree = (ids: string[]): string[] => {
+      const children = categories.filter((category) => ids.includes(category.parent_id || ""));
+      const childIds = children.map((category) => category.id);
+      return [...ids, ...childIds, ...collectCategoryTree(childIds)];
+    };
+    const visibleProductCategoryIds = collectCategoryTree(mappedIds);
+    const categoryProducts = products.filter((product) => visibleProductCategoryIds.includes(product.category_id || ""));
+    const categoryTile = (category: typeof categories[number]) => (
+      <Link key={category.id} to={"/category" as any} search={{ category: category.slug } as any}
+        className="group flex min-h-28 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border bg-white px-2 py-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-[#b8cdbf] hover:shadow-md"
+        style={{ borderColor: "#e5ece7" }}>
+        <span className="grid h-14 w-14 place-items-center rounded-2xl text-3xl" style={{ background: "linear-gradient(145deg,#f4f8ee,#e5efdf)" }}>🛍️</span>
+        <span className="line-clamp-2 text-xs font-bold leading-5 text-[#24352e]">{category.name_bn}</span>
+        {category.name_en && <span className="line-clamp-1 text-[10px] text-muted-foreground">{category.name_en}</span>}
+      </Link>
+    );
+
+    body = shell("ক্যাটাগরি", <>
+      <div className="mb-4 rounded-xl border px-4 py-3" style={{ borderColor: "#e2ebe4", background: "linear-gradient(115deg,#f2f7ed,#ffffff 72%)" }}>
+        <p className="text-[10px] font-extrabold tracking-[.16em]" style={{ color: "#6d8a72" }}>ALLIFY SHOPPING</p>
+        <h2 className="mt-1 text-lg font-black tracking-tight sm:text-xl" style={{ color: "#123b32" }}>ক্যাটাগরি ব্রাউজ করুন</h2>
+        <p className="mt-1 text-xs text-muted-foreground">বাম পাশ থেকে বিভাগ বেছে নিন, ডান পাশে উপ-বিভাগ দেখুন</p>
+      </div>
+      <div className="grid min-h-[520px] grid-cols-[112px_minmax(0,1fr)] overflow-hidden rounded-xl border bg-white shadow-sm sm:grid-cols-[220px_minmax(0,1fr)] md:grid-cols-[250px_minmax(0,1fr)]" style={{ borderColor: "#e5ece7" }}>
+        <aside aria-label="মূল ক্যাটাগরি" className="border-r" style={{ borderColor: "#e5ece7", background: "#f5f7f4" }}>
+          <div className="border-b px-2 py-3 text-[10px] font-extrabold sm:px-4 sm:text-xs" style={{ borderColor: "#e5ece7", color: "#52615b" }}>সব ক্যাটাগরি</div>
+          <nav className="max-h-[70vh] overflow-y-auto">
+            {darazCategories.map((category) => {
+              const active = activeGroup.slug === category.slug;
+              return <Link key={category.slug} to={"/category" as any} search={{ darazCategory: category.slug } as any}
+                aria-current={active ? "page" : undefined}
+                className={"relative flex min-h-[68px] items-center gap-2 border-b px-2 py-3 text-left transition sm:gap-3 sm:px-4 " + (active ? "bg-white font-extrabold" : "font-medium hover:bg-white/70")}
+                style={{ borderColor: "#e9eee9", color: active ? "#123b32" : "#52615b" }}>
+                {active && <span className="absolute inset-y-2 left-0 w-1 rounded-r-full" style={{ background: "#9bbd31" }} />}
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-lg sm:h-10 sm:w-10 sm:text-2xl" style={{ background: active ? "#edf4e8" : "#ffffff" }}>{category.icon}</span>
+                <span className="min-w-0 text-[10px] leading-4 sm:text-sm sm:leading-5">{category.name_bn}</span>
+              </Link>;
+            })}
+          </nav>
+        </aside>
+        <section className="min-w-0 p-3 sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-2 border-b pb-3" style={{ borderColor: "#edf1ed" }}>
+            <div className="min-w-0"><p className="text-[10px] font-bold tracking-wide" style={{ color: "#789080" }}>নির্বাচিত বিভাগ</p><h3 className="mt-1 truncate text-sm font-black sm:text-lg" style={{ color: "#123b32" }}>{activeGroup.name_bn}</h3></div>
+            <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold sm:text-xs" style={{ background: "#edf4e8", color: "#356b50" }}>{childCategories.length.toLocaleString("bn-BD")}টি উপ-বিভাগ</span>
+          </div>
+          {childCategories.length ? <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">{childCategories.map(categoryTile)}</div>
+            : <div className="rounded-xl border p-4 text-center text-xs text-muted-foreground" style={{ borderColor: "#e5ece7", background: "#fbfcfa" }}>এই বিভাগের উপ-বিভাগ এখনো যোগ করা হয়নি।</div>}
+          <div className="mb-3 mt-6 flex items-end justify-between gap-2"><div><h3 className="text-sm font-extrabold sm:text-base" style={{ color: "#123b32" }}>এই বিভাগের পণ্য</h3><p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">আপনার পছন্দের পণ্য বেছে নিন</p></div><span className="shrink-0 text-[10px] text-muted-foreground sm:text-xs">{categoryProducts.length.toLocaleString("bn-BD")}টি পণ্য</span></div>
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">{categoryProducts.map(productCard)}</div>
+          {!categoryProducts.length && <p className={panel}>এই ক্যাটাগরিতে এখনো কোনো পণ্য যোগ করা হয়নি।</p>}
+        </section>
+      </div>
+    </>);
+  } else if (page === "search" || page === "market") {
+    const title = page === "search" ? "পণ্য খুঁজুন" : "সব পণ্য";
+    body = shell(title, <>
+      <form className="mb-5 flex gap-2" onSubmit={e=>{e.preventDefault();navigate({to: "/search" as any,search:{q:form.q||""} as any});}}>
+        <input className={field} placeholder="পণ্যের নাম লিখুন…" value={form.q??queryValue("q", searchStr)} onChange={e=>set("q",e.target.value)}/>
+        <button className={primary}>খুঁজুন</button>
+      </form>
+      {page === "search" && !queryValue("q", searchStr).trim() && (
+        <div className="mb-5 flex flex-wrap gap-2">
+          {categories.filter(c=>!c.parent_id).map(c=>(
+            <div key={c.id} className="flex min-w-40 flex-col items-start gap-2 rounded-xl border p-3">
+              <Link to={"/category" as any} search={{category:c.slug} as any} className={secondary+" font-semibold"}>{c.name_bn}</Link>
+              <div className="flex w-full flex-col gap-2">
+                {categories.filter(child=>child.parent_id===c.id).map(child=>(
+                  <Link key={child.id} to={"/category" as any} search={{category:child.slug} as any} className={secondary+" text-xs"}>{child.name_bn}</Link>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{filtered.map(productCard)}</div>
+      {!filtered.length&&<p className={panel}>এই অনুসন্ধানে কোনো পণ্য পাওয়া যায়নি।</p>}
+    </>);
   } else if (page === "product") {
     const p = selected;
     body = shell("পণ্যের বিবরণ",p ? <div className="grid items-start gap-6 md:grid-cols-2"><section className="space-y-3"><div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl border bg-muted p-3"><img src={p.product_images?.[detailImageIndex]?.url||p.product_images?.[0]?.url||"/images/products/placeholder.svg"} onError={(e) => { const img = e.currentTarget; if (img.dataset.fallback !== "1") { img.dataset.fallback = "1"; img.src = "/images/products/placeholder.svg"; } else { img.style.display = "none"; } }} className="max-h-full w-full object-contain" alt={p.title_bn+" ছবি "+(detailImageIndex+1)}/>{(p.product_images||[]).length>1&&<><button type="button" aria-label="আগের ছবি" onClick={()=>setDetailImageIndex(i=>(i-1+(p.product_images||[]).length)%(p.product_images||[]).length)} className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full border bg-background/90 p-2 text-xl shadow">‹</button><button type="button" aria-label="পরের ছবি" onClick={()=>setDetailImageIndex(i=>(i+1)%(p.product_images||[]).length)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border bg-background/90 p-2 text-xl shadow">›</button><span className="absolute bottom-3 right-3 rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white">{(detailImageIndex+1).toLocaleString("bn-BD")} / {(p.product_images||[]).length.toLocaleString("bn-BD")}</span></>}</div>{(p.product_images||[]).length>1&&<div className="flex gap-2 overflow-x-auto pb-1">{p.product_images?.map((image,index)=><button type="button" key={image.url+index} aria-label={"ছবি "+(index+1)+" দেখুন"} aria-pressed={detailImageIndex===index} onClick={()=>setDetailImageIndex(index)} className={"h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-muted p-1 "+(detailImageIndex===index?"border-primary":"border-transparent")}><img src={image.url} alt={p.title_bn+" ছবি "+(index+1)} loading="lazy" className="h-full w-full object-contain"/></button>)}</div>}<p className="text-xs text-muted-foreground">পণ্যের আসল ছবি দেখে অর্ডার করুন।</p></section><section className="rounded-2xl border bg-card p-4 md:p-6"><p className="text-xs font-semibold"><span style={{color:"#123b32"}}>ALLI<span style={{color:"#9bbd31"}}>F</span>Y</span><span className="text-primary"> · চট্টগ্রামের বাজার</span></p><h1 className="mt-2 text-2xl font-bold leading-snug">{p.title_bn}</h1><div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">{p.seller_stores?.logo_url?<img src={p.seller_stores.logo_url} alt="" className="h-9 w-9 rounded-full border object-cover" onError={e=>{e.currentTarget.style.display="none";}}/>:<span className="flex h-9 w-9 items-center justify-center rounded-full border bg-muted text-xs font-bold">{(p.seller_stores?.name||"দোকান").slice(0,1)}</span>}<span>{p.seller_stores?.slug?<Link to={"/store" as any} search={{slug:p.seller_stores.slug} as any} className="font-semibold hover:text-primary">{p.seller_stores.name}</Link>:p.seller_stores?.name||"স্থানীয় দোকান"}{p.seller_stores?.area?" · "+p.seller_stores.area:""}{p.seller_stores?.is_demo?" · নমুনা দোকান":""}</span></div><div className="mt-5 flex flex-wrap items-baseline gap-3"><p className="text-3xl font-extrabold text-primary">{money(p.price)}</p>{p.compare_price&&<><s className="text-sm text-muted-foreground">{money(p.compare_price)}</s><span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">সাশ্রয় {money(Math.max(0,p.compare_price-p.price))}</span></>}</div><div className="mt-4 rounded-xl bg-muted/60 p-3 text-sm"><p className="font-semibold">{p.stock>0?"স্টকে আছে":"স্টক শেষ"}</p><p className="mt-1 text-xs text-muted-foreground">{p.stock>0?"স্টক: "+p.stock.toLocaleString("bn-BD")+" টি":"এই পণ্যটি এখন অর্ডার করা যাচ্ছে না।"}</p></div><div className="mt-5 hidden grid-cols-2 gap-2 md:grid md:grid-cols-3"><button className={secondary} disabled={!p.stock || !!p.seller_stores?.is_demo} onClick={()=>addToCart(p)}>কার্টে যোগ করুন</button><button className={primary} disabled={!p.stock || !!p.seller_stores?.is_demo} onClick={()=>buyNow(p)}>এখনই অর্ডার করুন</button>{p.seller_stores?.whatsapp_phone&&!p.seller_stores?.is_demo&&<a href={`https://wa.me/${p.seller_stores.whatsapp_phone.replace(/\D/g,"").replace(/^0/,"880")}?text=${encodeURIComponent(`আসসালামু আলাইকুম, ALLIFY-তে ${p.title_bn} পণ্যটি দেখেছি। এ সম্পর্কে জানতে চাই।`)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#16A34A] px-3 py-2.5 text-center text-sm font-semibold text-white hover:bg-[#15803D]"><span aria-hidden="true">☏</span> WhatsApp-এ যোগাযোগ</a>}</div><button type="button" className="mt-3 w-full rounded-lg border px-3 py-2 text-sm font-semibold hover:bg-muted" onClick={()=>toggleWishlist(p)}>{wishlistIds.includes(p.id)?"♥ পছন্দের তালিকা থেকে সরান":"♡ পছন্দের তালিকায় রাখুন"}</button><div className="mt-4 flex flex-wrap gap-3 border-t pt-4 text-xs text-muted-foreground"><span>ক্যাশ অন ডেলিভারি</span><span>চট্টগ্রাম জেলা</span></div>{p.seller_stores?.slug&&<p className="mt-4 text-sm"><Link to={"/store" as any} search={{slug:p.seller_stores.slug} as any} className={linkClass}>এই দোকানের আরও পণ্য দেখুন</Link></p>}</section><section className="md:col-span-2 rounded-2xl border bg-card p-4 md:p-6"><h2 className="text-lg font-bold">পণ্যের বিবরণ</h2><p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-foreground">{p.description||"বিক্রেতা এখনো পণ্যের বিস্তারিত বিবরণ যোগ করেননি।"}</p></section><section className="md:col-span-2 rounded-2xl border bg-card p-4 md:p-6"><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-bold">ক্রেতাদের রিভিউ</h2><span className="text-sm text-muted-foreground">★ {Number(p.rating||0).toFixed(1)} / ৫ · {productReviews.length.toLocaleString("bn-BD")}টি রিভিউ</span></div>{productReviews.length?productReviews.map(review=><article key={review.id} className="border-t py-3"><p className="font-semibold text-amber-600">{"★".repeat(review.rating)}{"☆".repeat(5-review.rating)}</p>{review.review_text&&<p className="mt-1 whitespace-pre-wrap text-sm">{review.review_text}</p>}<p className="mt-1 text-xs text-muted-foreground">যাচাইকৃত ক্রেতা · {new Date(review.created_at).toLocaleDateString("bn-BD")}</p></article>):<p className="mt-3 text-sm text-muted-foreground">এখনো কোনো রিভিউ নেই। পণ্যটি কেনা ও ডেলিভারি সম্পন্ন হলে প্রথম রিভিউ দিতে পারবে।</p>}{user&&orders.some(order=>(order.order_items||[]).some((item:any)=>item.product_id===p.id&&item.status==="delivered"&&!order.is_demo&&!reviewedOrderItemIds.includes(item.id)))&&<form className="mt-4 space-y-3 border-t pt-4" onSubmit={e=>{e.preventDefault();void submitProductReview(p.id);}}><h3 className="font-semibold">তোমার অভিজ্ঞতা জানাও</h3><label className="block text-sm">রেটিং<select className={field+" mt-1"} value={form.review_rating||"5"} onChange={e=>set("review_rating",e.target.value)}><option value="5">৫ — চমৎকার</option><option value="4">৪ — ভালো</option><option value="3">৩ — মোটামুটি</option><option value="2">২ — ভালো নয়</option><option value="1">১ — খারাপ</option></select></label><textarea className={field} rows={3} maxLength={1200} placeholder="পণ্যের মান ও অভিজ্ঞতা লিখুন (ঐচ্ছিক)" value={form.review_text||""} onChange={e=>set("review_text",e.target.value)}/><button disabled={busy} className={primary}>রিভিউ জমা দিন</button></form>}</section></div>:<p className={panel}>পণ্যটি পাওয়া যায়নি। <Link to={"/market" as any} className={linkClass}>সব পণ্য দেখুন</Link></p>);
