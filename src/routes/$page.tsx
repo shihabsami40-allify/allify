@@ -356,6 +356,7 @@ function MarketplacePage() {
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") setIsPasswordRecovery(true);
+      else if (event === "SIGNED_OUT") setIsPasswordRecovery(false);
       setUser(session?.user ?? null);
       if (!session?.user) {
         setRole("customer");
