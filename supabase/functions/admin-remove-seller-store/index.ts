@@ -113,10 +113,6 @@ Deno.serve(async (req: Request) => {
       return json({ error: "অ্যাডমিন অ্যাকাউন্টকে সেলার হিসেবে রিমুভ করা যাবে না।" }, 400);
     }
 
-    // Revoke the seller's active sessions before deleting their login identity.
-    const { error: signOutError } = await admin.auth.admin.signOut(store.owner_id, "global");
-    if (signOutError) throw signOutError;
-
     const { data: removalResult, error: removalError } = await admin.rpc("admin_remove_seller_store", {
       p_store_id: store.id,
       p_owner_id: store.owner_id,
