@@ -220,6 +220,10 @@ function MarketplacePage() {
 
         const currentUser = session.data.session?.user ?? null;
         setUser(currentUser);
+        if (currentUser) {
+          try { await syncPendingSellerApplication(currentUser); }
+          catch (syncError: any) { if (alive) setError(syncError.message || "বিক্রেতা আবেদন জমা করা যায়নি।"); }
+        }
         setCategories(cats.data ?? []);
         setProducts((productRows.data ?? []) as Product[]);
         setAreas((areaRows.data ?? []) as Area[]);
@@ -362,9 +366,11 @@ function MarketplacePage() {
         setApplications([]);
         return;
       }
-      if (!needsRole) return;
       window.setTimeout(() => {
         void (async () => {
+          try { await syncPendingSellerApplication(session.user); }
+          catch (syncError: any) { if (alive) setError(syncError.message || "বিক্রেতা আবেদন জমা করা যায়নি।"); }
+          if (!needsRole) return;
           const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id);
           if (error) {
             if (alive) setError("অ্যাকাউন্টের অনুমতি যাচাই করা যায়নি। পৃষ্ঠাটি রিফ্রেশ করুন।");
@@ -416,6 +422,36 @@ function MarketplacePage() {
       (!cat || matchingCategoryIds.includes(p.category_id || "")));
   }, [products,categories,page,searchStr]);
 
+  const syncPendingSellerApplication = async (authUser: any) => {
+    const draft = authUser?.user_metadata?.pending_seller_application;
+    if (!draft || typeof draft !== "object") return false;
+    const { data: existing, error: lookupError } = await supabase
+      .from("seller_applications")
+      .select("id")
+      .eq("user_id", authUser.id)
+      .eq("status", "pending")
+      .maybeSingle();
+    if (lookupError) throw lookupError;
+    if (!existing) {
+      const { error } = await supabase.from("seller_applications").insert({
+        user_id: authUser.id,
+        store_name: draft.store_name,
+        owner_name: draft.owner_name,
+        phone: draft.phone,
+        area: draft.store_location,
+        address: draft.store_location,
+        category_hint: draft.category_hint || null,
+        description: draft.description || null,
+      });
+      if (error) throw error;
+    }
+    const { error: metadataError } = await supabase.auth.updateUser({
+      data: { pending_seller_application: null },
+    });
+    if (metadataError) throw metadataError;
+    return true;
+  };
+
   const submitAuth = async (e: FormEvent, mode: "login"|"register") => {
     e.preventDefault(); setBusy(true); setError(""); setMessage("");
     try {
@@ -424,9 +460,35 @@ function MarketplacePage() {
         if (error) throw error;
         setMessage("লগইন সফল হয়েছে।"); navigate({to: "/account" as any});
       } else {
-        const {error} = await supabase.auth.signUp({email:form.email||"",password:form.password||"",options:{data:{full_name:form.name||""},emailRedirectTo:"https://allify-chattogram.vercel.app/account"}});
+        let pendingSellerApplication: Record<string, string> | null = null;
+        try {
+          const rawDraft = sessionStorage.getItem("allify-pending-seller-application");
+          if (rawDraft) pendingSellerApplication = JSON.parse(rawDraft);
+        } catch { pendingSellerApplication = null; }
+        const { data, error } = await supabase.auth.signUp({
+          email: form.email || "",
+          password: form.password || "",
+          options: {
+            data: {
+              full_name: form.name || "",
+              ...(pendingSellerApplication ? { pending_seller_application: pendingSellerApplication } : {}),
+            },
+            emailRedirectTo: "https://allify-chattogram.vercel.app/account",
+          },
+        });
         if (error) throw error;
-        setMessage("রেজিস্ট্রেশন সফল। ইমেইল যাচাই করতে হতে পারে।");
+        if (pendingSellerApplication) {
+          sessionStorage.removeItem("allify-pending-seller-application");
+          if (data.session?.user) {
+            await syncPendingSellerApplication(data.session.user);
+            setMessage("অ্যাকাউন্ট তৈরি ও বিক্রেতা আবেদন জমা হয়েছে।");
+            navigate({ to: "/account" as any });
+          } else {
+            setMessage("অ্যাকাউন্ট তৈরি হয়েছে। ইমেইল যাচাই সম্পন্ন হলে আপনার বিক্রেতা আবেদন স্বয়ংক্রিয়ভাবে জমা হবে।");
+          }
+        } else {
+          setMessage("রেজিস্ট্রেশন সফল। ইমেইল যাচাই করতে হতে পারে।");
+        }
       }
     } catch(e:any) { setError(e.message || "অনুরোধটি সম্পন্ন হয়নি।"); }
     finally { setBusy(false); }
@@ -449,7 +511,25 @@ function MarketplacePage() {
   };
 
   const submitSeller = async (e: FormEvent) => {
-    e.preventDefault(); if (!user) { navigate({to: "/login" as any}); return; }
+    e.preventDefault();
+    if (!user) {
+      try {
+        sessionStorage.setItem("allify-pending-seller-application", JSON.stringify({
+          store_name: String(form.store_name || "").trim(),
+          owner_name: String(form.owner_name || "").trim(),
+          phone: String(form.phone || "").trim(),
+          store_location: String(form.store_location || "").trim(),
+          category_hint: String(form.category_hint || "").trim(),
+          description: String(form.description || "").trim(),
+        }));
+        setError("");
+        setMessage("আপনার দেওয়া দোকানের তথ্য সংরক্ষণ করা হয়েছে। এখন অ্যাকাউন্ট তৈরি করুন; তথ্যগুলো হারাবে না।");
+        navigate({ to: "/register" as any });
+      } catch {
+        setError("আবেদনের তথ্য সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।");
+      }
+      return;
+    }
     if (applications.some((application) => application.status === "pending")) {
       setError("তোমার একটি আবেদন ইতিমধ্যে পর্যালোচনার অপেক্ষায় আছে।");
       return;
@@ -1129,7 +1209,7 @@ function MarketplacePage() {
     body = shell(reg?"নতুন অ্যাকাউন্ট":"লগইন",<form onSubmit={e=>submitAuth(e,reg?"register":"login")} className={panel+" max-w-md space-y-3"}>{reg&&<input required className={field} placeholder="তোমার নাম" value={form.name||""} onChange={e=>set("name",e.target.value)}/>}<input required type="email" className={field} placeholder="ইমেইল" value={form.email||""} onChange={e=>set("email",e.target.value)}/><input required minLength={reg?8:1} pattern={reg?"(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}":undefined} title={reg?"কমপক্ষে ৮ অক্ষর এবং ইংরেজি বড় হাতের, ছোট হাতের অক্ষর, সংখ্যা ও চিহ্ন ব্যবহার করুন।":undefined} type="password" autoComplete={reg?"new-password":"current-password"} className={field} placeholder={reg?"পাসওয়ার্ড (৮+ অক্ষর; বড়-ছোট অক্ষর, সংখ্যা ও চিহ্ন)":"পাসওয়ার্ড"} value={form.password||""} onChange={e=>set("password",e.target.value)}/><button disabled={busy} className={primary+" w-full"}>{busy?"অপেক্ষা করুন…":reg?"অ্যাকাউন্ট তৈরি করুন":"লগইন"}</button>{reg&&<button type="button" disabled={busy} onClick={resendVerification} className={secondary+" w-full"}>ভেরিফিকেশন ইমেইল আবার পাঠান</button>}<p className="text-sm text-muted-foreground">{reg?"আগে অ্যাকাউন্ট আছে? ":"অ্যাকাউন্ট নেই? "}<Link className={linkClass} to={(reg?"/login":"/register") as any}>{reg?"লগইন করুন":"রেজিস্ট্রেশন করুন"}</Link></p></form>);
   } else if (page === "seller") {
     const pendingApplication = applications.find(application=>application.status==="pending");
-    body = shell("বিক্রেতা হোন",myStore?<div className={panel}>তোমার দোকান চালু আছে: <b>{myStore.name}</b> <Link to={"/seller-dashboard" as any} className={linkClass}>ড্যাশবোর্ড খুলুন</Link></div>:pendingApplication?<div className={panel+" max-w-2xl space-y-2"}><b>তোমার বিক্রেতা আবেদন পর্যালোচনার অপেক্ষায় আছে।</b><p className="text-sm text-muted-foreground">দোকান: {pendingApplication.store_name}</p><p className="text-sm text-muted-foreground">আবেদনের অবস্থা: {pendingApplication.status==="pending"?"পর্যালোচনাধীন":pendingApplication.status}</p><p className="text-sm">অ্যাডমিন সিদ্ধান্ত না দেওয়া পর্যন্ত নতুন আবেদন জমা দেওয়ার প্রয়োজন নেই।</p></div>:<form onSubmit={submitSeller} className={panel+" max-w-2xl space-y-3"}><p className="text-sm text-muted-foreground">চট্টগ্রামের দোকানদাররা বিনামূল্যে আবেদন করতে পারবেন। অনুমোদনের পর দোকান ও পণ্য যোগ করা যাবে।</p><input required minLength={2} maxLength={80} className={field} placeholder="দোকানের নাম" value={form.store_name||""} onChange={e=>set("store_name",e.target.value)}/><input required minLength={2} maxLength={100} className={field} placeholder="মালিকের নাম" value={form.owner_name||""} onChange={e=>set("owner_name",e.target.value)}/><input required type="tel" inputMode="numeric" minLength={11} maxLength={11} pattern="01[3-9][0-9]{8}" className={field} placeholder="মোবাইল নম্বর" value={form.phone||""} onChange={e=>set("phone",e.target.value)}/><input required minLength={5} maxLength={300} className={field} placeholder="দোকানের লোকেশন / ঠিকানা (যেমন: চকবাজার, চট্টগ্রাম)" value={form.store_location||""} onChange={e=>set("store_location",e.target.value)}/><input maxLength={100} className={field} placeholder="পণ্যের ধরন" value={form.category_hint||""} onChange={e=>set("category_hint",e.target.value)}/><textarea maxLength={1000} className={field} placeholder="দোকান সম্পর্কে" value={form.description||""} onChange={e=>set("description",e.target.value)}/><button disabled={busy} className={primary}>{busy?"জমা হচ্ছে…":"বিনামূল্যে আবেদন জমা দিন"}</button>{!user&&<p className="text-xs text-muted-foreground">আবেদন করতে আগে <Link to={"/login" as any} className={linkClass}>লগইন</Link> করতে হবে।</p>}</form>);
+    body = shell("বিক্রেতা হোন",myStore?<div className={panel}>তোমার দোকান চালু আছে: <b>{myStore.name}</b> <Link to={"/seller-dashboard" as any} className={linkClass}>ড্যাশবোর্ড খুলুন</Link></div>:pendingApplication?<div className={panel+" max-w-2xl space-y-2"}><b>তোমার বিক্রেতা আবেদন পর্যালোচনার অপেক্ষায় আছে।</b><p className="text-sm text-muted-foreground">দোকান: {pendingApplication.store_name}</p><p className="text-sm text-muted-foreground">আবেদনের অবস্থা: {pendingApplication.status==="pending"?"পর্যালোচনাধীন":pendingApplication.status}</p><p className="text-sm">অ্যাডমিন সিদ্ধান্ত না দেওয়া পর্যন্ত নতুন আবেদন জমা দেওয়ার প্রয়োজন নেই।</p></div>:<form onSubmit={submitSeller} className={panel+" max-w-2xl space-y-3"}><p className="text-sm text-muted-foreground">চট্টগ্রামের দোকানদাররা বিনামূল্যে আবেদন করতে পারবেন। অনুমোদনের পর দোকান ও পণ্য যোগ করা যাবে।</p><input required minLength={2} maxLength={80} className={field} placeholder="দোকানের নাম" value={form.store_name||""} onChange={e=>set("store_name",e.target.value)}/><input required minLength={2} maxLength={100} className={field} placeholder="মালিকের নাম" value={form.owner_name||""} onChange={e=>set("owner_name",e.target.value)}/><input required type="tel" inputMode="numeric" minLength={11} maxLength={11} pattern="01[3-9][0-9]{8}" className={field} placeholder="মোবাইল নম্বর" value={form.phone||""} onChange={e=>set("phone",e.target.value)}/><input required minLength={5} maxLength={300} className={field} placeholder="দোকানের লোকেশন / ঠিকানা (যেমন: চকবাজার, চট্টগ্রাম)" value={form.store_location||""} onChange={e=>set("store_location",e.target.value)}/><input maxLength={100} className={field} placeholder="পণ্যের ধরন" value={form.category_hint||""} onChange={e=>set("category_hint",e.target.value)}/><textarea maxLength={1000} className={field} placeholder="দোকান সম্পর্কে" value={form.description||""} onChange={e=>set("description",e.target.value)}/><button disabled={busy} className={primary}>{busy?"জমা হচ্ছে…":"বিনামূল্যে আবেদন জমা দিন"}</button>{!user&&<p className="text-xs text-muted-foreground">প্রথমবার আবেদন করলে Submit চাপার পর অ্যাকাউন্ট তৈরি করতে পারবেন। আগে অ্যাকাউন্ট থাকলে <Link to={"/login" as any} className={linkClass}>লগইন</Link> করুন।</p>}</form>);
   } else if (page === "seller-dashboard") {
     const deliveredSales=sellerOrders.filter(item=>item.status==="delivered").reduce((sum,item)=>sum+Number(item.unit_price)*Number(item.quantity),0);
     const pendingCount=sellerOrders.filter(item=>item.status==="pending").length;
