@@ -1284,88 +1284,99 @@ function MarketplacePage() {
 
   let body:any;
   if (page === "category") {
-    const selectedCategory = categories.find((category) => category.slug === queryValue("category", searchStr));
     const rootCategories = categories.filter((category) => !category.parent_id);
+    const requestedCategory = categories.find((category) => category.slug === queryValue("category", searchStr));
+    const selectedCategory = requestedCategory ?? rootCategories[0];
+    const activeRoot = selectedCategory?.parent_id
+      ? rootCategories.find((category) => category.id === selectedCategory.parent_id) ?? selectedCategory
+      : selectedCategory;
+    const childCategories = selectedCategory
+      ? categories.filter((category) => category.parent_id === selectedCategory.id)
+      : [];
     const categoryEmoji = (name: string) => {
       const value = name.toLowerCase();
-      if (value.includes("পোশাক") || value.includes("কাপড়") || value.includes("কাপড়")) return "👕";
-      if (value.includes("জুতা") || value.includes("স্যান্ডেল")) return "👟";
-      if (value.includes("ঘড়ি") || value.includes("ঘড়ি")) return "⌚";
-      if (value.includes("ব্যাগ")) return "🎒";
-      if (value.includes("বিউটি") || value.includes("প্রসাধন")) return "💄";
-      if (value.includes("মোবাইল") || value.includes("ফোন")) return "📱";
-      if (value.includes("ইলেকট্র") || value.includes("কম্পিউটার")) return "💻";
-      if (value.includes("খাবার") || value.includes("খাদ্য")) return "🍱";
-      if (value.includes("ঘর") || value.includes("হোম") || value.includes("আসবাব")) return "🏠";
-      if (value.includes("খেলনা") || value.includes("শিশু")) return "🧸";
-      if (value.includes("বই") || value.includes("স্টেশনারি")) return "📚";
-      if (value.includes("স্পোর্টস") || value.includes("খেলাধুলা")) return "⚽";
+      if (value.includes("পোশাক") || value.includes("কাপড়") || value.includes("কাপড়") || value.includes("fashion")) return "👕";
+      if (value.includes("জুতা") || value.includes("স্যান্ডেল") || value.includes("shoe")) return "👟";
+      if (value.includes("ঘড়ি") || value.includes("ঘড়ি") || value.includes("watch")) return "⌚";
+      if (value.includes("ব্যাগ") || value.includes("bag")) return "🎒";
+      if (value.includes("বিউটি") || value.includes("প্রসাধন") || value.includes("beauty")) return "💄";
+      if (value.includes("মোবাইল") || value.includes("ফোন") || value.includes("device")) return "📱";
+      if (value.includes("ইলেকট্র") || value.includes("কম্পিউটার") || value.includes("electronic")) return "💻";
+      if (value.includes("খাবার") || value.includes("খাদ্য") || value.includes("grocery")) return "🛒";
+      if (value.includes("ঘর") || value.includes("হোম") || value.includes("আসবাব") || value.includes("home")) return "🏠";
+      if (value.includes("খেলনা") || value.includes("শিশু") || value.includes("baby")) return "🧸";
+      if (value.includes("স্পোর্টস") || value.includes("খেলাধুলা") || value.includes("sport")) return "⚽";
+      if (value.includes("গাড়ি") || value.includes("মোটর") || value.includes("automotive")) return "🚗";
       return "🛍️";
     };
     const categoryTile = (category: typeof categories[number]) => (
       <Link key={category.id} to={"/category" as any} search={{ category: category.slug } as any}
-        className="group flex min-w-0 min-h-28 flex-col items-center justify-center gap-2 rounded-2xl border bg-white px-2 py-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-[#b8cdbf] hover:shadow-md"
+        className="group flex min-h-28 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border bg-white px-2 py-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-[#b8cdbf] hover:shadow-md"
         style={{ borderColor: "#e5ece7" }}>
-        <span className="grid h-14 w-14 place-items-center rounded-2xl text-3xl transition group-hover:scale-105" style={{ background: "linear-gradient(145deg,#f4f8ee,#e5efdf)" }}>{categoryEmoji(category.name_bn)}</span>
+        <span className="grid h-14 w-14 place-items-center rounded-2xl text-3xl transition group-hover:scale-105" style={{ background: "linear-gradient(145deg,#f4f8ee,#e5efdf)" }}>{categoryEmoji(category.name_bn + " " + (category.name_en || ""))}</span>
         <span className="line-clamp-2 text-xs font-bold leading-5 text-[#24352e]">{category.name_bn}</span>
         {category.name_en && <span className="line-clamp-1 text-[10px] text-muted-foreground">{category.name_en}</span>}
       </Link>
     );
 
     body = shell("ক্যাটাগরি", <>
-      <div className="mb-5 rounded-2xl border px-4 py-4 sm:px-6 sm:py-5" style={{ borderColor: "#e2ebe4", background: "linear-gradient(115deg,#f2f7ed,#ffffff 72%)" }}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-extrabold tracking-[.16em]" style={{ color: "#6d8a72" }}>ALLIFY SHOPPING</p>
-            <h2 className="mt-1 text-xl font-black tracking-tight sm:text-2xl" style={{ color: "#123b32" }}>{selectedCategory ? selectedCategory.name_bn : "সব ক্যাটাগরি"}</h2>
-            <p className="mt-1 text-xs text-muted-foreground">{selectedCategory ? "এই ক্যাটাগরির পছন্দের বিভাগ বেছে নিন" : "আপনার প্রয়োজনীয় পণ্য সহজে খুঁজে নিন"}</p>
-          </div>
-          {selectedCategory && <Link to={"/category" as any} className="rounded-xl border bg-white px-3 py-2 text-xs font-bold" style={{ borderColor: "#dce7df", color: "#123b32" }}>← সব ক্যাটাগরি</Link>}
-        </div>
+      <div className="mb-4 rounded-xl border px-4 py-3" style={{ borderColor: "#e2ebe4", background: "linear-gradient(115deg,#f2f7ed,#ffffff 72%)" }}>
+        <p className="text-[10px] font-extrabold tracking-[.16em]" style={{ color: "#6d8a72" }}>ALLIFY SHOPPING</p>
+        <h2 className="mt-1 text-lg font-black tracking-tight sm:text-xl" style={{ color: "#123b32" }}>ক্যাটাগরি ব্রাউজ করুন</h2>
+        <p className="mt-1 text-xs text-muted-foreground">বাম পাশ থেকে বিভাগ বেছে নিন, ডান পাশে উপ-বিভাগ দেখুন</p>
       </div>
 
-      {!selectedCategory ? (
-        <div className="space-y-5">
-          {rootCategories.map((root) => {
-            const children = categories.filter((category) => category.parent_id === root.id);
-            return (
-              <section key={root.id} className="overflow-hidden rounded-2xl border bg-white shadow-sm" style={{ borderColor: "#e5ece7" }}>
-                <div className="flex items-center justify-between gap-3 border-b px-4 py-3" style={{ borderColor: "#edf1ed", background: "#fbfcfa" }}>
-                  <Link to={"/category" as any} search={{ category: root.slug } as any} className="flex min-w-0 items-center gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-2xl" style={{ background: "#edf4e8" }}>{categoryEmoji(root.name_bn)}</span>
-                    <span className="truncate text-sm font-extrabold" style={{ color: "#123b32" }}>{root.name_bn}</span>
+      {rootCategories.length > 0 ? (
+        <div className="grid min-h-[520px] grid-cols-[112px_minmax(0,1fr)] overflow-hidden rounded-xl border bg-white shadow-sm sm:grid-cols-[220px_minmax(0,1fr)] md:grid-cols-[250px_minmax(0,1fr)]" style={{ borderColor: "#e5ece7" }}>
+          <aside aria-label="মূল ক্যাটাগরি" className="border-r" style={{ borderColor: "#e5ece7", background: "#f5f7f4" }}>
+            <div className="border-b px-2 py-3 text-[10px] font-extrabold sm:px-4 sm:text-xs" style={{ borderColor: "#e5ece7", color: "#52615b" }}>সব ক্যাটাগরি</div>
+            <nav className="max-h-[70vh] overflow-y-auto">
+              {rootCategories.map((root) => {
+                const active = activeRoot?.id === root.id;
+                return (
+                  <Link key={root.id} to={"/category" as any} search={{ category: root.slug } as any}
+                    aria-current={active ? "page" : undefined}
+                    className={"relative flex min-h-[68px] items-center gap-2 border-b px-2 py-3 text-left transition sm:gap-3 sm:px-4 " + (active ? "bg-white font-extrabold" : "font-medium hover:bg-white/70")}
+                    style={{ borderColor: "#e9eee9", color: active ? "#123b32" : "#52615b" }}>
+                    {active && <span className="absolute inset-y-2 left-0 w-1 rounded-r-full" style={{ background: "#9bbd31" }} />}
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-lg sm:h-10 sm:w-10 sm:text-2xl" style={{ background: active ? "#edf4e8" : "#ffffff" }}>{categoryEmoji(root.name_bn + " " + (root.name_en || ""))}</span>
+                    <span className="min-w-0 text-[10px] leading-4 sm:text-sm sm:leading-5">{root.name_bn}</span>
                   </Link>
-                  <Link to={"/category" as any} search={{ category: root.slug } as any} className="shrink-0 text-xs font-bold" style={{ color: "#356b50" }}>সব দেখুন →</Link>
+                );
+              })}
+            </nav>
+          </aside>
+
+          <section className="min-w-0 p-3 sm:p-5">
+            {selectedCategory ? <>
+              <div className="mb-4 flex items-center justify-between gap-2 border-b pb-3" style={{ borderColor: "#edf1ed" }}>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold tracking-wide" style={{ color: "#789080" }}>নির্বাচিত বিভাগ</p>
+                  <h3 className="mt-1 truncate text-sm font-black sm:text-lg" style={{ color: "#123b32" }}>{selectedCategory.name_bn}</h3>
                 </div>
-                {children.length > 0 ? (
-                  <div className="grid grid-cols-3 gap-2 p-3 sm:grid-cols-4 sm:gap-3 md:grid-cols-5">
-                    {children.map(categoryTile)}
-                  </div>
-                ) : (
-                  <div className="px-4 py-3 text-xs text-muted-foreground">এই বিভাগে পণ্য দেখতে উপরের নামটি নির্বাচন করুন।</div>
-                )}
-              </section>
-            );
-          })}
-          {rootCategories.length === 0 && <p className={panel}>ক্যাটাগরি শিগগিরই যোগ করা হবে।</p>}
+                <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold sm:text-xs" style={{ background: "#edf4e8", color: "#356b50" }}>{childCategories.length.toLocaleString("bn-BD")}টি উপ-বিভাগ</span>
+              </div>
+
+              {childCategories.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
+                  {childCategories.map(categoryTile)}
+                </div>
+              ) : (
+                <div className="rounded-xl border p-4 text-center text-xs text-muted-foreground" style={{ borderColor: "#e5ece7", background: "#fbfcfa" }}>
+                  এই বিভাগে আরও উপ-বিভাগ নেই। নিচে পণ্যগুলো দেখুন।
+                </div>
+              )}
+
+              <div className="mb-3 mt-6 flex items-end justify-between gap-2">
+                <div><h3 className="text-sm font-extrabold sm:text-base" style={{ color: "#123b32" }}>এই বিভাগের পণ্য</h3><p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">আপনার পছন্দের পণ্য বেছে নিন</p></div>
+                <span className="shrink-0 text-[10px] text-muted-foreground sm:text-xs">{filtered.length.toLocaleString("bn-BD")}টি পণ্য</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">{filtered.map(productCard)}</div>
+              {!filtered.length && <p className={panel}>এই ক্যাটাগরিতে এখনো কোনো পণ্য যোগ করা হয়নি।</p>}
+            </> : <p className={panel}>ক্যাটাগরি শিগগিরই যোগ করা হবে।</p>}
+          </section>
         </div>
-      ) : (
-        <>
-          {categories.filter((category) => category.parent_id === selectedCategory.id).length > 0 ? (
-            <section className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 md:grid-cols-5">
-              {categories.filter((category) => category.parent_id === selectedCategory.id).map(categoryTile)}
-            </section>
-          ) : (
-            <p className={panel}>এই ক্যাটাগরিতে আলাদা কোনো উপ-বিভাগ নেই। নিচে পণ্যগুলো দেখুন।</p>
-          )}
-          <div className="mb-3 mt-7 flex items-end justify-between gap-3">
-            <div><h2 className="text-lg font-extrabold" style={{ color: "#123b32" }}>এই ক্যাটাগরির পণ্য</h2><p className="mt-1 text-xs text-muted-foreground">আপনার পছন্দের পণ্য বেছে নিন</p></div>
-            <span className="text-xs text-muted-foreground">{filtered.length.toLocaleString("bn-BD")} টি পণ্য</span>
-          </div>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{filtered.map(productCard)}</div>
-          {!filtered.length && <p className={panel}>এই ক্যাটাগরিতে এখনো কোনো পণ্য যোগ করা হয়নি।</p>}
-        </>
-      )}
+      ) : <p className={panel}>ক্যাটাগরি শিগগিরই যোগ করা হবে।</p>}
     </>);
   } else if (page === "search" || page === "market") {
     const title = page === "search" ? "পণ্য খুঁজুন" : "সব পণ্য";
