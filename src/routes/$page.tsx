@@ -284,7 +284,7 @@ function MarketplacePage() {
 
           if (needsAdminData && roles.includes("admin")) {
             const [adminProductRows, adminOrderRows, appRows, storeRows, orderCount, completedCount, productCount, activeStoreCount] = await Promise.all([
-              supabase.from("products").select("id,title_bn,price,stock,status,seller_stores(name,is_demo)").order("created_at",{ascending:false}).limit(100),
+              supabase.from("products").select("id,title_bn,price,stock,status,seller_stores!inner(id,name,is_demo)").order("created_at",{ascending:false}).limit(100),
               supabase.from("orders").select("id,order_no,is_demo,status,total,recipient,phone,area,created_at,order_items(id,title,unit_price,quantity,status)").order("created_at",{ascending:false}).limit(100),
               supabase.from("seller_applications").select("*").order("created_at",{ascending:false}).limit(100),
               supabase.from("seller_stores").select("id,name,slug,area,status,is_demo,created_at").order("created_at",{ascending:false}).limit(100),
@@ -905,6 +905,34 @@ function MarketplacePage() {
     finally { setBusy(false); }
   };
 
+  const removeAdminStore = async (id:string) => {
+    const target = adminStores.find(store => store.id === id);
+    if (!target) return;
+    if (target.is_demo) { setError("নমুনা দোকান রিমুভ করা যাবে না।"); return; }
+    const confirmation = window.confirm("“" + target.name + "” দোকানটি সম্পূর্ণ রিমুভ করবেন? দোকান, পণ্য, আবেদন এবং সেলারের লগইন অ্যাকাউন্ট স্থায়ীভাবে মুছে যাবে। পুরোনো অর্ডার ও কুরিয়ার ইতিহাস থাকবে। এই কাজ ফেরত নেওয়া যাবে না।");
+    if (!confirmation) return;
+    setBusy(true); setError(""); setMessage("");
+    try {
+      const {data,error} = await supabase.functions.invoke("admin-remove-seller-store",{body:{storeId:id}});
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "দোকানটি সম্পূর্ণ রিমুভ করা যায়নি।");
+      const removedOwnerId = data.ownerId as string;
+      setAdminStores(rows=>rows.filter(store=>store.id!==id));
+      setAdminProducts(rows=>rows.filter(product=>product.seller_stores?.id!==id));
+      setApplications(rows=>rows.filter(app=>app.user_id!==removedOwnerId));
+      setAdminStats(stats=>({...stats,activeStores:Math.max(0,stats.activeStores-(target.status==="active"?1:0))}));
+      setProducts(rows=>rows.filter(product=>product.seller_stores?.id!==id));
+      setWishlistProducts(rows=>rows.filter(product=>product.seller_stores?.id!==id));
+      setDetailProduct(product=>product?.seller_stores?.id===id?null:product);
+      setStore(current=>current?.id===id?null:current);
+      setCart(rows=>{ const next=rows.filter(line=>line.product.seller_stores?.id!==id); try { localStorage.setItem("allify-cart",JSON.stringify(next)); } catch {} return next; });
+      setMessage(data.storageCleanupPending
+        ? "দোকান, পণ্য, আবেদন ও সেলার অ্যাকাউন্ট রিমুভ হয়েছে। অর্ডার ও কুরিয়ার ইতিহাস সংরক্ষিত আছে; কিছু পুরোনো ছবি পরিষ্কারের কাজ বাকি আছে।"
+        : "দোকান, পণ্য, আবেদন ও সেলার অ্যাকাউন্ট সম্পূর্ণ রিমুভ হয়েছে। পুরোনো অর্ডার ও কুরিয়ার ইতিহাস সংরক্ষিত আছে।");
+    } catch(e:any) { setError(e.message || "দোকানটি সম্পূর্ণ রিমুভ করা যায়নি।"); }
+    finally { setBusy(false); }
+  };
+
   const updateAdminStoreStatus = async (id:string, status:"active"|"suspended") => {
     const target = adminStores.find(store => store.id === id);
     if (!target) return;
@@ -1359,7 +1387,7 @@ function MarketplacePage() {
               {adminStores.length ? <div className="divide-y">{adminStores.map(store => <div key={store.id} className="flex items-center gap-3 p-3.5">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted text-xl">🏪</span>
                 <div className="min-w-0 flex-1"><b className="block truncate text-sm">{store.name}</b><p className="mt-0.5 text-xs text-muted-foreground">{store.area || "এলাকা উল্লেখ নেই"}</p></div>
-                <div className="flex shrink-0 flex-col items-end gap-2"><span className={"rounded-full px-2.5 py-1 text-[10px] font-semibold "+(store.status==="active"?"bg-emerald-50 text-emerald-800":store.status==="pending"?"bg-amber-50 text-amber-800":"bg-muted text-muted-foreground")}>{store.status==="active"?"সক্রিয়":store.status==="pending"?"অপেক্ষমাণ":"বন্ধ"}</span><button type="button" disabled={busy||store.is_demo||store.status==="pending"} className={secondary+" px-3 py-2 text-xs"} onClick={()=>updateAdminStoreStatus(store.id,store.status==="active"?"suspended":"active")}>{store.status==="active"?"দোকান বন্ধ করুন":store.status==="suspended"?"আবার চালু করুন":"অপেক্ষমাণ"}</button></div>
+                <div className="flex shrink-0 flex-col items-end gap-2"><span className={"rounded-full px-2.5 py-1 text-[10px] font-semibold "+(store.status==="active"?"bg-emerald-50 text-emerald-800":store.status==="pending"?"bg-amber-50 text-amber-800":"bg-muted text-muted-foreground")}>{store.status==="active"?"সক্রিয়":store.status==="pending"?"অপেক্ষমাণ":"বন্ধ"}</span><button type="button" disabled={busy||store.is_demo||store.status==="pending"} className={secondary+" px-3 py-2 text-xs"} onClick={()=>updateAdminStoreStatus(store.id,store.status==="active"?"suspended":"active")}>{store.status==="active"?"দোকান বন্ধ করুন":store.status==="suspended"?"আবার চালু করুন":"অপেক্ষমাণ"}</button><button type="button" disabled={busy||store.is_demo} className="rounded-lg border border-red-300 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50" onClick={()=>removeAdminStore(store.id)}>রিমুভ করুন</button></div>
               </div>)}</div> : <p className="p-6 text-center text-sm text-muted-foreground">এখনো কোনো দোকান পাওয়া যায়নি।</p>}
             </div>
           </section>
