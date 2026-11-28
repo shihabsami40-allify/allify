@@ -57,12 +57,15 @@ Deno.serve(async (req: Request) => {
 
     const publishableKeys = envKeySet("SUPABASE_PUBLISHABLE_KEYS");
     const secretKeys = envKeySet("SUPABASE_SECRET_KEYS");
-    const publishableKey = publishableKeys.default
-      ? Deno.env.get(publishableKeys.default)
-      : Deno.env.get("SUPABASE_ANON_KEY");
-    const secretKey = secretKeys.default
-      ? Deno.env.get(secretKeys.default)
-      : Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    // Support current singular API-key env names and legacy Supabase env names.
+    const publishableKey =
+      (publishableKeys.default ? Deno.env.get(publishableKeys.default) : undefined) ??
+      Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ??
+      Deno.env.get("SUPABASE_ANON_KEY");
+    const secretKey =
+      (secretKeys.default ? Deno.env.get(secretKeys.default) : undefined) ??
+      Deno.env.get("SUPABASE_SECRET_KEY") ??
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     if (!supabaseUrl || !publishableKey || !secretKey) {
       throw new Error("সার্ভার কনফিগারেশন অসম্পূর্ণ।");
