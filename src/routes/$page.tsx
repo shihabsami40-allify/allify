@@ -20,7 +20,7 @@ type Product = {
   id: string; slug: string; title_bn: string; title_en?: string | null;
   description?: string | null; price: number; compare_price?: number | null;
   stock: number; category_id?: string | null;
-  product_images?: { id?: string; url: string; sort_order?: number }[]; seller_stores?: { id?: string; name: string; slug?: string; area?: string; logo_url?: string | null; banner_url?: string | null; is_demo?: boolean };
+  product_images?: { id?: string; url: string; sort_order?: number }[]; seller_stores?: { id?: string; name: string; slug?: string; area?: string; logo_url?: string | null; banner_url?: string | null; is_demo?: boolean; status?: string };
 };
 type Area = { name_bn: string; name_en: string };
 type CartLine = { product: Product; quantity: number };
@@ -780,8 +780,32 @@ function MarketplacePage() {
       if (error) throw error;
       if (!data) throw new Error("দোকানটি পাওয়া যায়নি বা পরিবর্তনের অনুমতি নেই।");
       setAdminStores(rows=>rows.map(store=>store.id===id?{...store,status}:store));
-      setAdminStats(stats=>({...stats,activeStores:Math.max(0,stats.activeStores+(status==="active"?1:-1))}));
-      setMessage(status==="suspended" ? "দোকানটি বন্ধ করা হয়েছে। দোকানের পণ্য ক্রেতাদের কাছে আর দেখা যাবে না।" : "দোকানটি আবার চালু করা হয়েছে।");
+      setAdminStats(stats=>({...stats,activeStores:Math.max(0,stats.activeStores+(target.status===status?0:status==="active"?1:-1))}));
+      if (status === "suspended") {
+        // Immediately remove this store's products from every already-mounted customer view.
+        setProducts(rows=>rows.filter(product=>product.seller_stores?.id!==id));
+        setWishlistProducts(rows=>rows.filter(product=>product.seller_stores?.id!==id));
+        setDetailProduct(product=>product?.seller_stores?.id===id?null:product);
+        setStore(current=>current?.id===id?null:current);
+        setCart(rows=>{
+          const next=rows.filter(line=>line.product.seller_stores?.id!==id);
+          try { localStorage.setItem("allify-cart",JSON.stringify(next)); } catch {}
+          return next;
+        });
+        setMessage("দোকানটি বন্ধ হয়েছে। হোমপেজসহ খোলা সব পৃষ্ঠা থেকে পণ্যগুলো সঙ্গে সঙ্গেই সরানো হয়েছে।");
+      } else {
+        // Re-fetch products when reopening so they reappear without a page reload.
+        const {data:restoredProducts,error:productsError}=await supabase.from("products")
+          .select("id,slug,title_bn,title_en,description,price,compare_price,stock,category_id,product_images(id,url,sort_order),seller_stores!inner(id,name,slug,area,logo_url,banner_url,is_demo,status)")
+          .eq("store_id",id).eq("status","active").eq("seller_stores.status","active");
+        if (productsError) throw productsError;
+        setProducts(rows=>{
+          const byId=new Map(rows.map(product=>[product.id,product]));
+          for (const product of (restoredProducts??[]) as Product[]) byId.set(product.id,product);
+          return Array.from(byId.values()).sort((a,b)=>Number((b as any).sold_count||0)-Number((a as any).sold_count||0)).slice(0,48);
+        });
+        setMessage("দোকানটি আবার চালু হয়েছে। পণ্যগুলো হোমপেজে ফিরিয়ে আনা হয়েছে।");
+      }
     } catch(e:any) { setError(e.message || "দোকানের অবস্থা পরিবর্তন করা যায়নি।"); }
     finally { setBusy(false); }
   };
