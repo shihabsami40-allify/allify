@@ -445,6 +445,7 @@ export type Database = {
           address: string | null
           area: string
           banner_url: string | null
+          whatsapp_phone: string | null
           created_at: string
           description: string | null
           id: string
@@ -462,6 +463,7 @@ export type Database = {
           address?: string | null
           area?: string
           banner_url?: string | null
+          whatsapp_phone?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -479,6 +481,7 @@ export type Database = {
           address?: string | null
           area?: string
           banner_url?: string | null
+          whatsapp_phone?: string | null
           created_at?: string
           description?: string | null
           id?: string
