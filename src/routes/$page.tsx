@@ -10,6 +10,7 @@ import {
   validateSellerProductImage,
 } from "@/lib/product-image-input";
 import { getSellerApplicationSubmitError } from "@/lib/seller-application-error";
+import { getPasswordResetFeedback } from "@/lib/password-reset-feedback";
 import { sanitizeStoredCart } from "@/lib/cart-validation";
 import { AdminCatalogControls } from "@/components/AdminCatalogControls";
 import { SellerCategoryPicker } from "@/components/SellerCategoryPicker";
@@ -530,10 +531,9 @@ function MarketplacePage() {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
-      if (error) throw error;
-      setMessage("যদি এই ইমেইলে ALLIFY অ্যাকাউন্ট থাকে, তাহলে পাসওয়ার্ড পরিবর্তনের লিংক পাঠানো হয়েছে। ইনবক্স ও Spam ফোল্ডার দেখুন।");
-    } catch (e: any) {
-      setError(e.message || "রিসেট ইমেইল পাঠানো যায়নি। কিছুক্ষণ পর আবার চেষ্টা করুন।");
+      setMessage(getPasswordResetFeedback(error));
+    } catch (requestError: unknown) {
+      setMessage(getPasswordResetFeedback(requestError));
     } finally { setBusy(false); }
   };
 
