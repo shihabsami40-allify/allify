@@ -223,8 +223,9 @@ function MarketplacePage() {
 
         const currentUser = session.data.session?.user ?? null;
         setUser(currentUser);
+        let sellerApplicationSynced = false;
         if (currentUser) {
-          try { await syncPendingSellerApplication(currentUser); }
+          try { sellerApplicationSynced = await syncPendingSellerApplication(currentUser); }
           catch (syncError: any) { if (alive) setError(syncError.message || "বিক্রেতা আবেদন জমা করা যায়নি।"); }
         }
         setCategories(cats.data ?? []);
@@ -265,6 +266,10 @@ function MarketplacePage() {
           const roles = roleRows.data?.map((row:any) => row.role) ?? [];
           if (needsRole) setRole(roles.includes("admin") ? "admin" : roles.includes("seller") ? "seller" : "customer");
           if (needsStore) setMyStore(storeRow.data);
+          if (sellerApplicationSynced && storeRow.data && roles.includes("seller")) {
+            navigate({ to: "/seller-dashboard" as any });
+            return;
+          }
           if (needsOrders && !roles.includes("admin")) setOrders(orderRows.data ?? []);
           else if (needsOrders) setOrders([]);
 
@@ -475,7 +480,7 @@ function MarketplacePage() {
       } else {
         let pendingSellerApplication: Record<string, string> | null = null;
         try {
-          const rawDraft = sessionStorage.getItem("allify-pending-seller-application");
+          const rawDraft = localStorage.getItem("allify-pending-seller-application") || sessionStorage.getItem("allify-pending-seller-application");
           if (rawDraft) pendingSellerApplication = JSON.parse(rawDraft);
         } catch { pendingSellerApplication = null; }
         const { data, error } = await supabase.auth.signUp({
@@ -491,6 +496,7 @@ function MarketplacePage() {
         });
         if (error) throw error;
         if (pendingSellerApplication) {
+          localStorage.removeItem("allify-pending-seller-application");
           sessionStorage.removeItem("allify-pending-seller-application");
           if (data.session?.user) {
             setMessage("অ্যাকাউন্ট তৈরি হয়েছে। বিক্রেতা আবেদন জমা হচ্ছে…");
@@ -571,7 +577,7 @@ function MarketplacePage() {
     e.preventDefault();
     if (!user) {
       try {
-        sessionStorage.setItem("allify-pending-seller-application", JSON.stringify({
+        localStorage.setItem("allify-pending-seller-application", JSON.stringify({
           store_name: String(form.store_name || "").trim(),
           owner_name: String(form.owner_name || "").trim(),
           phone: String(form.phone || "").trim(),
