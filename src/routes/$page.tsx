@@ -768,6 +768,24 @@ function MarketplacePage() {
     finally { setBusy(false); }
   };
 
+  const updateAdminStoreStatus = async (id:string, status:"active"|"suspended") => {
+    const target = adminStores.find(store => store.id === id);
+    if (!target) return;
+    if (target.is_demo) { setError("নমুনা দোকানের অবস্থা পরিবর্তন করা যাবে না।"); return; }
+    const action = status === "suspended" ? "বন্ধ" : "আবার চালু";
+    if (!window.confirm(`“${target.name}” দোকানটি ${action} করতে চান?`)) return;
+    setBusy(true); setError(""); setMessage("");
+    try {
+      const {data,error} = await supabase.from("seller_stores").update({status}).eq("id",id).select("id,status").maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error("দোকানটি পাওয়া যায়নি বা পরিবর্তনের অনুমতি নেই।");
+      setAdminStores(rows=>rows.map(store=>store.id===id?{...store,status}:store));
+      setAdminStats(stats=>({...stats,activeStores:Math.max(0,stats.activeStores+(status==="active"?1:-1))}));
+      setMessage(status==="suspended" ? "দোকানটি বন্ধ করা হয়েছে। দোকানের পণ্য ক্রেতাদের কাছে আর দেখা যাবে না।" : "দোকানটি আবার চালু করা হয়েছে।");
+    } catch(e:any) { setError(e.message || "দোকানের অবস্থা পরিবর্তন করা যায়নি।"); }
+    finally { setBusy(false); }
+  };
+
   const updateAdminProduct = async (id:string, status:string) => {
     if (adminProducts.find(product => product.id === id)?.seller_stores?.is_demo) {
       setError("নমুনা পণ্যের প্রকাশ-অবস্থা পরিবর্তন করা যাবে না।");
@@ -1176,7 +1194,7 @@ function MarketplacePage() {
               {adminStores.length ? <div className="divide-y">{adminStores.map(store => <div key={store.id} className="flex items-center gap-3 p-3.5">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted text-xl">🏪</span>
                 <div className="min-w-0 flex-1"><b className="block truncate text-sm">{store.name}</b><p className="mt-0.5 text-xs text-muted-foreground">{store.area || "এলাকা উল্লেখ নেই"}</p></div>
-                <span className={"shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold "+(store.status==="active"?"bg-emerald-50 text-emerald-800":store.status==="pending"?"bg-amber-50 text-amber-800":"bg-muted text-muted-foreground")}>{store.status==="active"?"সক্রিয়":store.status==="pending"?"অপেক্ষমাণ":"স্থগিত"}</span>
+                <div className="flex shrink-0 flex-col items-end gap-2"><span className={"rounded-full px-2.5 py-1 text-[10px] font-semibold "+(store.status==="active"?"bg-emerald-50 text-emerald-800":store.status==="pending"?"bg-amber-50 text-amber-800":"bg-muted text-muted-foreground")}>{store.status==="active"?"সক্রিয়":store.status==="pending"?"অপেক্ষমাণ":"বন্ধ"}</span><button type="button" disabled={busy||store.is_demo||store.status==="pending"} className={secondary+" px-3 py-2 text-xs"} onClick={()=>updateAdminStoreStatus(store.id,store.status==="active"?"suspended":"active")}>{store.status==="active"?"দোকান বন্ধ করুন":store.status==="suspended"?"আবার চালু করুন":"অপেক্ষমাণ"}</button></div>
               </div>)}</div> : <p className="p-6 text-center text-sm text-muted-foreground">এখনো কোনো দোকান পাওয়া যায়নি।</p>}
             </div>
           </section>
