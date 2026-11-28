@@ -1284,8 +1284,7 @@ function MarketplacePage() {
 
   let body:any;
   if (page === "category") {
-    // Mobile-first category browser: root categories in a left rail,
-    // then child categories or products in the right content pane.
+    // Daraz-inspired mobile category browser: fixed left category rail and visual subcategory tiles.
     const rootCategories = categories.filter((category) => !category.parent_id);
     const requestedCategory = categories.find((category) => category.slug === queryValue("category", searchStr));
     const requestedRoot = queryValue("rootCategory", searchStr);
@@ -1300,7 +1299,6 @@ function MarketplacePage() {
     };
     const activeRoot = rootCategories.find((category) => category.slug === requestedRoot)
       ?? findRoot(requestedCategory)
-      ?? rootCategories.find((root) => categories.some((category) => category.parent_id === root.id))
       ?? rootCategories[0];
     const activeCategory = requestedCategory && findRoot(requestedCategory)?.id === activeRoot?.id
       ? requestedCategory
@@ -1318,7 +1316,6 @@ function MarketplacePage() {
     const childCategories = activeCategory
       ? categories.filter((category) => category.parent_id === activeCategory.id)
       : [];
-    const categoryItemClass = "flex min-h-[54px] w-full items-center justify-between gap-2 px-3 py-3 text-left text-xs leading-snug transition";
     const categoryIcon = (slug: string) => ({
       clothing: "👕", shoes: "👟", watches: "⌚", bags: "👜", daily: "🛒",
       electronics: "🎧", beauty: "✨", home: "🏠", mobile: "📱", "food-drinks": "🍱",
@@ -1330,63 +1327,67 @@ function MarketplacePage() {
       "food-bakery": "🍰", "food-homemade": "🍲", "food-snacks": "🥤",
     } as Record<string, string>)[slug] || "🛍️";
     body = shell("ক্যাটাগরি", <>
-      <div className="overflow-hidden rounded-xl border bg-white" style={{ borderColor: "#e5ece7" }}>
-        <div className="grid min-h-[68vh] grid-cols-[112px_minmax(0,1fr)] sm:grid-cols-[190px_minmax(0,1fr)]">
-          <nav aria-label="মূল ক্যাটাগরি" className="border-r bg-[#f5f7f5]" style={{ borderColor: "#e5ece7" }}>
+      <div className="-mx-4 overflow-hidden border-y border-[#e9eee9] bg-white sm:mx-0 sm:rounded-xl sm:border">
+        <div className="grid min-h-[calc(100vh-170px)] grid-cols-[104px_minmax(0,1fr)] sm:grid-cols-[190px_minmax(0,1fr)]">
+          <nav aria-label="মূল ক্যাটাগরি" className="max-h-[calc(100vh-170px)] overflow-y-auto border-r border-[#edf0ed] bg-[#f6f7f6]">
             {rootCategories.map((category) => {
               const active = activeRoot?.id === category.id;
               return <Link key={category.id} to={"/category" as any}
                 search={{ rootCategory: category.slug } as any}
                 aria-current={active ? "page" : undefined}
-                className={categoryItemClass + (active
-                  ? " border-l-[3px] border-[#9bbd31] bg-white font-extrabold text-[#123b32]"
-                  : " border-l-[3px] border-transparent text-[#52615b] hover:bg-white")}>
+                className={"relative flex min-h-[62px] w-full items-center justify-center px-2 py-3 text-center text-[11px] leading-snug transition sm:min-h-[68px] sm:px-3 sm:text-sm " + (active
+                  ? "bg-white font-bold text-[#123b32]"
+                  : "text-[#58635d] hover:bg-white/80")}>
+                {active && <span className="absolute inset-y-0 left-0 w-[3px] bg-[#9bbd31]" />}
                 <span>{category.name_bn}</span>
-                {active && <span aria-hidden="true" className="text-[#8eae29]">›</span>}
               </Link>;
             })}
           </nav>
 
-          <section className="min-w-0 p-3 sm:p-5">
-            <div className="mb-3 flex items-center justify-between gap-2 border-b pb-3" style={{ borderColor: "#edf1ed" }}>
+          <section className="min-w-0 bg-white px-3 py-4 sm:px-5 sm:py-5">
+            <div className="mb-4 flex items-center justify-between gap-2">
               <div className="min-w-0">
                 {activeCategory?.id !== activeRoot?.id && (
                   <Link to={"/category" as any} search={{ rootCategory: activeRoot?.slug } as any}
-                    className="mb-1 inline-flex items-center gap-1 text-[11px] font-semibold text-[#68816f]">
+                    className="mb-1 inline-flex items-center gap-1 text-[11px] font-medium text-[#718078]">
                     <span aria-hidden="true">‹</span> {activeRoot?.name_bn}
                   </Link>
                 )}
-                <h2 className="truncate text-sm font-extrabold text-[#123b32] sm:text-base">
+                <h2 className="truncate text-[14px] font-bold text-[#253d32] sm:text-base">
                   {activeCategory?.name_bn || "ক্যাটাগরি"}
                 </h2>
               </div>
               {childCategories.length === 0 && (
-                <span className="shrink-0 text-[10px] text-muted-foreground sm:text-xs">
+                <span className="shrink-0 text-[10px] text-[#87928b]">
                   {categoryProducts.length.toLocaleString("bn-BD")}টি পণ্য
                 </span>
               )}
             </div>
 
             {childCategories.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-                {childCategories.map((category) => (
-                  <Link key={category.id} to={"/category" as any}
-                    search={{ rootCategory: activeRoot?.slug, category: category.slug } as any}
-                    className="flex min-h-[76px] items-center justify-between gap-2 rounded-lg border border-[#e8eee9] bg-white px-2.5 py-3 text-xs font-semibold leading-snug text-[#36564a] transition hover:border-[#b7cb8b] hover:bg-[#f8faf5] active:scale-[0.98] sm:min-h-[88px] sm:px-3 sm:text-sm">
-                    <span className="flex min-w-0 items-center gap-2.5">
-                      <span aria-hidden="true" className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#f1f6eb] text-xl">{categoryIcon(category.slug)}</span>
-                      <span>{category.name_bn}</span>
-                    </span>
-                    <span aria-hidden="true" className="shrink-0 text-base text-[#9bbd31]">›</span>
-                  </Link>
-                ))}
-              </div>
+              <>
+                <div className="mb-3 h-px bg-[#f0f2f0]" />
+                <div className="grid grid-cols-3 gap-x-2 gap-y-4 sm:grid-cols-4 sm:gap-x-4 sm:gap-y-5">
+                  {childCategories.map((category) => (
+                    <Link key={category.id} to={"/category" as any}
+                      search={{ rootCategory: activeRoot?.slug, category: category.slug } as any}
+                      className="group flex min-w-0 flex-col items-center gap-2 rounded-lg px-1 py-1 text-center transition active:scale-[0.97]">
+                      <span aria-hidden="true" className="grid aspect-square w-full max-w-[88px] place-items-center rounded-xl bg-[#f5f7f3] text-[34px] shadow-[inset_0_0_0_1px_#edf0e9] transition group-hover:bg-[#edf4e4] sm:max-w-[104px] sm:text-[40px]">
+                        {categoryIcon(category.slug)}
+                      </span>
+                      <span className="line-clamp-2 min-h-[30px] w-full text-[10px] font-medium leading-[1.45] text-[#4a574f] sm:text-xs">
+                        {category.name_bn}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </>
             ) : categoryProducts.length ? (
               <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">
                 {categoryProducts.map(productCard)}
               </div>
             ) : (
-              <p className="rounded-lg bg-[#f7f9f7] px-3 py-5 text-center text-xs leading-relaxed text-muted-foreground">
+              <p className="rounded-lg bg-[#f7f8f6] px-3 py-6 text-center text-xs leading-relaxed text-[#7a857e]">
                 এই ক্যাটাগরিতে এখনো কোনো পণ্য যোগ করা হয়নি।
               </p>
             )}
