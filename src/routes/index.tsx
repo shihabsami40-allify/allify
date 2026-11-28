@@ -164,26 +164,26 @@ function Index() {
         </div>
         {prods.isLoading && <p className="py-6 text-center text-sm" style={{ color: "#687571" }}>পণ্য লোড হচ্ছে…</p>}
         {prods.error && <p className="rounded-xl bg-white p-5 text-sm text-red-600">পণ্য লোড করা যায়নি। অনুগ্রহ করে পরে আবার চেষ্টা করুন।</p>}
-        <section className="grid grid-cols-2 gap-2.5 md:grid-cols-4 md:gap-4">
+        <section className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4">
           {prods.data?.map((product) => (
-            <article key={product.id} className="group overflow-hidden rounded-[17px] border bg-white shadow-[0_5px_18px_rgba(18,59,50,0.055)] md:rounded-[22px] transition duration-200 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(18,59,50,0.12)]" style={{ borderColor: "#e5ece7" }}>
+            <article key={product.id} className="group overflow-hidden rounded-xl border bg-white shadow-[0_5px_18px_rgba(18,59,50,0.055)] md:rounded-[22px] transition duration-200 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(18,59,50,0.12)]" style={{ borderColor: "#e5ece7" }}>
               <a href={"/product?slug=" + encodeURIComponent(product.slug)} className="block">
-                <div className="grid aspect-square w-full place-items-center overflow-hidden bg-gradient-to-br from-[#f7f9f5] via-[#f0f4ee] to-[#e5ede5] p-3">
+                <div className="grid aspect-square w-full place-items-center overflow-hidden bg-gradient-to-br from-[#f7f9f5] via-[#f0f4ee] to-[#e5ede5] p-1 md:p-3">
                   {product.product_images?.[0]?.url
                     ? <img src={product.product_images[0].url} alt={product.title_bn} loading="lazy" className="h-full w-full object-contain" onError={(e) => { e.currentTarget.style.display = "none"; }} />
-                    : <span className="text-5xl">🛍️</span>}
+                    : <span className="text-3xl md:text-5xl">🛍️</span>}
                 </div>
               </a>
-              <div className="p-3">
-                <a href={"/product?slug=" + encodeURIComponent(product.slug)} className="block"><h3 className="line-clamp-2 min-h-10 text-sm font-bold">{product.title_bn}</h3></a>
-                <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
-                  <p className="shrink-0 text-sm font-black" style={{ color: "#123b32" }}>{bdt(product.price)}</p>
-                  <a href={product.seller_stores?.slug ? "/store?slug=" + encodeURIComponent(product.seller_stores.slug) : "/market"} className="flex min-w-0 items-center justify-end gap-1.5 text-right text-[10px] hover:underline" style={{ color: "#687571" }}>{product.seller_stores?.logo_url ? <img src={product.seller_stores.logo_url} alt="" loading="lazy" className="h-5 w-5 shrink-0 rounded-full border object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full border text-[9px] font-bold" style={{ background: "#eff5e9", color: "#123b32" }}>{(product.seller_stores?.name || "দ").slice(0,1)}</span>}<span className="min-w-0 truncate">{product.seller_stores?.name || "স্থানীয় দোকান"}</span></a>
+              <div className="p-2 md:p-3">
+                <a href={"/product?slug=" + encodeURIComponent(product.slug)} className="block"><h3 className="line-clamp-2 min-h-8 text-[11px] font-bold leading-snug md:min-h-10 md:text-sm">{product.title_bn}</h3></a>
+                <div className="mt-1.5 flex min-w-0 items-center justify-between gap-1 md:mt-2 md:gap-2">
+                  <p className="shrink-0 text-xs font-black md:text-sm" style={{ color: "#123b32" }}>{bdt(product.price)}</p>
+                  <a href={product.seller_stores?.slug ? "/store?slug=" + encodeURIComponent(product.seller_stores.slug) : "/market"} className="flex min-w-0 items-center justify-end gap-1 text-right text-[9px] hover:underline md:gap-1.5 md:text-[10px]" style={{ color: "#687571" }}>{product.seller_stores?.logo_url ? <img src={product.seller_stores.logo_url} alt="" loading="lazy" className="h-4 w-4 shrink-0 rounded-full border object-cover md:h-5 md:w-5" onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full border text-[8px] font-bold md:h-5 md:w-5 md:text-[9px]" style={{ background: "#eff5e9", color: "#123b32" }}>{(product.seller_stores?.name || "দ").slice(0,1)}</span>}<span className="min-w-0 truncate">{product.seller_stores?.name || "স্থানীয় দোকান"}</span></a>
                 </div>
-                {product.compare_price ? <s className="mt-0.5 block text-[10px] text-gray-400">{bdt(product.compare_price)}</s> : null}
+                {product.compare_price ? <s className="mt-0.5 block text-[9px] text-gray-400 md:text-[10px]">{bdt(product.compare_price)}</s> : null}
               </div>
-              <div className="px-3 pb-3">
-                <button type="button" disabled={!canPurchaseProduct(product)} onClick={() => addToCart(product)} className="w-full rounded-xl border py-2.5 text-xs font-extrabold transition hover:bg-[#123b32] hover:text-white disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: "#cbd9d0", color: "#123b32" }}>{product.seller_stores?.is_demo ? "নমুনা পণ্য — অর্ডার বন্ধ" : "কার্টে যোগ করুন"}</button>
+              <div className="px-2 pb-2 md:px-3 md:pb-3">
+                <button type="button" disabled={!canPurchaseProduct(product)} onClick={() => addToCart(product)} className="w-full rounded-lg border py-2 text-[10px] font-extrabold transition hover:bg-[#123b32] hover:text-white disabled:cursor-not-allowed disabled:opacity-50 md:rounded-xl md:py-2.5 md:text-xs" style={{ borderColor: "#cbd9d0", color: "#123b32" }}>{product.seller_stores?.is_demo ? "নমুনা পণ্য — অর্ডার বন্ধ" : "কার্টে যোগ করুন"}</button>
               </div>
             </article>
           ))}
