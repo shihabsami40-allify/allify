@@ -2,6 +2,7 @@ import { createFileRoute, Link, useLocation, useNavigate } from "@tanstack/react
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { deriveOrderStatus } from "@/lib/order-status";
+import { buildCheckoutRequestFingerprint } from "@/lib/checkout-request";
 import { canTransitionOrderItemStatus } from "@/lib/order-transitions";
 import { validateSellerProductNumbers, validateSellerProductTitle } from "@/lib/product-input";
 import {
@@ -1225,7 +1226,12 @@ function MarketplacePage() {
     if (!areas.some(a=>a.name_en===area)) { setError("ডেলিভারির এলাকা নির্বাচন করুন।"); return; }
     if (address.length<5 || address.length>300) { setError("সম্পূর্ণ ঠিকানা ৫ থেকে ৩০০ অক্ষরের মধ্যে লিখুন।"); return; }
     if (note.length>500) { setError("অতিরিক্ত নির্দেশনা সর্বোচ্চ ৫০০ অক্ষরের হতে পারবে।"); return; }
-    const requestFingerprint=JSON.stringify({user:user.id,items:cart.map(x=>({product_id:x.product.id,quantity:x.quantity})),recipient,phone,area,address,note,save:form.save_address==="yes"});
+    const requestFingerprint=buildCheckoutRequestFingerprint({
+      userId:user.id,
+      items:cart.map(x=>({productId:x.product.id,quantity:x.quantity})),
+      recipient,phone,area,address,note,
+      saveAddress:form.save_address==="yes"
+    });
     if (!checkoutRequestRef.current || checkoutRequestRef.current.fingerprint!==requestFingerprint) {
       checkoutRequestRef.current={fingerprint:requestFingerprint,id:crypto.randomUUID()};
     }
