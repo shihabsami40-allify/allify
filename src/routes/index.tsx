@@ -31,33 +31,14 @@ type StoreProduct = {
 };
 
 const bdt = (n: number) => "৳ " + Number(n || 0).toLocaleString("bn-BD");
-const categoryIcons: Record<string, string> = {
-  "পোশাক": "👕", "জুতা": "👟", "ঘড়ি": "⌚", "ঘড়ি": "⌚",
-  "ব্যাগ": "🎒", "বিউটি": "💄", "লাইফস্টাইল": "🏠",
-  "মোবাইল": "📱", "মোবাইল অ্যাকসেসরিজ": "🔌", "মোবাইল ও অ্যাকসেসরিজ": "📱", "খাবার ও পানীয়": "🍱",
-};
+
 
 function Index() {
   const [cartCount, setCartCount] = useState(0);
   const [toast, setToast] = useState("");
   const [search, setSearch] = useState("");
 
-  const cats = useQuery({
-    queryKey: ["cats"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("id,slug,name_bn,name_en,sort_order,parent_id")
-        .order("sort_order");
-      if (error) throw error;
-      return data ?? [];
-    },
-    staleTime: 0,
-    gcTime: 300_000,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    retry: 1,
-  });
+
 
   const prods = useQuery({
     queryKey: ["popular-active-store-products-v2"],
@@ -128,8 +109,6 @@ function Index() {
     }
   };
 
-  const categoryList = (cats.data ?? []).filter((cat) => !cat.parent_id).slice(0, 8);
-
   return (
     <div className="min-h-screen" style={{ background: "#f7f9f7", color: "#18211f" }}>
       <div className="px-3 py-2 text-center text-[11px] font-medium tracking-wide" style={{ background: "#10382f", color: "#e9f2ed" }}>
@@ -153,7 +132,6 @@ function Index() {
         </div>
         <nav className="mx-auto flex max-w-6xl gap-6 overflow-x-auto whitespace-nowrap px-4 pb-3.5 text-xs font-semibold md:px-6" style={{ color: "#52615b" }}>
           <a href="/market">সব পণ্য</a>
-          <a href="#categories">ক্যাটাগরি</a>
           <a href="#local">স্থানীয় দোকান</a>
           <a href="#products">জনপ্রিয় পণ্য</a>
           <a href="/seller">বিক্রেতা হোন</a>
@@ -178,23 +156,6 @@ function Index() {
               <span className="absolute -bottom-2 -left-6 rounded-xl border border-white/60 bg-white px-3.5 py-2.5 text-[11px] font-extrabold shadow-xl" style={{ color: "#123b32" }}>🛍️ সহজ অনলাইন অর্ডার</span><span className="absolute -left-5 top-1/2 -translate-y-1/2 rounded-xl bg-[#d9f36a] px-3 py-2 text-[11px] font-extrabold shadow-xl" style={{ color: "#123b32" }}>⌚ পছন্দের পণ্য</span>
             </div>
           </div>
-        </section>
-
-        <div id="categories" className="mb-3 mt-5 flex items-end justify-between md:mb-4 md:mt-12">
-          <div><h2 className="text-xl font-extrabold tracking-tight md:text-2xl">ক্যাটাগরি থেকে খুঁজুন</h2><p className="mt-1 text-xs" style={{ color: "#687571" }}>আপনার পছন্দের পণ্য এক জায়গায়</p></div>
-          <a href="/market" className="text-xs font-extrabold" style={{ color: "#1b594a" }}>সব দেখুন →</a>
-        </div>
-        <section className="grid grid-cols-4 gap-2 md:grid-cols-5 md:gap-4">
-          {cats.isLoading && <p className="col-span-full py-5 text-center text-sm" style={{ color: "#687571" }}>ক্যাটাগরি লোড হচ্ছে…</p>}
-          {cats.error && <p className="col-span-full py-5 text-center text-sm text-red-600">ক্যাটাগরি লোড করা যায়নি।</p>}
-          {categoryList.map((cat) => (
-            <a key={cat.id} href={"/category?category=" + encodeURIComponent(cat.slug)} className="group rounded-[16px] border bg-white px-1.5 py-2.5 text-center shadow-[0_3px_12px_rgba(18,59,50,0.045)] transition duration-200 hover:-translate-y-1 hover:border-[#b8cdbf] hover:shadow-[0_10px_20px_rgba(18,59,50,0.08)] md:rounded-[22px] md:px-3 md:py-5" style={{ borderColor: "#e5ece7" }}>
-              <span className="mx-auto mb-1.5 grid h-9 w-9 place-items-center rounded-xl text-xl shadow-inner transition group-hover:scale-105 md:mb-3 md:h-14 md:w-14 md:rounded-[19px] md:text-[28px]" style={{ background: "linear-gradient(145deg,#f4f8ee,#e5efdf)" }}>{categoryIcons[cat.name_bn] || "🛍️"}</span>
-              <b className="block truncate text-[10px] md:text-sm">{cat.name_bn}</b>
-              <small className="mt-0.5 hidden md:mt-1 md:block md:text-[10px]" style={{ color: "#687571" }}>{cat.name_en || "পছন্দের পণ্য"}</small>
-            </a>
-          ))}
-          {!cats.isLoading && !cats.error && categoryList.length === 0 && <p className="col-span-full rounded-xl bg-white p-5 text-center text-sm" style={{ color: "#687571" }}>ক্যাটাগরি শিগগিরই যোগ করা হবে।</p>}
         </section>
 
         <div id="products" className="mb-3 mt-6 flex items-end justify-between md:mb-4 md:mt-12">
