@@ -113,6 +113,15 @@ Deno.serve(async (req: Request) => {
       return json({ error: "অ্যাডমিন অ্যাকাউন্টকে সেলার হিসেবে রিমুভ করা যাবে না।" }, 400);
     }
 
+    // Delete the Auth identity through Supabase Admin API so the email can be registered again.
+    // If a previous attempt already deleted it but the DB cleanup failed, allow a safe retry.
+    const { data: existingAuthUser, error: lookupAuthError } = await admin.auth.admin.getUserById(store.owner_id);
+    if (lookupAuthError && lookupAuthError.status !== 404) throw lookupAuthError;
+    if (existingAuthUser?.user) {
+      const { error: deleteAuthError } = await admin.auth.admin.deleteUser(store.owner_id);
+      if (deleteAuthError) throw deleteAuthError;
+    }
+
     const { data: removalResult, error: removalError } = await admin.rpc("admin_remove_seller_store", {
       p_store_id: store.id,
       p_owner_id: store.owner_id,
