@@ -8,10 +8,11 @@ export const validateSellerProductTitle = (input: unknown): SellerProductTitleRe
   return { ok: true, value: title };
 };
 
-const normalizeLocalizedDigits = (value: string): string => value
-  .replace(/[০-৯]/g, digit => String("০১২৩৪৫৬৭৮৯".indexOf(digit)))
-  .replace(/[٠-٩]/g, digit => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
-  .replace(/٫/g, ".");
+const normalizeLocalizedDigits = (value: string): string =>
+  value
+    .replace(/[০-৯]/g, (digit) => String("০১২৩৪৫৬৭৮৯".indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+    .replace(/٫/g, ".");
 
 export type SellerProductNumbers = {
   price: number;
