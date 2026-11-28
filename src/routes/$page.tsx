@@ -355,8 +355,10 @@ function MarketplacePage() {
     })();
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY") setIsPasswordRecovery(true);
-      else if (event === "SIGNED_OUT") setIsPasswordRecovery(false);
+      if (event === "PASSWORD_RECOVERY") {
+        setIsPasswordRecovery(true);
+        navigate({ to: "/reset-password" as any });
+      } else if (event === "SIGNED_OUT") setIsPasswordRecovery(false);
       setUser(session?.user ?? null);
       if (!session?.user) {
         setRole("customer");
@@ -458,7 +460,7 @@ function MarketplacePage() {
     setBusy(true); setError(""); setMessage("");
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: "https://allify-chattogram.vercel.app/reset-password",
+        redirectTo: "https://allify-chattogram.vercel.app/account",
       });
       if (error) throw error;
       setMessage("যদি এই ইমেইলে ALLIFY অ্যাকাউন্ট থাকে, তাহলে পাসওয়ার্ড পরিবর্তনের লিংক পাঠানো হয়েছে। ইনবক্স ও Spam ফোল্ডার দেখুন।");
